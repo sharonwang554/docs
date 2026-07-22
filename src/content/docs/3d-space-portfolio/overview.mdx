@@ -7,24 +7,16 @@ import { Card, CardGrid, LinkCard, Aside, Badge } from '@astrojs/starlight/compo
 
 Welcome to the official documentation for the **3D Space Portfolio**, an interactive, WebGL-powered personal website built with React and Three.js. This project pushes the boundaries of traditional web portfolios by embedding user experience within a fully functional 3D environment.
 
-<Aside type="tip" title="Quick Links">
-  Access the deployed application or review the source code directly.
+<Aside type="tip" title="Live Application">
+  Access the deployed production application directly.
 </Aside>
 
-<CardGrid>
-  <LinkCard
-    title="View Live Site"
-    description="Explore the interactive 3D portfolio at sharonwang.me"
-    href="https://sharonwang.me"
-    target="_blank"
-  />
-  <LinkCard
-    title="View Source on GitHub"
-    description="Review the React and Three.js source code"
-    href="https://github.com/sharonwang554/3d-space-portfolio"
-    target="_blank"
-  />
-</CardGrid>
+<LinkCard
+  title="View Live Site"
+  description="Explore the interactive 3D portfolio at sharonwang.me"
+  href="https://sharonwang.me"
+  target="_blank"
+/>
 
 ## Project Vision
 
@@ -73,16 +65,17 @@ Upon loading, the user is greeted by a high-resolution, interactive 3D model of 
 
 ## Getting Started Locally
 
-To run the portfolio on your local machine, ensure you have **Node.js 18+** installed.
+<Aside type="note">
+  The 3D Space Portfolio codebase is maintained in a private repository. Access for local development or code auditing requires collaborator permissions.
+</Aside>
+
+To run the portfolio locally once access is granted, ensure you have **Node.js 18+** installed:
 
 ```bash
-# Clone the repository
-git clone https://github.com/sharonwang554/3d-space-portfolio.git
-
-# Navigate into the directory
+# Navigate into the project directory
 cd 3d-space-portfolio
 
-# Install dependencies (pnpm is recommended)
+# Install dependencies
 npm install
 
 # Start the Vite development server

@@ -5,14 +5,14 @@ template: splash
 hero:
   tagline: Developer Knowledge Base & Technical Runbooks. Exploring system architecture decomposition, API specifications, OAuth 2.0 sequence diagrams, and operational incident playbooks.
   actions:
-    - text: Explore API Specs
+    - text: Explore Developer Docs
       link: /developer-docs/overview
       icon: right-arrow
       variant: primary
     - text: View Live Applications
       link: '#live-production-applications'
       icon: external
-      variant: minimal
+      variant: secondary
 ---
 
 import { Card, CardGrid, LinkCard, Aside, Badge } from '@astrojs/starlight/components';
@@ -43,9 +43,11 @@ import { Card, CardGrid, LinkCard, Aside, Badge } from '@astrojs/starlight/compo
 
 ---
 
-## Live Production Applications & Suites
+<div id="live-production-applications"></div>
 
-Explore our complete documentation suites alongside their live production websites and repositories:
+## Live Production Applications
+
+Explore our complete documentation suites alongside their live production websites:
 
 <CardGrid>
   <Card title="3D Space Portfolio" icon="rocket">
@@ -54,7 +56,6 @@ Explore our complete documentation suites alongside their live production websit
     Interactive WebGL-powered 3D personal website built with React 18, Three.js / React Three Fiber, SCSS Modules, Vitest, and bilingual i18n.
     <br/><br/>
     - **Live Website**: [https://sharonwang.me](https://sharonwang.me)
-    - **Source Code**: [GitHub Repository](https://github.com/sharonwang554/3d-space-portfolio)
     - **Documentation Suite**: [Explore 3D Portfolio Docs &rarr;](/3d-space-portfolio/overview)
   </Card>
   <Card title="Raised Church Website" icon="sun">
