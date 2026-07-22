@@ -1,0 +1,106 @@
+---
+title: 'Content Editor Guide'
+description: 'Step-by-step Contentful editing guide for non-technical church staff.'
+---
+
+import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+Welcome to the website management guide! This manual is designed for church staff and volunteers. You do not need to know any programming to update the website. 
+
+We use a system called **Contentful** to manage all the text, images, and sermons on the Raised Church website. When you save and publish changes in Contentful, the website automatically updates within a few minutes.
+
+## 1. Logging In
+
+1. Go to [app.contentful.com](https://app.contentful.com).
+2. Log in with your church email address and password.
+3. You will see the **Space Home** page for "Raised Church".
+4. Click on the **Content** tab at the very top of the screen. This is where you will do all your work.
+
+---
+
+## 2. Adding a New Weekly Sermon
+
+This is the most common task. We recommend doing this every Monday to upload Sunday's sermon.
+
+<Steps>
+1. Click the blue **Add entry** button in the top right corner.
+2. Select **Sermon** from the drop-down menu.
+3. Fill out the **Title**: 
+   - You will see two boxes for the title: one for English and one for Traditional Chinese (繁體中文). Please fill out both!
+4. Choose the **Date**: Click the calendar icon and select the Sunday the sermon was preached.
+5. Select the **Speaker**: Click "Link existing entry" and choose the pastor from the list.
+6. Add the **YouTube ID**:
+   - Go to the YouTube video for the sermon.
+   - Look at the link in the address bar (e.g., `https://www.youtube.com/watch?v=dQw4w9WgXcQ`).
+   - Copy *only* the 11 letters/numbers after the `=` sign (e.g., `dQw4w9WgXcQ`).
+   - Paste those 11 characters into the YouTube ID field.
+7. Fill in the **Passage** (e.g., "John 3:16-21").
+8. Write the **Summary**: Use the text box to write a short paragraph about the sermon. You can make text bold or add bullet points. Remember to fill out both English and Chinese boxes.
+9. Click the green **Publish** button on the right sidebar. 
+</Steps>
+
+<Aside type="tip">
+**Screenshot reference**: The Contentful editor shows English fields on the left and Chinese fields on the right, side-by-side. If you leave a Chinese field blank, the website will display the English text as a backup.
+</Aside>
+
+---
+
+## 3. Adding or Updating Events
+
+Use this for special gatherings, holiday services, or church retreats.
+
+<Steps>
+1. Go to the **Content** tab and click **Add entry** -> **Event**.
+2. Fill out the **Event Name** in both languages.
+3. Select the **Start Date & Time** and **End Date & Time**. 
+4. Write the **Location** (e.g., "Main Sanctuary" or "Church Retreat Center").
+5. Add a **Cover Image**:
+   - Click "Create new asset and link"
+   - Upload your image file.
+   - Give the image a title, click "Publish" on the image, and then go back to your Event.
+6. Write the **Description** with all the details.
+7. Click the green **Publish** button.
+</Steps>
+
+<Aside type="caution">
+**Important**: Once the End Date of an event passes, it will automatically disappear from the website's Upcoming Events page. You do not need to delete old events manually!
+</Aside>
+
+---
+
+## 4. Updating Gathering Times or the About Page
+
+Information like Sunday service times or the church's history changes rarely, but when it does, you can update it here.
+
+<Steps>
+1. Go to the **Content** tab.
+2. In the search bar at the top, type "Gathering Times" or "About Us".
+3. Click on the entry to open it.
+4. Scroll down to the **Content** section. It looks like a standard word processor (like Microsoft Word).
+5. Make your text changes, add new tables, or fix typos.
+6. Click the green **Publish changes** button on the right.
+</Steps>
+
+---
+
+## Common Mistakes & How to Fix Them
+
+<CardGrid>
+  <Card title="I made a mistake and published it!" icon="warning">
+    Don't panic! On the right sidebar, look for **Versions**. Click it, and you can see a history of all changes. Select an older version and click "Restore".
+  </Card>
+  <Card title="My changes aren't on the website yet" icon="clock">
+    When you click Publish, the website rebuilds itself. This takes about **2 to 3 minutes**. Wait a few minutes, go to the website, and refresh your browser (press F5 on your keyboard).
+  </Card>
+  <Card title="The YouTube video won't play" icon="youtube">
+    Make sure you only pasted the 11-character ID (like `dQw4w9WgXcQ`), not the entire `https://www.youtube.com...` link. Edit the Sermon entry, fix the ID, and click Publish again.
+  </Card>
+</CardGrid>
+
+## Need Help?
+
+If you are stuck, cannot log in, or the website is showing an error, please contact the tech team:
+- **Email**: webmaster@raisedchurch.com
+- **Line ID**: @raisedchurchtech
+
+Thank you for helping keep the church website up to date!

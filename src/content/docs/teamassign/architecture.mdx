@@ -1,0 +1,118 @@
+---
+title: Architecture
+description: System design, database schema patterns, and module organization for TeamAssign.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+TeamAssign utilizes a robust, traditional Model-View-Controller (MVC) architecture adapted for the `mod_perl` environment. Understanding the request lifecycle and data flow is essential for navigating the legacy codebase effectively.
+
+## Request Lifecycle
+
+Because TeamAssign runs under Apache's `mod_perl2`, the Perl interpreter is persistent in memory. This eliminates the overhead of starting a new Perl process for every request (as in standard CGI), but requires careful management of global variables and memory.
+
+```mermaid
+sequenceDiagram
+    participant Browser
+    participant Apache
+    participant mod_perl
+    participant Dispatcher
+    participant Controller
+    participant Model
+    participant Database
+
+    Browser->>Apache: HTTP GET /app/teams/view?id=123
+    Apache->>mod_perl: Map to PerlResponseHandler
+    mod_perl->>Dispatcher: TeamAssign::Dispatcher->handler()
+    
+    Note over Dispatcher: Parse URI, instantiate CGI object,<br/>check session/auth.
+    
+    Dispatcher->>Controller: TeamAssign::Controller::Teams->view()
+    Controller->>Model: TeamAssign::Model::Team->new(123)
+    Model->>Database: SELECT * FROM teams WHERE id = 123
+    Database-->>Model: Return row data
+    Model-->>Controller: Return Team object
+    
+    Note over Controller: Fetch associated students
+    
+    Controller->>Model: $team->get_students()
+    Model->>Database: SELECT * FROM students ...
+    Database-->>Model: Return rows
+    Model-->>Controller: Return list of Student objects
+    
+    Note over Controller: Render view via Template Toolkit
+    
+    Controller->>mod_perl: print HTML output
+    mod_perl-->>Apache: HTTP Response
+    Apache-->>Browser: Render Page
+```
+
+## Module Organization
+
+The codebase is organized within the `lib/TeamAssign/` directory, adhering to standard Perl namespace conventions.
+
+- **`Dispatcher.pm`**: The central entry point. It maps URLs to specific Controller modules and subroutines. It handles global setup, logging initialization, and session validation.
+- **`Controller/`**: Contains the business logic for specific domains (e.g., `Teams.pm`, `Surveys.pm`, `Auth.pm`). Controllers parse input, interact with Models, and prepare data for the view layer.
+- **`Model/`**: Encapsulates data access. Each major database entity has a corresponding Model class (e.g., `User.pm`, `Course.pm`). These classes abstract away the raw SQL using DBI.
+- **`View/`**: While HTML templates reside in the `templates/` directory, `View.pm` acts as a wrapper around Template Toolkit, providing global variables (like the current user) to all templates.
+- **`Utils/`**: Contains helper modules for tasks like CSV parsing, email generation, and date formatting.
+
+## Database Schema Patterns
+
+The MySQL database is highly relational. We prioritize foreign keys and constraints to maintain data integrity across thousands of courses.
+
+### Core Tables
+
+- **`users`**: Central table for all accounts (instructors, TAs, students). Differentiated by role flags.
+- **`courses`**: Represents a specific offering of a class in a given term.
+- **`course_enrollments`**: Join table linking `users` (students) to `courses`.
+- **`teams`**: Represents a group of students within a course.
+- **`team_members`**: Join table linking `users` to `teams`.
+
+<Aside type="tip">
+When querying for a student's teams, always join through `course_enrollments` to ensure the student is still active in the course, as instructors often drop students without explicitly removing them from teams.
+</Aside>
+
+### Survey and Evaluation Data Flow
+
+The most complex data structures relate to dynamic surveys and peer evaluations.
+
+```mermaid
+erDiagram
+    SURVEY ||--o{ QUESTION : contains
+    QUESTION ||--o{ QUESTION_OPTION : has_choices
+    SURVEY ||--o{ RESPONSE_SET : receives
+    RESPONSE_SET }o--|| USER : submitted_by
+    RESPONSE_SET ||--o{ ANSWER : contains
+    ANSWER }o--|| QUESTION : answers
+    
+    SURVEY {
+        int id PK
+        int course_id FK
+        string title
+        datetime deadline
+    }
+    QUESTION {
+        int id PK
+        int survey_id FK
+        string type "radio, text, likert"
+        string prompt
+    }
+    RESPONSE_SET {
+        int id PK
+        int survey_id FK
+        int submitter_id FK
+        int evaluatee_id FK "nullable, used for peer eval"
+    }
+```
+
+Notice the `evaluatee_id` in `RESPONSE_SET`. For standard surveys, this is null. For peer evaluations, one student (the submitter) fills out a survey evaluating another student (the evaluatee) on their team. This design allows the same survey engine to power both general data collection and complex peer reviews.
+
+## Authentication and Sessions
+
+TeamAssign uses cookie-based session management. 
+
+1. Upon successful login, a cryptographically secure session ID is generated.
+2. This ID is stored in the `sessions` database table along with serialized user data and an expiry timestamp.
+3. The session ID is sent to the client as an HTTP-only cookie.
+4. On subsequent requests, `TeamAssign::Dispatcher` reads the cookie, looks up the session in the database, and hydrates the global user object for the request lifecycle.

@@ -1,0 +1,127 @@
+---
+title: 'Testing Strategy'
+description: 'Vitest configuration, test patterns, coverage thresholds, and CI integration.'
+---
+
+import { Aside, Card, CardGrid, Steps } from '@astrojs/starlight/components';
+
+Quality assurance for the 3D Space Portfolio relies on a robust, automated testing pipeline. Given the project's use of Vite, we utilize [Vitest](https://vitest.dev/) for unit and integration testing, coupled with [React Testing Library (RTL)](https://testing-library.com/docs/react-testing-library/intro/) for DOM assertions.
+
+## Test Environment Setup
+
+Vitest is configured to run tests in a `jsdom` environment. This simulates a browser environment within Node.js, allowing React components to render and be queried just like they would in a real DOM.
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./tests/setup.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      thresholds: {
+        statements: 80,
+        branches: 75,
+        functions: 80,
+        lines: 80,
+      },
+    },
+  },
+});
+```
+
+### Coverage Thresholds
+
+We enforce strict coverage thresholds to ensure code reliability. If a Pull Request drops test coverage below these metrics, the Continuous Integration (CI) pipeline will automatically fail the build.
+
+- **Statements**: 80%
+- **Functions**: 80%
+- **Lines**: 80%
+- **Branches**: 75%
+
+## Testing Patterns and Conventions
+
+Test files are co-located with their respective components and follow the `*.test.tsx` naming convention. 
+
+### 1. Standard DOM Component Testing
+For standard React components, we utilize RTL to render the component and simulate user interactions (like clicks and typing) to assert expected outcomes.
+
+```tsx
+// components/ui/LanguageToggle.test.tsx
+import { render, screen, fireEvent } from '@testing-library/react';
+import { LanguageToggle } from './LanguageToggle';
+import { LanguageProvider } from '../../context/LanguageContext';
+
+describe('LanguageToggle Component', () => {
+  it('switches text from EN to ZH when clicked', () => {
+    render(
+      <LanguageProvider>
+        <LanguageToggle />
+      </LanguageProvider>
+    );
+    
+    // Assert initial state
+    const button = screen.getByRole('button');
+    expect(button).toHaveTextContent('ZH'); // Button says ZH to switch *to* ZH
+    
+    // Simulate interaction
+    fireEvent.click(button);
+    
+    // Assert mutated state
+    expect(button).toHaveTextContent('EN');
+  });
+});
+```
+
+### 2. Mocking WebGL and Three.js
+
+Testing components that rely on WebGL (`<Canvas>`) inside `jsdom` is notoriously difficult because `jsdom` does not support a real WebGL context. 
+
+To solve this, we globally mock `@react-three/fiber` and `three` in our test setup file. This allows the test runner to skip the actual graphics rendering while still validating the React component tree and prop passing.
+
+```typescript
+// tests/setup.ts
+import '@testing-library/jest-dom';
+import { vi } from 'vitest';
+
+// Mock ResizeObserver (required by R3F Canvas)
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
+// Mock React Three Fiber Canvas to render children as standard divs
+vi.mock('@react-three/fiber', async () => {
+  const original = await vi.importActual('@react-three/fiber');
+  return {
+    ...original,
+    Canvas: ({ children }: { children: React.ReactNode }) => (
+      <div data-testid="mock-canvas">{children}</div>
+    ),
+    useFrame: vi.fn(),
+  };
+});
+```
+
+## Continuous Integration (CI)
+
+The testing suite is fully integrated into GitHub Actions. Every push and pull request triggers a workflow that executes the following steps:
+
+<Steps>
+1. **Setup Node**: Initializes the specified Node.js version.
+2. **Install Dependencies**: Runs `npm ci` to cleanly install lockfile dependencies.
+3. **Linting**: Executes `eslint` and `stylelint`.
+4. **Test & Coverage**: Runs `npm run test:coverage`.
+5. **Build**: Ensures the Vite build process completes successfully.
+</Steps>
+
+<Aside type="tip">
+  To view the visual HTML coverage report locally after running tests, open `coverage/index.html` in your browser. This provides a line-by-line breakdown of untested code paths.
+</Aside>

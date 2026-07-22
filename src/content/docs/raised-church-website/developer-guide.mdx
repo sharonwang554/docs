@@ -1,0 +1,108 @@
+---
+title: 'Developer Guide'
+description: 'Codebase onboarding, SvelteKit conventions, and contribution workflow for developers.'
+---
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Welcome to the Raised Church website repository! This guide provides the necessary information for developers to set up the local environment, understand our conventions, and contribute to the codebase.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+- **Node.js** (v18.x or higher)
+- **npm** (v9.x or higher)
+- **Git**
+
+You will also need access to the Contentful workspace to generate a Personal Access Token for local development. Contact the project administrator if you need access.
+
+## Local Development Setup
+
+<Steps>
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/sharon-wang/raised-church-website.git
+   cd raised-church-website
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure Environment Variables**
+   Create a `.env.local` file in the root directory. Do not commit this file.
+   ```ini
+   # .env.local
+   CONTENTFUL_SPACE_ID=your_space_id
+   CONTENTFUL_ENVIRONMENT=master
+   CONTENTFUL_ACCESS_TOKEN=your_delivery_api_token
+   # Use the Preview API token if you want to see unpublished drafts locally
+   # CONTENTFUL_PREVIEW_TOKEN=your_preview_api_token
+   ```
+
+4. **Start the development server**
+   ```bash
+   npm run dev
+   ```
+   The site will be available at `http://localhost:5173`.
+</Steps>
+
+## Codebase Conventions
+
+### SvelteKit Architecture
+
+We heavily rely on SvelteKit's Server-Side Rendering (SSR). 
+
+- **Data Fetching**: All external API calls (to Contentful) **must** happen in `+page.server.ts` or `+layout.server.ts` files. This keeps our API keys secure and ensures the client receives fully rendered HTML.
+- **Form Actions**: Use SvelteKit Form Actions for form submissions (e.g., contact forms). Avoid client-side `fetch` posts unless building highly interactive client-side widgets.
+
+### Styling with Tailwind CSS
+
+We use Tailwind CSS for all styling. 
+
+- Avoid writing custom CSS in `<style>` tags within Svelte components.
+- For repeating UI patterns, extract them into reusable Svelte components rather than creating custom Tailwind `@apply` classes.
+- **Responsive Design**: Always design mobile-first. Use `md:` and `lg:` prefixes for larger screens. The church demographic is 80%+ mobile.
+
+<Aside type="tip">
+We use the `@tailwindcss/typography` plugin for rendering rich text from Contentful. Wrap the output of the Contentful rich text renderer in a `div` with the `prose` class.
+</Aside>
+
+### TypeScript
+
+The project runs in strict TypeScript mode. 
+
+- Types for Contentful entries are located in `src/lib/types/contentful.d.ts`.
+- Avoid using `any`. If a type is complex, define an interface for it.
+- Use SvelteKit's generated types for load functions (`import type { PageServerLoad } from './$types';`).
+
+## Contribution Workflow
+
+We follow a standard Feature Branch workflow.
+
+1. **Create a branch**: Branch off `main` using the format `feature/your-feature-name` or `fix/issue-description`.
+   ```bash
+   git checkout -b feature/add-event-calendar
+   ```
+
+2. **Develop and Test**: Make your changes. Ensure you test your UI in both English and Traditional Chinese using the language toggle in the navbar.
+
+3. **Linting and Formatting**: We use Prettier and ESLint. Run the check before committing.
+   ```bash
+   npm run lint
+   npm run format
+   npm run check # Runs svelte-check for TS errors in templates
+   ```
+
+4. **Commit**: Write clear, descriptive commit messages.
+
+5. **Pull Request**: Push your branch and open a PR against `main`. 
+   - Vercel will automatically generate a preview URL for your PR. 
+   - Add the preview URL to the PR description.
+   - Request a review from at least one core maintainer.
+
+## Troubleshooting
+
+- **Content Not Updating Locally**: If you update Contentful but don't see changes locally, restart the dev server. Contentful caches responses aggressively.
+- **Type Errors in `$types`**: Run `npm run dev` to let SvelteKit generate the necessary routing types in the `.svelte-kit` directory.

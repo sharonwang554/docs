@@ -1,0 +1,84 @@
+---
+title: System Documentation & Architecture Hub
+description: Official developer documentation, API specifications, system architecture designs, and troubleshooting runbooks across modern and legacy technical stacks.
+template: splash
+hero:
+  tagline: Developer Knowledge Base & Technical Runbooks. Exploring system architecture decomposition, API specifications, OAuth 2.0 sequence diagrams, and operational incident playbooks.
+  actions:
+    - text: Explore API Specs
+      link: /developer-docs/overview
+      icon: right-arrow
+      variant: primary
+    - text: View Live Applications
+      link: '#live-production-applications'
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard, Aside, Badge } from '@astrojs/starlight/components';
+
+<Aside type="note" title="Official Developer Knowledge Base">
+  Welcome to the central technical documentation center. Select a specialized knowledge hub below or explore our production application repositories directly.
+</Aside>
+
+## Specialized Knowledge Hubs
+
+<CardGrid stagger>
+  <Card title="Developer Docs & API" icon="document">
+    Pure technical specifications, OAuth 2.0 authorization sequence diagrams (`Mermaid.js`), unified API endpoints with request/response JSON payload schemas, and AWS EC2 developer onboarding tutorials.
+
+    [Explore Developer Docs &rarr;](/developer-docs/overview)
+  </Card>
+  <Card title="Troubleshooting & Runbooks" icon="warning">
+    Structured Standard Operating Procedures (`Symptom → Diagnosis → Fix`), 5 common Canvas LMS integration error resolutions, distributed log tracing, and local SSL certificate expiration runbooks (`thisisunsafe` bypass protocol).
+
+    [Explore Runbooks &rarr;](/troubleshooting/overview)
+  </Card>
+  <Card title="Architecture & Project Logic" icon="puzzle">
+    High-level Canvas LMS + AWS cloud infrastructure architecture diagrams, comparative system design trade-offs across live WebGL/CMS deployments, and abstract mathematical/philological algorithm decomposition (`KaTeX`).
+
+    [Explore Architecture &rarr;](/architecture/overview)
+  </Card>
+</CardGrid>
+
+---
+
+## Live Production Applications & Suites
+
+Explore our complete documentation suites alongside their live production websites and repositories:
+
+<CardGrid>
+  <Card title="3D Space Portfolio" icon="rocket">
+    <Badge text="Live Production Site" variant="success" size="small" />
+    <br/><br/>
+    Interactive WebGL-powered 3D personal website built with React 18, Three.js / React Three Fiber, SCSS Modules, Vitest, and bilingual i18n.
+    <br/><br/>
+    - **Live Website**: [https://sharonwang.me](https://sharonwang.me)
+    - **Source Code**: [GitHub Repository](https://github.com/sharonwang554/3d-space-portfolio)
+    - **Documentation Suite**: [Explore 3D Portfolio Docs &rarr;](/3d-space-portfolio/overview)
+  </Card>
+  <Card title="Raised Church Website" icon="sun">
+    <Badge text="Live Production Site" variant="success" size="small" />
+    <br/><br/>
+    Bilingual (Chinese/English) church platform for 左營復活堂 in Kaohsiung, Taiwan, powered by SvelteKit SSR and Contentful Headless CMS.
+    <br/><br/>
+    - **Live Website**: [https://raisedchurch.com](https://raisedchurch.com)
+    - **Preview Deployment**: [Vercel Staging Environment](https://raised-church-website-kappa.vercel.app)
+    - **Documentation Suite**: [Explore Church Website Docs &rarr;](/raised-church-website/overview)
+  </Card>
+  <Card title="TeamAssign Academic Platform" icon="setting">
+    <Badge text="Legacy Institutional System" variant="danger" size="small" />
+    <br/><br/>
+    Anonymized institutional knowledge base for a Perl 5 / CGI / `mod_perl` / MySQL academic management system deployed across 100+ universities since 2005.
+    <br/><br/>
+    - **System Status**: Active across participating higher education institutions.
+    - **Documentation Suite**: [Explore TeamAssign Runbooks &rarr;](/teamassign/overview)
+  </Card>
+  <Card title="Academic Articles & Research" icon="open-book">
+    <Badge text="Research Case Studies" variant="note" size="small" />
+    <br/><br/>
+    Long-form technical writing and academic papers on textual criticism, algorithm comparison, and stemmatic theory.
+    <br/><br/>
+    - **Research Repository**: [Explore Articles &rarr;](/articles/textual-criticism)
+  </Card>
+</CardGrid>

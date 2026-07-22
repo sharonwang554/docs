@@ -1,0 +1,203 @@
+---
+title: 'Quickstart & AWS EC2 Onboarding'
+description: 'Step-by-step developer setup tutorial for connecting to AWS EC2 instances and local environment configuration.'
+---
+
+import { Steps, Tabs, TabItem, Badge, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+This runbook provides standardized onboarding procedures for new software engineers, SREs, and technical contributors setting up local development environments and connecting to our staging and production AWS cloud infrastructure.
+
+By completing this guide, you will configure your local toolchain, establish secure SSH tunnels through our AWS bastion hosts using private cryptographic keys (`key.pem`), provision environment secrets (`.env.local`), and verify database migrations against replicas of [sharonwang.me](https://sharonwang.me) and [raisedchurch.com](https://raisedchurch.com).
+
+---
+
+## Step-by-Step Onboarding Runbook
+
+Follow these sequential steps (`Steps`) to initialize your local development stack and verify connection capabilities across our engineering boundaries.
+
+<Steps>
+1. **Prerequisites & Tooling Setup**
+
+   Our core services require Node.js LTS, the AWS Command Line Interface v2, and a POSIX-compliant OpenSSH client. We strongly recommend installing Node.js via `nvm` (Node Version Manager) and managing dependencies with `pnpm`.
+
+   <Tabs>
+     <TabItem label="macOS (Homebrew)" icon="apple">
+       ```bash
+       # Install Node Version Manager and core CLI utilities
+       brew update && brew install nvm awscli git pnpm
+
+       # Install and activate Node.js v20 LTS
+       nvm install 20
+       nvm use 20
+
+       # Verify installation binaries and versions
+       node -v       # Expected Output: v20.x.x
+       pnpm -v       # Expected Output: 9.x.x
+       aws --version # Expected Output: aws-cli/2.x.x
+       ssh -V        # Expected Output: OpenSSH_9.x
+       ```
+     </TabItem>
+     <TabItem label="Linux (Debian/Ubuntu)" icon="linux">
+       ```bash
+       # Update package index and install build prerequisites
+       sudo apt update && sudo apt install -y curl git unzip openssh-client
+
+       # Install AWS CLI v2 via official installer
+       curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+       unzip -q awscliv2.zip && sudo ./aws/install
+
+       # Install nvm and Node.js v20 LTS
+       curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+       source ~/.bashrc
+       nvm install 20 && npm install -g pnpm
+
+       # Verify toolchain
+       node -v && aws --version && pnpm -v
+       ```
+     </TabItem>
+   </Tabs>
+
+2. **SSH Connection & AWS Bastion Host Setup (`key.pem`)**
+
+   Direct public SSH access to our internal AWS EC2 database and application instances is strictly prohibited by our VPC security groups. All SSH connections must route through our hardened bastion proxy host (`bastion.internal`) using your assigned private RSA/Ed25519 key (`~/.ssh/sharon-dev.pem`).
+
+   First, set strict file permissions on your private key file. OpenSSH will reject keys that are accessible by other users (`UNPROTECTED PRIVATE KEY FILE` error):
+
+   ```bash
+   # Create SSH configuration directory if missing
+   mkdir -p ~/.ssh && chmod 700 ~/.ssh
+
+   # Move private key file to ~/.ssh and restrict read/write to owner only
+   mv ~/Downloads/sharon-dev.pem ~/.ssh/sharon-dev.pem
+   chmod 400 ~/.ssh/sharon-dev.pem
+   ```
+
+   Next, configure your `~/.ssh/config` file to enable automated **ProxyJump** tunneling whenever you initiate a connection to an internal EC2 instance:
+
+   ```ssh-config
+   # ~/.ssh/config - Bastion Tunneling & Host Aliases
+
+   # Bastion Jump Host (Public Facing Gateway)
+   Host bastion.internal
+       HostName bastion.staging.sharonwang.me
+       User ubuntu
+       IdentityFile ~/.ssh/sharon-dev.pem
+       CheckHostIP no
+       StrictHostKeyChecking ask
+
+   # Private Application & Database Nodes (Private Subnets)
+   Host ec2-prod.internal
+       HostName 10.0.12.45
+       User ubuntu
+       IdentityFile ~/.ssh/sharon-dev.pem
+       ProxyJump bastion.internal
+       LocalForward 5432 127.0.0.1:5432 # Tunnel remote PostgreSQL to localhost:5432
+   ```
+
+   Test your secure connection across the bastion proxy directly to the production/staging instance:
+
+   ```bash
+   ssh -i ~/.ssh/sharon-dev.pem ubuntu@ec2-prod.internal
+   # Output: Welcome to Ubuntu 22.04.4 LTS (GNU/Linux 6.5.0-1022-aws x86_64)
+   ```
+
+3. **Local Environment Variables Configuration (`.env.local`)**
+
+   Clone the core repository and create your local environment secrets file from our template. Never commit real credentials to Git; our repository includes pre-commit hooks that scan for API key entropy.
+
+   ```bash
+   # Clone repository and enter workspace
+   git clone https://github.com/sharonwang/docs.git
+   cd docs
+
+   # Copy template to active local secrets file
+   cp .env.example .env.local
+   ```
+
+   Populate `.env.local` with your database connection strings, headless CMS keys, and Vercel deployment tokens:
+
+   ```bash
+   # ==========================================
+   # LOCAL ENVIRONMENT VARIABLES (.env.local)
+   # ==========================================
+
+   # Core Application URLs
+   NEXT_PUBLIC_SITE_URL=https://sharonwang.me
+   NEXT_PUBLIC_CHURCH_URL=https://raisedchurch.com
+
+   # Database Connection Strings (Tunneled via SSH local port forward)
+   DATABASE_URL="postgresql://postgres:local_secret_pass@127.0.0.1:5432/sharon_dev_db?schema=public"
+   REDIS_URL="redis://default:redis_token_pass@127.0.0.1:6379/0"
+
+   # Contentful Headless CMS Integration (Raised Church Pipeline)
+   CONTENTFUL_SPACE_ID="3v8x9y0z1a2b"
+   CONTENTFUL_ACCESS_TOKEN="cfp_dev_access_token_string_here"
+   CONTENTFUL_WEBHOOK_SECRET="e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9"
+
+   # Vercel Deployment & ISR Tokens
+   VERCEL_API_TOKEN="vcl_token_string_alpha_beta_gamma"
+   NEXT_PRIVATE_REVALIDATION_KEY="isr_secret_revalidate_token"
+   ```
+
+4. **Running Database Migrations & Verification**
+
+   With your SSH tunnel active and `.env.local` configured, execute database migrations to synchronize your local schema with staging, seed initial mock data, and start the local development server.
+
+   ```bash
+   # Install workspace dependencies using pnpm
+   pnpm install
+
+   # Push ORM migrations and seed test records
+   pnpm db:migrate
+   pnpm db:seed
+
+   # Launch local development server with hot module replacement
+   pnpm dev
+   ```
+
+   Once the development server starts on `http://localhost:3000`, run automated health and integration checks against your local endpoints:
+
+   ```bash
+   # 1. Verify Core Health Check Endpoint
+   curl -i http://localhost:3000/api/health
+   # Expected Output: HTTP/1.1 200 OK
+   # {"status":"UP","timestamp":"2026-07-22T20:55:00Z","database":"CONNECTED","redis":"CONNECTED"}
+
+   # 2. Test Local Contentful Webhook Verification (Using your local secret)
+   curl -X POST http://localhost:3000/api/webhooks/contentful \
+     -H "Content-Type: application/json" \
+     -H "X-Contentful-Topic: ContentManagement.Entry.publish" \
+     -H "X-Contentful-Webhook-Name: Local-Dev-Test" \
+     -H "X-Raised-Signature: <computed_hmac_hex>" \
+     -d '{"sys":{"id":"test_1","type":"Entry","revision":1},"fields":{"title":{"en-US":"Local Test"}}}'
+   ```
+</Steps>
+
+---
+
+## Troubleshooting & Common Onboarding Gotchas
+
+If you encounter initialization errors during your onboarding process, consult the diagnosis catalog below before escalating to the infrastructure on-call engineer.
+
+<Aside type="caution" title="SSH Key Security Warning">
+  If you attempt to connect to AWS EC2 using a key file with permissions broader than `400` (for example, `644` or `777`), your OpenSSH client will immediately abort the handshake to protect your cryptographic credentials from local process scraping.
+</Aside>
+
+| Error Message / Symptom | Root Cause Analysis | Remediation Runbook |
+| :--- | :--- | :--- |
+| `Permissions 0644 for 'key.pem' are too open.` | The SSH private key file is readable by non-owner system users (`UNPROTECTED PRIVATE KEY FILE`). | Run `chmod 400 ~/.ssh/sharon-dev.pem` and `chown $USER ~/.ssh/sharon-dev.pem` to restrict permissions strictly to your OS account. |
+| `Permission denied (publickey).` | • Your public key has not been propagated to `~/.ssh/authorized_keys` on the bastion host.<br/>• You specified the wrong `IdentityFile` path. | Verify your private key path in `~/.ssh/config`. If new, request public key provisioning from the DevOps team or check that your AWS IAM identity matches. |
+| `EADDRINUSE: address already in use :::3000` | Another process (e.g., a background Node instance or Docker container) is already bound to local port `3000`. | Identify the blocking process using `lsof -i :3000` and terminate it cleanly using `kill -9 <PID>`, or start your development server on an alternative port (`PORT=3001 pnpm dev`). |
+| `P1001: Can't reach database server at 127.0.0.1:5432` | The local SSH port forward tunnel (`LocalForward 5432`) to the AWS RDS/PostgreSQL instance has disconnected or was not initialized. | Re-establish your background SSH tunnel by running `ssh -f -N -i ~/.ssh/sharon-dev.pem ubuntu@ec2-prod.internal` before executing database migrations. |
+| `401 Unauthorized: Invalid HMAC signature` | The `CONTENTFUL_WEBHOOK_SECRET` in your `.env.local` file does not match the secret key used to sign incoming webhook payloads. | Confirm your webhook secret against the Contentful Space settings dashboard under **Settings → Webhooks → Secret Headers**, and restart your local `pnpm dev` server after updating `.env.local`. |
+
+---
+
+<CardGrid>
+  <Card title="Need AWS IAM Credentials?" icon="approve-check-circle">
+    Contact your engineering manager or create a ticket via our internal service portal to request temporary AWS IAM console access and staging SSH keys.
+  </Card>
+  <Card title="Next Step: Explore API Specs" icon="open-book">
+    Once your local environment is running, review the complete [API Endpoints & Payload Reference](/developer-docs/api-reference/) to start building features.
+  </Card>
+</CardGrid>

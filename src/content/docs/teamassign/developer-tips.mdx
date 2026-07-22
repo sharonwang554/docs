@@ -1,0 +1,145 @@
+---
+title: Developer Tips
+description: Common Perl patterns, debugging techniques, and coding conventions in the TeamAssign codebase.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+Working with a mature Perl codebase requires familiarity with specific idioms and the environment constraints of `mod_perl`. This guide outlines the conventions and debugging strategies used in TeamAssign.
+
+## Perl Idioms in the Codebase
+
+### Blessed Hash References
+Most Models in TeamAssign are implemented as blessed hash references. When inspecting an object, you are looking at a hash containing its internal state.
+
+```perl
+# TeamAssign::Model::User
+sub new {
+    my ($class, $id) = @_;
+    my $self = { _id => $id };
+    bless $self, $class;
+    $self->_load_from_db() if $id;
+    return $self;
+}
+
+sub get_email {
+    my $self = shift;
+    return $self->{email}; # Direct access to internal hash key
+}
+```
+
+### Hash Arguments
+Subroutines that accept multiple parameters usually take a hash or hash reference for named arguments, improving readability.
+
+```perl
+# Good
+my $team = TeamAssign::Model::Team->create({
+    course_id => 101,
+    name      => 'Team Alpha',
+    capacity  => 5,
+});
+
+# Bad (Avoid this)
+my $team = TeamAssign::Model::Team->create(101, 'Team Alpha', 5);
+```
+
+## DBI and Database Best Practices
+
+### Parameterized Queries
+**Never** interpolate user input directly into a SQL string. Always use placeholders (`?`) to prevent SQL injection attacks.
+
+```perl
+# DANGER: SQL Injection vulnerability
+my $sql = "SELECT * FROM users WHERE email = '" . $cgi->param('email') . "'";
+my $sth = $dbh->prepare($sql);
+
+# CORRECT: Using placeholders
+my $sql = "SELECT * FROM users WHERE email = ?";
+my $sth = $dbh->prepare($sql);
+$sth->execute($cgi->param('email'));
+my $user = $sth->fetchrow_hashref;
+```
+
+### Transaction Handling
+For operations that modify multiple tables (e.g., creating a team and adding members), wrap the queries in a database transaction.
+
+```perl
+eval {
+    $dbh->begin_work;
+    
+    # ... execute multiple insert/update statements ...
+    
+    $dbh->commit;
+};
+if ($@) {
+    # If any error occurred, rollback the entire transaction
+    $dbh->rollback;
+    die "Transaction failed: $@";
+}
+```
+
+## Debugging Techniques
+
+### Data::Dumper
+`Data::Dumper` is your best friend for inspecting complex data structures, especially the results of complex database joins or nested JSON parsed from the frontend.
+
+```perl
+use Data::Dumper;
+# ...
+my $complex_data = $model->get_survey_results();
+# Log the structure to the Apache error log
+warn "Survey Data: " . Dumper($complex_data); 
+```
+
+<Aside type="caution">
+Never leave `Data::Dumper` calls in production code, as dumping massive objects (like a full course roster) can block the process and fill up error logs rapidly.
+</Aside>
+
+### Apache Error Logs
+Since the application runs under `mod_perl`, all `warn` and `die` statements, as well as compilation errors, are sent to the Apache error log.
+
+```bash
+# Tail the error log during local development
+tail -f /path/to/teamassign/logs/error_log
+```
+
+## Common Gotchas
+
+### UTF-8 Encoding Issues
+Academic rosters often contain names with special characters. TeamAssign standardizes on UTF-8, but you must ensure the entire pipeline (Database -> DBI -> Perl -> Template Toolkit -> Browser) handles it correctly.
+
+- Ensure database tables use `utf8mb4`.
+- When reading from the database, ensure the `mysql_enable_utf8` flag is set in the DBI connection string.
+- If manually printing data, you may need to use `Encode::encode_utf8()`.
+
+### The `mod_perl` Variable Trap
+Because the Perl interpreter persists, global variables retain their values across different HTTP requests. 
+
+**Never use global package variables (`our $VAR`) to store request-specific data.**
+
+```perl
+package TeamAssign::Controller::Auth;
+
+# BAD: This will leak the logged-in user to the next person who hits this Apache worker!
+our $current_user; 
+
+sub login {
+    # ...
+    $current_user = $user; 
+}
+```
+Always pass data explicitly via parameters or store it in a request-scoped object (like the `$cgi` object or a customized request context).
+
+### CGI Parameter Context
+The `CGI.pm` module behaves differently in list context vs. scalar context.
+
+```perl
+# Assuming URL: ?role=student&role=ta
+
+# Scalar context: returns the first value ('student')
+my $role = $cgi->param('role'); 
+
+# List context: returns all values ('student', 'ta')
+my @roles = $cgi->param('role'); 
+```
+Be explicit about the context you expect to avoid subtle bugs when processing form arrays.

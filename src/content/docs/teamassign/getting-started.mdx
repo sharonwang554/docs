@@ -1,0 +1,164 @@
+---
+title: Getting Started
+description: Development environment setup and first local run for TeamAssign.
+---
+
+import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+Setting up a local development environment for a legacy Perl/mod_perl application requires specific configurations. This guide walks you through provisioning your local system to run TeamAssign.
+
+## Prerequisites
+
+Before beginning, ensure your system has the following software installed:
+
+- **Perl**: version 5.16 or higher.
+- **MySQL**: version 5.7 or higher (or MariaDB equivalent).
+- **Apache HTTP Server**: version 2.4+ with `mod_perl2` enabled.
+- **cpanm** (`App::cpanminus`): For managing Perl dependencies.
+- **Git**: For version control.
+
+<Aside type="note">
+On macOS, we recommend using Homebrew to install MySQL and Apache, and `plenv` or `perlbrew` to manage your Perl versions independently of the system Perl.
+</Aside>
+
+## Installation Steps
+
+<Steps>
+
+1.  **Clone the Repository**
+
+    Clone the TeamAssign repository to your local workspace:
+
+    ```bash
+    git clone git@github.com:organization/teamassign.git
+    cd teamassign
+    ```
+
+2.  **Install Perl Dependencies**
+
+    The project uses a `cpanfile` to declare its dependencies. Use `cpanm` to install them into a local directory (`local/`) or your global Perl environment.
+
+    ```bash
+    # Install dependencies locally using Carton or cpanm
+    cpanm --installdeps .
+    ```
+
+    Key modules installed include `DBI`, `DBD::mysql`, `CGI`, `Template`, and `Log::Log4perl`.
+
+3.  **Database Setup**
+
+    Create the local MySQL database and run the initial schema migrations.
+
+    ```bash
+    # Log into MySQL
+    mysql -u root -p
+    ```
+
+    ```sql
+    CREATE DATABASE teamassign_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE USER 'ta_dev_user'@'localhost' IDENTIFIED BY 'local_dev_password';
+    GRANT ALL PRIVILEGES ON teamassign_dev.* TO 'ta_dev_user'@'localhost';
+    FLUSH PRIVILEGES;
+    ```
+
+    Apply the schema and seed data:
+
+    ```bash
+    mysql -u ta_dev_user -p teamassign_dev < db/schema.sql
+    mysql -u ta_dev_user -p teamassign_dev < db/seed_data.sql
+    ```
+
+4.  **Environment Variables**
+
+    Copy the example environment file and configure it for your local database.
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    Edit `.env` and set the database credentials:
+
+    ```ini
+    # .env
+    DB_DSN=DBI:mysql:database=teamassign_dev;host=127.0.0.1
+    DB_USER=ta_dev_user
+    DB_PASS=local_dev_password
+    APP_ENV=development
+    LOG_LEVEL=DEBUG
+    ```
+
+5.  **Configure Apache and mod_perl**
+
+    You need to configure Apache to serve the application via `mod_perl`. Create a virtual host configuration.
+
+    <Tabs>
+      <TabItem label="Apache Config (httpd-vhosts.conf)">
+        ```apache
+        <VirtualHost *:8080>
+            ServerName teamassign.test
+            DocumentRoot "/path/to/teamassign/htdocs"
+
+            PerlRequire /path/to/teamassign/conf/startup.pl
+
+            <Location /app>
+                SetHandler perl-script
+                PerlResponseHandler TeamAssign::Dispatcher
+                PerlOptions +ParseHeaders
+                Options +ExecCGI
+            </Location>
+
+            <Directory "/path/to/teamassign/htdocs">
+                AllowOverride All
+                Require all granted
+            </Directory>
+            
+            ErrorLog "/path/to/teamassign/logs/error_log"
+            CustomLog "/path/to/teamassign/logs/access_log" common
+        </VirtualHost>
+        ```
+      </TabItem>
+      <TabItem label="startup.pl">
+        ```perl
+        # conf/startup.pl
+        use lib '/path/to/teamassign/lib';
+        use lib '/path/to/teamassign/local/lib/perl5';
+        
+        # Pre-load heavy modules for mod_perl performance
+        use DBI ();
+        use Template ();
+        use TeamAssign::Dispatcher ();
+        
+        1;
+        ```
+      </TabItem>
+    </Tabs>
+
+6.  **Verify First Run**
+
+    Start (or restart) your local Apache server.
+
+    ```bash
+    # On macOS with Homebrew
+    brew services restart httpd
+    ```
+
+    Navigate to `http://localhost:8080/app/login` in your browser. You should see the TeamAssign login page.
+
+    Use the default seed credentials to log in:
+    - **Username**: `admin@test.edu`
+    - **Password**: `password123`
+
+</Steps>
+
+## Common Setup Issues
+
+### Missing `DBD::mysql`
+If `cpanm` fails to install `DBD::mysql`, it is usually because the MySQL client libraries are missing on your system.
+**Fix**: Install the client libraries (e.g., `brew install mysql-client` on macOS or `apt-get install libmysqlclient-dev` on Ubuntu) and ensure `mysql_config` is in your PATH.
+
+### Apache 500 Internal Server Error on Startup
+This usually indicates a syntax error in `startup.pl` or a missing Perl module required by `TeamAssign::Dispatcher`.
+**Fix**: Check the Apache error log (`/path/to/teamassign/logs/error_log`). It will contain the exact Perl compilation error.
+
+### Database Connection Refused
+If the application loads but throws a database error, verify that the `DB_DSN` in your `.env` file matches your MySQL server configuration (e.g., using `127.0.0.1` vs `localhost` depending on socket vs TCP connection).

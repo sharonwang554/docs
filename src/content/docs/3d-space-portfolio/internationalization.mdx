@@ -1,0 +1,154 @@
+---
+title: 'Internationalization'
+description: 'Bilingual (English/Chinese) support via React Context, translation workflow, and browser language detection.'
+---
+
+import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
+
+The 3D Space Portfolio is fully bilingual, supporting **English (en)** and **Traditional Chinese (zh-TW)**. To maximize performance and maintain a lightweight bundle without relying on heavy third-party libraries (like `react-i18next`), the project implements a custom Internationalization (i18n) solution utilizing React Context.
+
+## System Architecture
+
+The i18n system is composed of three main parts:
+1. **Translation Dictionary**: Static TypeScript objects containing the raw text.
+2. **Language Context**: A global React provider managing the current active language.
+3. **`useLanguage` Hook**: A custom hook for consuming translations within components.
+
+## Translation Data Structure
+
+Translations are stored in a nested object structure organized by section and component. Using TypeScript ensures that keys are strictly typed, preventing typos and missing translations during development.
+
+<Tabs>
+  <TabItem label="locales/en.ts" icon="seti:typescript">
+    ```typescript
+    export const en = {
+      nav: {
+        about: 'About',
+        skills: 'Skills',
+        projects: 'Projects',
+      },
+      hero: {
+        greeting: "Hello, I'm",
+        role: "Software Engineer & Technical Writer",
+        cta: "Explore the Space"
+      },
+      skills: {
+        frontend: "Frontend Development",
+        backend: "Backend Services",
+        graphics: "3D & Graphics"
+      }
+    } as const;
+    
+    export type TranslationType = typeof en;
+    ```
+  </TabItem>
+  <TabItem label="locales/zh.ts" icon="seti:typescript">
+    ```typescript
+    import type { TranslationType } from './en';
+
+    // TypeScript enforces that 'zh' perfectly matches the structure of 'en'
+    export const zh: TranslationType = {
+      nav: {
+        about: '關於我',
+        skills: '專業技能',
+        projects: '專案作品',
+      },
+      hero: {
+        greeting: "你好，我是",
+        role: "軟體工程師與技術寫手",
+        cta: "開始探索"
+      },
+      skills: {
+        frontend: "前端開發",
+        backend: "後端服務",
+        graphics: "3D 與圖形"
+      }
+    };
+    ```
+  </TabItem>
+</Tabs>
+
+## The Language Context & Hook
+
+The `LanguageProvider` wraps the root application, enabling the user to toggle the language and providing the translation dictionary to the React tree.
+
+```tsx
+// context/LanguageContext.tsx
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { en, zh, TranslationType } from '../locales';
+
+type Language = 'en' | 'zh';
+
+interface LanguageContextProps {
+  language: Language;
+  t: TranslationType;
+  toggleLanguage: () => void;
+}
+
+const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
+
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Initialize with browser preference, fallback to 'en'
+  const [language, setLanguage] = useState<Language>(() => {
+    const saved = localStorage.getItem('app-lang');
+    if (saved === 'en' || saved === 'zh') return saved;
+    
+    const browserLang = navigator.language.toLowerCase();
+    return browserLang.includes('zh') ? 'zh' : 'en';
+  });
+
+  const toggleLanguage = () => {
+    setLanguage(prev => {
+      const newLang = prev === 'en' ? 'zh' : 'en';
+      localStorage.setItem('app-lang', newLang);
+      return newLang;
+    });
+  };
+
+  // Determine which dictionary to provide
+  const t = language === 'en' ? en : zh;
+
+  return (
+    <LanguageContext.Provider value={{ language, t, toggleLanguage }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+};
+```
+
+### Consuming Translations in Components
+
+Components access the localized strings using the custom `useLanguage` hook. 
+
+```tsx
+import { useLanguage } from '../hooks/useLanguage';
+import styles from './Hero.module.scss';
+
+export const Hero = () => {
+  const { t } = useLanguage();
+
+  return (
+    <div className={styles.Hero}>
+      <h1>{t.hero.greeting} <span>Sharon</span></h1>
+      <p>{t.hero.role}</p>
+      <button>{t.hero.cta}</button>
+    </div>
+  );
+};
+```
+
+## Adding a New Language
+
+If the portfolio needs to be expanded to support additional languages (e.g., Japanese or Spanish), follow this workflow:
+
+<Steps>
+1. Create a new file in `src/locales/` (e.g., `ja.ts`).
+2. Export a constant typed as `TranslationType` ensuring all keys are translated.
+3. Update the `Language` type in `LanguageContext.tsx` to include the new language code (`'en' | 'zh' | 'ja'`).
+4. Update the `LanguageToggle` UI component to support a dropdown or multi-button layout, rather than a simple binary toggle.
+5. (Optional) If adding an RTL (Right-to-Left) language like Arabic, ensure a `dir="rtl"` attribute is dynamically added to the `<html>` tag within the Context provider.
+</Steps>
+
+<Aside type="caution">
+  Always verify that the CSS styling does not break when translations change. Chinese text is generally more compact than English text, which can unexpectedly shift layouts or alter button dimensions if flexbox/grid constraints are not strictly defined.
+</Aside>

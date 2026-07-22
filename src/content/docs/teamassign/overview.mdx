@@ -1,0 +1,67 @@
+---
+title: Overview
+description: System overview for TeamAssign, a Perl-based academic team management platform.
+---
+
+import { Card, CardGrid, Badge } from '@astrojs/starlight/components';
+
+TeamAssign is a comprehensive web application designed to facilitate academic team management, peer evaluation, and survey administration. Developed originally at a major research university, the system has been in continuous operation for over 15 years, serving thousands of instructors and hundreds of thousands of students across hundreds of higher education institutions globally.
+
+This documentation serves as a central repository for institutional knowledge. It is designed to onboard new developers, system administrators, and technical support engineers to a mature, legacy codebase, ensuring the continued stability and evolution of the platform.
+
+## System Purpose
+
+In academic settings, forming effective teams and gathering reliable peer feedback are complex logistical challenges. TeamAssign automates these processes, providing instructors with tools to:
+
+- Create complex surveys to gather student preferences, schedules, and skills.
+- Form optimal teams using constraint-based algorithms.
+- Administer and grade peer evaluations based on defined rubrics.
+- Export actionable data for grading and analysis.
+
+## Technology Stack
+
+TeamAssign is built on a traditional, robust LAMP-style stack, optimized for stability and high throughput under academic workloads (e.g., end-of-semester evaluation spikes).
+
+<CardGrid>
+  <Card title="Backend" icon="seti:perl">
+    **Perl 5**: The core application logic is written in Perl 5, utilizing extensive object-oriented patterns and modules.
+  </Card>
+  <Card title="Web Server" icon="seti:apache">
+    **Apache with mod_perl**: The application runs under Apache HTTP Server. `mod_perl` is used to embed the Perl interpreter into the web server, drastically improving performance over standard CGI scripts by keeping compiled code in memory.
+  </Card>
+  <Card title="Database" icon="seti:db">
+    **MySQL**: Relational data storage, utilizing complex joins, indexing, and stored procedures for performance-critical operations.
+  </Card>
+  <Card title="Templating" icon="seti:html">
+    **Template Toolkit**: A fast, powerful templating system for Perl, separating application logic from HTML presentation.
+  </Card>
+</CardGrid>
+
+## Scale and Impact
+
+The platform operates at a significant scale, necessitating careful consideration of database query performance and server resource management.
+
+- **User Base**: Over 5,000 active instructors and 200,000+ student accounts.
+- **Institutions**: Adopted by over 300 universities and colleges.
+- **Data Volume**: Millions of survey responses and peer evaluation records stored and processed annually.
+- **Longevity**: 15+ years of continuous operation, reflecting a proven, highly resilient architecture.
+
+## Key Features
+
+### Constraint-Based Team Formation
+The core value proposition of TeamAssign lies in its ability to form teams based on complex, instructor-defined criteria. The platform uses custom algorithms to group students based on schedule compatibility, skill distribution (e.g., ensuring every team has a strong programmer), or demographic diversity.
+
+### Peer Evaluation Engine
+Instructors can design detailed peer evaluation rubrics. The system manages the distribution of these evaluations, tracks completion rates, and aggregates the results into comprehensive reports, often applying weightings to identify "free-riders" or exceptional contributors.
+
+### Survey Administration
+A flexible survey builder allows for the creation of multiple-choice, free-text, and Likert-scale questions to gather necessary data for team formation or general course feedback.
+
+### Data Interoperability
+Given its integration into varied academic ecosystems, TeamAssign heavily supports bulk data operations. Robust CSV import/export capabilities allow instructors to sync rosters from their Learning Management Systems (LMS) and export final grades seamlessly.
+
+## Why This Documentation?
+
+Legacy systems often suffer from "knowledge silos," where critical understanding resides only with the original developers. This documentation aims to democratize that knowledge. 
+
+Whether you are debugging a complex `mod_perl` memory leak, optimizing a massive SQL query for end-of-term reporting, or developing a new feature using established Perl idioms, these guides will provide the necessary context and patterns to work effectively within the TeamAssign codebase.

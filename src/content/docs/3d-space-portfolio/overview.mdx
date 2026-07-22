@@ -1,0 +1,96 @@
+---
+title: 'Overview'
+description: 'Project introduction, tech stack, and quick links for the 3D Space Portfolio.'
+---
+
+import { Card, CardGrid, LinkCard, Aside, Badge } from '@astrojs/starlight/components';
+
+Welcome to the official documentation for the **3D Space Portfolio**, an interactive, WebGL-powered personal website built with React and Three.js. This project pushes the boundaries of traditional web portfolios by embedding user experience within a fully functional 3D environment.
+
+<Aside type="tip" title="Quick Links">
+  Access the deployed application or review the source code directly.
+</Aside>
+
+<CardGrid>
+  <LinkCard
+    title="View Live Site"
+    description="Explore the interactive 3D portfolio at sharonwang.me"
+    href="https://sharonwang.me"
+    target="_blank"
+  />
+  <LinkCard
+    title="View Source on GitHub"
+    description="Review the React and Three.js source code"
+    href="https://github.com/sharonwang554/3d-space-portfolio"
+    target="_blank"
+  />
+</CardGrid>
+
+## Project Vision
+
+The 3D Space Portfolio was designed to demonstrate technical proficiency across multiple domains of modern frontend development. Instead of a standard scrolling page, the site immerses the visitor in a space-themed environment where portfolio sections orbit an interactive Earth.
+
+Key technical achievements of this project include:
+- **WebGL Integration**: Seamlessly blending HTML/DOM overlays with a `<canvas>` context using React Three Fiber.
+- **Custom Shaders**: Utilizing GLSL vertex and fragment shaders for atmospheric scattering and procedural stars.
+- **Internationalization**: First-class support for English and Traditional Chinese without requiring a page reload.
+- **Rigorous Testing**: Enforcing strict coverage thresholds (80%+) using Vitest and React Testing Library.
+
+## Tech Stack Overview
+
+The portfolio relies on a modern frontend stack optimized for both performance and developer experience.
+
+<CardGrid>
+  <Card title="Core Framework" icon="rocket">
+    **React 18** and **Vite**. Leveraging concurrent rendering and extremely fast Hot Module Replacement (HMR).
+  </Card>
+  <Card title="3D Engine" icon="star">
+    **Three.js** and **React Three Fiber (R3F)**. Declarative 3D graphics that natively integrate with React's component lifecycle.
+  </Card>
+  <Card title="Styling" icon="puzzle">
+    **SCSS Modules**. Locally scoped CSS to avoid global namespace collisions, organized using BEM conventions.
+  </Card>
+  <Card title="Testing" icon="approve-check">
+    **Vitest** and **React Testing Library**. Fast, parallelized unit and integration testing.
+  </Card>
+</CardGrid>
+
+## Navigation and Layout
+
+The application is structured into clearly defined sections, each accessible via orbital navigation or standard DOM-based scroll mechanisms (fallback for accessibility).
+
+### The Hero Experience
+Upon loading, the user is greeted by a high-resolution, interactive 3D model of Earth. The camera smoothly interpolates to its starting position, revealing the primary navigation. 
+
+> *Placeholder: A full-bleed screenshot showing a glowing Earth with a dark, star-filled space background, overlaid with crisp, sans-serif typography introducing the author.*
+
+### Portfolio Sections
+1. **About**: Professional summary and background.
+2. **Skills**: Technical competencies, visualized as interactive 3D orbital rings.
+3. **Experience**: Career history, utilizing custom scroll-linked animations.
+4. **Projects**: Highlighted works, dynamically fetched and rendered as floating cards.
+5. **Contact**: A form interface mapped securely to a serverless backend.
+
+## Getting Started Locally
+
+To run the portfolio on your local machine, ensure you have **Node.js 18+** installed.
+
+```bash
+# Clone the repository
+git clone https://github.com/sharonwang554/3d-space-portfolio.git
+
+# Navigate into the directory
+cd 3d-space-portfolio
+
+# Install dependencies (pnpm is recommended)
+npm install
+
+# Start the Vite development server
+npm run dev
+```
+
+Your local instance will be available at `http://localhost:5173`. 
+
+<Aside type="caution">
+  Because this project utilizes WebGL heavily, ensure your local development machine has hardware acceleration enabled in the browser for accurate performance testing.
+</Aside>

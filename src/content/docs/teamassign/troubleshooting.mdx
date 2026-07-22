@@ -1,0 +1,79 @@
+---
+title: Troubleshooting
+description: Common errors, diagnostic steps, and fixes for TeamAssign operational issues.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+This runbook outlines common operational issues encountered in the TeamAssign production and development environments, along with diagnostic steps and proven resolutions.
+
+## 500 Internal Server Error After Deployment
+
+**Symptom**: Users see a generic 500 error page immediately after a new release is deployed.
+**Diagnosis**: This is almost always a Perl compilation error in a recently modified module. Because `mod_perl` pre-compiles modules on startup, syntax errors prevent the Apache worker from handling the request.
+**Fix**:
+1. Check the Apache error log: `tail -n 50 /var/log/apache2/error.log`
+2. Look for lines starting with `Global symbol requires explicit package name` or `syntax error at...`
+3. Identify the file and line number, fix the syntax issue.
+4. Restart Apache to force `mod_perl` to recompile the modules: `sudo systemctl restart apache2`
+
+## Database Connection Failures
+
+**Symptom**: The application loads but displays a "Database connection error" banner, or the error logs show `DBI connect failed: Can't connect to local MySQL server through socket`.
+**Diagnosis**: The application cannot communicate with the MySQL daemon. This could be due to credentials, network issues, or the MySQL service being down.
+**Fix**:
+1. Verify the MySQL service is running: `systemctl status mysql`
+2. Check the `.env` file credentials. Test them manually via CLI: `mysql -u [user] -p[password] -h [host]`
+3. If connecting via socket (localhost), ensure the socket path in `my.cnf` matches what DBI expects. If connecting via TCP (127.0.0.1), ensure MySQL is bound to that interface.
+
+## Slow Survey Response Loading (N+1 Query Issue)
+
+**Symptom**: An instructor reports that viewing the results of a peer evaluation survey for a large class (300+ students) takes 30+ seconds or times out.
+**Diagnosis**: This is a classic N+1 query problem. The Controller is likely fetching all teams, and then looping through each team to fetch members, and then looping through members to fetch survey responses, executing hundreds of individual SQL queries.
+**Fix**:
+1. Identify the slow Controller endpoint (e.g., `TeamAssign::Controller::Reports->view`).
+2. Rewrite the underlying Model method to use a `JOIN` to fetch all necessary data in a single, well-indexed query.
+3. Example fix: Replace `$team->get_members()` inside a loop with a bulk fetch: `SELECT * FROM users u JOIN team_members tm ON u.id = tm.user_id WHERE tm.team_id IN (...)`.
+
+<Aside type="tip">
+Enable the MySQL slow query log (`slow_query_log = 1` in `my.cnf`) temporarily to identify the exact queries causing the bottleneck.
+</Aside>
+
+## Session Expiry During Long Surveys
+
+**Symptom**: Students report losing all their work when they click "Submit" on a lengthy peer evaluation. They are redirected to the login page.
+**Diagnosis**: The user's session timed out while they were filling out the form. The default session lifetime is 2 hours. If a student leaves the tab open while working elsewhere, the session expires.
+**Fix**:
+1. **Immediate workaround**: Advise the instructor to warn students to save drafts frequently (if the feature is enabled for that survey).
+2. **System fix**: Implement a "heartbeat" AJAX ping on the survey taking page that hits an endpoint (e.g., `/app/ping`) every 15 minutes to keep the server-side session alive while the browser tab remains open.
+
+## CSV Import Failures
+
+**Symptom**: An instructor tries to upload a class roster CSV, but it fails with "Invalid file format" or silently imports corrupted names (e.g., "Jos").
+**Diagnosis**: This is typically caused by incorrect text encoding (saving as Mac OS Roman or ANSI instead of UTF-8) or using a different delimiter (semicolons instead of commas).
+**Fix**:
+1. Ask the user to open the file in a plain text editor (like Notepad or TextEdit) to verify it is comma-separated.
+2. Instruct the user to open their spreadsheet software (Excel/Numbers), select "Save As", and explicitly choose "CSV UTF-8 (Comma delimited)".
+3. If the backend parser is failing on valid files, ensure `Text::CSV` is configured to handle binary data and UTF-8: `my $csv = Text::CSV->new({ binary => 1, auto_diag => 1 });`
+
+## mod_perl Memory Leaks
+
+**Symptom**: Over a period of several days, the Apache processes consume increasingly more RAM until the server runs out of memory (OOM killer intervenes).
+**Diagnosis**: A memory leak in a Perl module. In `mod_perl`, if circular references are created (e.g., Object A holds a reference to Object B, and Object B holds a reference to Object A), Perl's reference-counting garbage collector cannot free the memory.
+**Fix**:
+1. Review recent code changes for circular data structures.
+2. Ensure you are using `Scalar::Util::weaken` on one side of any necessary circular reference.
+3. **Mitigation**: Configure Apache `MaxConnectionsPerChild` (e.g., set to 1000). This forces Apache to recycle worker processes after they serve a certain number of requests, preventing unbounded memory growth.
+
+<Aside type="danger">
+Do not use global variables (`our $data = {...}`) to cache large datasets across requests. This data will persist indefinitely in the Apache worker's memory space.
+</Aside>
+
+## Team Formation Algorithm Constraints Conflict
+
+**Symptom**: The team formation algorithm fails to generate teams and throws a "Cannot satisfy constraints" error.
+**Diagnosis**: The instructor has configured mutually exclusive or mathematically impossible rules. (e.g., "Teams must have exactly 5 people", in a class of 21 students; or requiring 3 diverse demographics in teams of 2).
+**Fix**:
+1. Review the course configuration.
+2. Loosen the constraints. Explain to the instructor that hard constraints (must) often cause failures, whereas soft constraints (prefer) allow the algorithm to find the "least bad" fit.
+3. Check the algorithm logs (set `LOG_LEVEL=DEBUG` in `.env`) to see exactly which student/team caused the constraint solver to backtrack and fail.

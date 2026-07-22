@@ -1,0 +1,151 @@
+---
+title: '3D Graphics'
+description: 'Three.js and React Three Fiber implementation details, custom shaders, and performance optimization.'
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components';
+
+The visual centerpiece of the 3D Space Portfolio is the interactive WebGL scene built using [Three.js](https://threejs.org/) and [React Three Fiber (R3F)](https://docs.pmnd.rs/react-three-fiber). This page details the implementation of the core graphical elements and the strategies used to maintain 60FPS on a wide range of devices.
+
+## Canvas Setup
+
+The `<Canvas>` component from `@react-three/fiber` acts as the bridge between React and Three.js. It is positioned absolutely behind the DOM overlay.
+
+```tsx
+import { Canvas } from '@react-three/fiber';
+import { Suspense } from 'react';
+import { Earth, SpaceBackground, CameraRig } from './components/3d';
+
+export function Scene() {
+  return (
+    <Canvas
+      camera={{ position: [0, 0, 8], fov: 45 }}
+      gl={{ antialias: true, powerPreference: "high-performance" }}
+      dpr={[1, 2]} // Limit device pixel ratio to max 2 for performance
+    >
+      <Suspense fallback={null}>
+        <SpaceBackground />
+        <Earth />
+        <CameraRig />
+      </Suspense>
+      
+      <ambientLight intensity={0.1} />
+      <directionalLight position={[5, 3, 5]} intensity={2.5} />
+    </Canvas>
+  );
+}
+```
+
+## The Earth Component (Custom Shaders)
+
+To achieve a realistic look for the Earth, standard Three.js materials (like `MeshStandardMaterial`) were insufficient. The project uses custom GLSL shaders via `shaderMaterial` to implement:
+1. **Atmospheric Scattering**: A soft blue glow on the edges of the sphere (Fresnel effect).
+2. **Day/Night Cycle**: Dynamically blending between a daytime texture and a glowing city-lights texture based on the directional light's position.
+
+### Vertex and Fragment Shaders
+
+<Tabs>
+  <TabItem label="Vertex Shader (GLSL)" icon="seti:glsl">
+    ```glsl
+    varying vec2 vUv;
+    varying vec3 vNormal;
+    varying vec3 vPosition;
+
+    void main() {
+      vUv = uv;
+      vNormal = normalize(normalMatrix * normal);
+      vPosition = (modelViewMatrix * vec4(position, 1.0)).xyz;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+    ```
+  </TabItem>
+  <TabItem label="Fragment Shader (GLSL)" icon="seti:glsl">
+    ```glsl
+    uniform sampler2D dayTexture;
+    uniform sampler2D nightTexture;
+    uniform vec3 sunDirection;
+
+    varying vec2 vUv;
+    varying vec3 vNormal;
+
+    void main() {
+      // Calculate dot product of normal and light direction
+      float intensity = dot(vNormal, normalize(sunDirection));
+      
+      // Smooth step to create a transition terminator line
+      float blend = smoothstep(-0.2, 0.2, intensity);
+      
+      vec4 dayColor = texture2D(dayTexture, vUv);
+      vec4 nightColor = texture2D(nightTexture, vUv);
+      
+      // Mix the textures based on light angle
+      vec4 finalColor = mix(nightColor, dayColor, blend);
+      
+      // Add atmosphere edge glow (Fresnel)
+      float fresnel = pow(1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
+      finalColor += vec4(0.3, 0.6, 1.0, 1.0) * fresnel * 0.5;
+
+      gl_FragColor = finalColor;
+    }
+    ```
+  </TabItem>
+</Tabs>
+
+## Procedural Starfield
+
+Instead of using a static skybox image, the background is generated using Three.js `InstancedMesh`. This allows us to render 10,000+ stars in a single draw call, providing a massive performance boost over creating individual `Mesh` objects.
+
+```tsx
+import { useMemo, useRef } from 'react';
+import { InstancedMesh, Object3D } from 'three';
+
+export function SpaceBackground({ count = 5000 }) {
+  const meshRef = useRef<InstancedMesh>(null);
+  
+  const dummy = useMemo(() => new Object3D(), []);
+  
+  useMemo(() => {
+    if (!meshRef.current) return;
+    
+    // Distribute stars spherically
+    for (let i = 0; i < count; i++) {
+      const r = 50 + Math.random() * 50;
+      const theta = 2 * Math.PI * Math.random();
+      const phi = Math.acos(2 * Math.random() - 1);
+      
+      const x = r * Math.sin(phi) * Math.cos(theta);
+      const y = r * Math.sin(phi) * Math.sin(theta);
+      const z = r * Math.cos(phi);
+      
+      dummy.position.set(x, y, z);
+      
+      // Vary star sizes
+      const scale = 0.5 + Math.random() * 1.5;
+      dummy.scale.set(scale, scale, scale);
+      
+      dummy.updateMatrix();
+      meshRef.current.setMatrixAt(i, dummy.matrix);
+    }
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  }, [count, dummy]);
+
+  return (
+    <instancedMesh ref={meshRef} args={[null, null, count]}>
+      <sphereGeometry args={[0.05, 8, 8]} />
+      <meshBasicMaterial color="#ffffff" transparent opacity={0.8} />
+    </instancedMesh>
+  );
+}
+```
+
+## Performance Optimization
+
+To guarantee smooth rendering across mobile devices and older hardware, several strict optimizations are enforced:
+
+1. **Frustum Culling**: Objects outside the camera's view (like portfolio cards not currently active) are automatically ignored by the renderer.
+2. **Device Pixel Ratio Clamping**: We restrict `dpr={[1, 2]}` on the Canvas. Rendering 3D at 3x or 4x resolution on modern smartphones destroys GPU performance with minimal visual benefit.
+3. **Texture Compression**: Earth textures are compressed using WebP and resized. We use a 2K texture for mobile and a 4K texture only for large desktop screens.
+4. **No React State in `useFrame`**: 
+   <Aside type="danger">
+     Never call a React `setState` hook inside R3F's `useFrame` loop. This triggers a full React component tree re-render 60 times a second. Always mutate Three.js objects directly via refs for animations.
+   </Aside>
