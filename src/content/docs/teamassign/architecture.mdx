@@ -1,136 +1,150 @@
 ---
-title: Architecture
-description: System design, database schema patterns, and module organization for TeamAssign.
+title: "Architecture: Canvas LMS OAuth 2.0 & AWS Infrastructure"
+description: "Backend architecture and cloud deployment: Canvas LMS OAuth 2.0 PKCE / Authorization Code flow, Perl submodule structure (`lib/LMS/`), and AWS EC2 provisioning runbooks."
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
-TeamAssign utilizes a robust, traditional Model-View-Controller (MVC) architecture adapted for the `mod_perl` environment. Understanding the request lifecycle and data flow is essential for navigating the legacy codebase effectively.
+This document outlines the architecture and backend implementation of TeamAssign’s **Canvas Learning Management System (LMS) Integration**, along with the operational workflows for provisioning and connecting to our **Amazon Web Services (AWS)** hosting infrastructure.
 
-## Request Lifecycle
+---
 
-Because TeamAssign runs under Apache's `mod_perl2`, the Perl interpreter is persistent in memory. This eliminates the overhead of starting a new Perl process for every request (as in standard CGI), but requires careful management of global variables and memory.
+## About Canvas LMS Integration and OAuth 2.0
+
+TeamAssign integrates directly with Canvas LMS to allow academic instructors to import course rosters, form optimized teams, and export final peer evaluation grades back to the Canvas gradebook.
+
+### Overview & Core Terminology
+To understand how TeamAssign communicates with Canvas, developers must be familiar with the following standard academic interoperability terms:
+- **LMS (Learning Management System)**: The institution's primary software platform for delivering course content and grading (e.g., Canvas, Blackboard, Moodle).
+- **LTI (Learning Tools Interoperability)**: A standard specification developed by 1EdTech that securely connects external learning applications (like TeamAssign) directly into an LMS course window.
+- **SIS (Student Information System)**: The university's master registrar database containing official student IDs, course enrollments, and academic transcripts.
+- **OAuth 2.0**: The industry-standard authorization framework used to grant TeamAssign secure, delegated access to perform actions on behalf of a Canvas user without ever storing their actual Canvas login password.
+- **Client ID & Client Secret**: Unique cryptographic credentials assigned by an institution’s Canvas administrator to authenticate TeamAssign as an authorized API application.
+- **Access Token & Refresh Token**: Cryptographic bearer tokens issued by Canvas after successful OAuth authorization. Access tokens expire periodically (typically every 1 hour), requiring the refresh token to silently request a new access token without interrupting the instructor's workflow.
+
+---
+
+## Authorization Code Flow 🔄
+
+TeamAssign utilizes the secure **OAuth 2.0 Authorization Code Flow** (supplemented by state verification parameters) to establish API connections between our backend and an instructor's Canvas domain.
 
 ```mermaid
 sequenceDiagram
-    participant Browser
-    participant Apache
-    participant mod_perl
-    participant Dispatcher
-    participant Controller
-    participant Model
-    participant Database
+    autonumber
+    actor Instructor
+    participant TA as TeamAssign Web App
+    participant DB as PostgreSQL Database
+    participant Canvas as Canvas LMS API
 
-    Browser->>Apache: HTTP GET /app/teams/view?id=123
-    Apache->>mod_perl: Map to PerlResponseHandler
-    mod_perl->>Dispatcher: TeamAssign::Dispatcher->handler()
-    
-    Note over Dispatcher: Parse URI, instantiate CGI object,<br/>check session/auth.
-    
-    Dispatcher->>Controller: TeamAssign::Controller::Teams->view()
-    Controller->>Model: TeamAssign::Model::Team->new(123)
-    Model->>Database: SELECT * FROM teams WHERE id = 123
-    Database-->>Model: Return row data
-    Model-->>Controller: Return Team object
-    
-    Note over Controller: Fetch associated students
-    
-    Controller->>Model: $team->get_students()
-    Model->>Database: SELECT * FROM students ...
-    Database-->>Model: Return rows
-    Model-->>Controller: Return list of Student objects
-    
-    Note over Controller: Render view via Template Toolkit
-    
-    Controller->>mod_perl: print HTML output
-    mod_perl-->>Apache: HTTP Response
-    Apache-->>Browser: Render Page
+    Instructor->>TA: Click "Link Canvas Account"
+    TA->>Canvas: Redirect to GET /login/oauth2/auth<br/>(client_id, redirect_uri, response_type=code, state)
+    Note over Instructor,Canvas: Instructor authenticates & grants access
+    Canvas-->>TA: Redirect back with Authorization Code & State
+    TA->>TA: Verify cryptographic State parameter against session
+    TA->>Canvas: POST /login/oauth2/token<br/>(grant_type=authorization_code, code, client_secret)
+    Canvas-->>TA: Return JSON payload (access_token, refresh_token, expires_in)
+    TA->>DB: Store tokens & expiration timestamp in `canvas_tokens` table
+    Note over TA,Canvas: Subsequent API Calls automatically check pre-expiration (60s buffer)<br/>and execute check_and_update_token when expired!
 ```
 
-## Module & Multi-Repository Organization
-
-The TeamAssign platform is distributed across two primary Git repositories that separate core platform controllers/views from shared backend library code:
-1. **`TeamAssign` (Main Web Repository)**: Contains the CGI scripts, Apache/mod_perl dispatcher configuration (`htdocs/`, `conf/`), Template Toolkit HTML presentation files (`templates/`), and frontend controllers.
-2. **`teamassign-lib` (Submodule & Core Engine)**: Contains all backend data access models, algorithmic constraint solvers, and third-party integration drivers under `lib/`.
-
-### Core Namespace Architecture (`lib/TeamAssign/` & `lib/LMS/`)
-
-```
-teamassign-lib/lib/
-├── TeamAssign/
-│   ├── Dispatcher.pm   # Central URI router, session check, and mod_perl handler
-│   ├── Controller/     # Domain business logic (Teams.pm, Surveys.pm, Auth.pm)
-│   ├── Model/          # Blessed hash object models & DBI access (User.pm, Course.pm)
-│   ├── View/           # Template Toolkit presentation wrapper & global contexts
-│   └── Utils/          # Helper utilities (CSV parser, mailer, date formatting)
-└── LMS/
-    ├── LMS.pm          # Common interface for Learning Management System providers
-    ├── Login.pm        # OAuth 2.0 PKCE / Authorization code handshake & refresh
-    ├── Canvas.pm       # Canvas LMS REST API client (SIS imports, roster sync)
-    └── Utils.pm        # API request formatting, user-agent headers, and logging
+### 1. Authorization Request (`GET /login/oauth2/auth`)
+When an instructor initiates Canvas linking, TeamAssign redirects their browser to the Canvas OAuth endpoint:
+```http
+GET https://<canvas_domain>/login/oauth2/auth?
+  client_id=<TEAMASSIGN_CLIENT_ID>&
+  response_type=code&
+  redirect_uri=https://teamassign.org/app/lms/oauth_callback&
+  state=<CSRF_STATE_TOKEN>
 ```
 
-- **`Dispatcher.pm`**: The central entry point for `mod_perl`. Maps URLs to specific Controller modules and subroutines. Handles global setup, logging initialization, and session validation.
-- **`Controller/`**: Contains the business logic for specific domains (`Teams.pm`, `Surveys.pm`, `Auth.pm`). Controllers parse input, interact with Models, and prepare data for the view layer.
-- **`Model/`**: Encapsulates data access. Each major database entity has a corresponding Model class (`User.pm`, `Course.pm`, `Team.pm`). These classes abstract raw SQL queries using parameterized `DBI` placeholders.
-- **`LMS/` Subsystem**: Dedicated integration hierarchy where `Login.pm` and `Canvas.pm` handle external OAuth 2.0 token persistence (`canvas_tokens` table) and automatic pre-expiration token refreshes (`check_and_update_token`) prior to any roster synchronization.
+### 2. Token Exchange (`POST /login/oauth2/token`)
+After the instructor approves access, Canvas redirects back to `/app/lms/oauth_callback` with an authorization `code`. TeamAssign validates the `state` parameter and POSTs the code to exchange it for bearer tokens:
+```http
+POST https://<canvas_domain>/login/oauth2/token
+Content-Type: application/x-www-form-urlencoded
 
-## Database Schema Patterns
+grant_type=authorization_code&
+client_id=<TEAMASSIGN_CLIENT_ID>&
+client_secret=<TEAMASSIGN_CLIENT_SECRET>&
+redirect_uri=https://teamassign.org/app/lms/oauth_callback&
+code=<AUTHORIZATION_CODE>
+```
 
-The MySQL database is highly relational. We prioritize foreign keys and constraints to maintain data integrity across thousands of courses.
+### 3. Database Persistence & Expiration Tracking
+Upon a successful JSON response from Canvas, TeamAssign stores the resulting `access_token`, `refresh_token`, and calculated expiration timestamp directly inside our backend PostgreSQL database (`canvas_tokens` table).
 
-### Core Tables
+---
 
-- **`users`**: Central table for all accounts (instructors, TAs, students). Differentiated by role flags.
-- **`courses`**: Represents a specific offering of a class in a given term.
-- **`course_enrollments`**: Join table linking `users` (students) to `courses`.
-- **`teams`**: Represents a group of students within a course.
-- **`team_members`**: Join table linking `users` to `teams`.
+## Source Code Architecture (`teamassign-lib`) 💻
 
-<Aside type="tip">
-When querying for a student's teams, always join through `course_enrollments` to ensure the student is still active in the course, as instructors often drop students without explicitly removing them from teams.
+Most of TeamAssign's core application logic is split between the primary web repository and the `teamassign-lib` submodule. All Canvas integration code is located inside `/var/www/src/teamassign-lib/lib/LMS/`:
+
+| Perl Module | Path | Primary Responsibilities & Methods |
+| :--- | :--- | :--- |
+| **`Login.pm`** | `lib/LMS/Login.pm` | Handles the initial OAuth redirect requests, callback URL processing, `state` CSRF generation, and extracting the authorization `code` upon redirection. |
+| **`Canvas.pm`** | `lib/LMS/Canvas.pm` | Implements direct HTTP client interactions against Canvas REST API endpoints (fetching courses, syncing student rosters, submitting peer evaluation gradebook entries). |
+| **`Utils.pm`** | `lib/LMS/Utils.pm` | Provides critical utility helpers, including `check_and_update_token`. This method checks whether an access token is within 60 seconds of expiration; if expired, it automatically executes a refresh grant request to issue and persist a new access token before executing the API call. |
+| **`LMS.pm`** | `lib/LMS/LMS.pm` | Acts as the universal abstract facade and factory module dispatching requests between different LMS implementations. |
+
+<Aside type="note">
+**Server Restart Requirement**: Because `teamassign-lib` is a compiled Perl library pre-loaded by `mod_perl` during server startup (`conf/startup.pl`), making edits to any file inside `lib/LMS/*.pm` requires running `make restart_httpd` inside `/var/www/src` on your developer VM to see your changes applied.
 </Aside>
 
-### Survey and Evaluation Data Flow
+---
 
-The most complex data structures relate to dynamic surveys and peer evaluations.
+## Navigating AWS (Amazon Web Services) ☁️
+
+TeamAssign relies on Amazon Web Services to host both our remote developer virtual machines (`*.teamassign.org`) and isolated Canvas LMS testing environments.
 
 ```mermaid
-erDiagram
-    SURVEY ||--o{ QUESTION : contains
-    QUESTION ||--o{ QUESTION_OPTION : has_choices
-    SURVEY ||--o{ RESPONSE_SET : receives
-    RESPONSE_SET }o--|| USER : submitted_by
-    RESPONSE_SET ||--o{ ANSWER : contains
-    ANSWER }o--|| QUESTION : answers
-    
-    SURVEY {
-        int id PK
-        int course_id FK
-        string title
-        datetime deadline
-    }
-    QUESTION {
-        int id PK
-        int survey_id FK
-        string type "radio, text, likert"
-        string prompt
-    }
-    RESPONSE_SET {
-        int id PK
-        int survey_id FK
-        int submitter_id FK
-        int evaluatee_id FK "nullable, used for peer eval"
-    }
+graph LR
+    subgraph Local ["Developer Workspace"]
+        SSH["SSH Client (Terminal / VS Code)"]
+        KEY["Private Key (~/.ssh/canvas-dev.pem)"]
+    end
+
+    subgraph AWS ["Amazon Web Services Cloud Infrastructure"]
+        EIP["Elastic IP Address (Static Public IP)"]
+        EC2["EC2 Instance running Ubuntu / Canvas LMS"]
+        SG["Security Group (Port 22 SSH / Port 443 HTTPS)"]
+    end
+
+    SSH -->|Authenticate via Key Pair| EIP
+    EIP --- SG
+    SG --- EC2
 ```
 
-Notice the `evaluatee_id` in `RESPONSE_SET`. For standard surveys, this is null. For peer evaluations, one student (the submitter) fills out a survey evaluating another student (the evaluatee) on their team. This design allows the same survey engine to power both general data collection and complex peer reviews.
+### 1. What is AWS & Account Access
+Amazon Web Services provides virtualized cloud computing resources. Developers who need to configure standalone Canvas LMS test server instances require access to our internal AWS IAM console. If assigned to an infrastructure project, contact your supervisor to receive your AWS IAM credentials.
 
-## Authentication and Sessions
+### 2. Launching an AWS Instance to Host Canvas LMS
+When provisioning a new testing server for Canvas integration:
+1. Log into the AWS Management Console and navigate to the **EC2 Dashboard**.
+2. Click **Launch Instance** and select an **Ubuntu Server** Amazon Machine Image (AMI).
+3. Choose an instance type appropriate for Canvas LMS requirements (e.g., `t3.large` or `m5.large`).
+4. Configure storage and security groups, ensuring port `22` (SSH) is restricted to developer IPs and port `443` (HTTPS) is open for LTI callbacks.
 
-TeamAssign uses cookie-based session management. 
+### 3. Creating & Managing Key Pairs 🔐
+To SSH into your newly launched EC2 instance securely:
+1. Under **Key Pair (login)** during instance launch, select **Create new key pair**.
+2. Name the key pair (e.g., `canvas-test-key`) and select **RSA** and `.pem` format.
+3. Download the `.pem` file to your local `~/.ssh/` directory immediately (AWS only allows downloading the private key once).
+4. Restrict permissions on the private key file immediately so your SSH client does not reject it as insecure:
+   ```bash
+   chmod 400 ~/.ssh/canvas-test-key.pem
+   ```
 
-1. Upon successful login, a cryptographically secure session ID is generated.
-2. This ID is stored in the `sessions` database table along with serialized user data and an expiry timestamp.
-3. The session ID is sent to the client as an HTTP-only cookie.
-4. On subsequent requests, `TeamAssign::Dispatcher` reads the cookie, looks up the session in the database, and hydrates the global user object for the request lifecycle.
+### 4. Allocating an Elastic IP & Connecting
+Because standard EC2 instances change public IP addresses upon reboot, allocate an **Elastic IP Address** under the EC2 network settings and associate it with your running Canvas instance to ensure a static endpoint for OAuth redirect URIs.
+
+Connect to your AWS instance via terminal:
+```bash
+# Connect using your downloaded private key (.pem)
+ssh -i ~/.ssh/canvas-test-key.pem ubuntu@<elastic_ip_address>
+```
+
+### 5. SSH Access Without a Key-Pair File
+If an AWS instance was previously launched and you need access but do not possess the original `.pem` key pair:
+1. Contact an existing developer or system administrator who currently has root/sudo access on that EC2 instance.
+2. Provide them with your public SSH key (`~/.ssh/id_ed25519.pub`).
+3. Have them append your public key directly into `/home/ubuntu/.ssh/authorized_keys` (or `/root/.ssh/authorized_keys`) on the remote server. Once added, you can connect immediately using your standard local SSH identity without needing the original `.pem` file.

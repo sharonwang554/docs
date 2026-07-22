@@ -1,242 +1,125 @@
 ---
-title: Developer Tips
-description: Common Perl patterns, debugging techniques, and coding conventions in the TeamAssign codebase.
+title: "Developer Tips: Web Concepts & Git Runbooks"
+description: "Foundational web concepts, activity deletion runbooks, mentoring feature architecture, and Git pull request / cherry-pick workflows."
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Steps } from '@astrojs/starlight/components';
 
-Working with a mature Perl codebase requires familiarity with specific idioms and the environment constraints of `mod_perl`. This guide outlines the conventions and debugging strategies used in TeamAssign.
+This guide compiles essential developer tips, core HTTP web concepts, application logic workflows, and version control best practices for engineers contributing to the TeamAssign platform.
 
-## Perl Idioms in the Codebase
+---
 
-### Blessed Hash References
-Most Models in TeamAssign are implemented as blessed hash references. When inspecting an object, you are looking at a hash containing its internal state.
+## Useful Web Dev Concepts
 
-```perl
-# TeamAssign::Model::User
-sub new {
-    my ($class, $id) = @_;
-    my $self = { _id => $id };
-    bless $self, $class;
-    $self->_load_from_db() if $id;
-    return $self;
-}
+For new software engineers joining the team directly from academic computer science programs, understanding the practical lifecycle of web requests is vital when debugging CGI and `mod_perl` handlers.
 
-sub get_email {
-    my $self = shift;
-    return $self->{email}; # Direct access to internal hash key
-}
+### 1. What Happens When You Type a URL Into the Browser
+1. **DNS Lookup**: Your browser resolves the domain name (e.g., `dev01.teamassign.org`) to a specific IP address by interrogating Domain Name System (DNS) servers.
+2. **TCP & TLS Handshake**: The browser establishes a secure TCP connection over port `443` using TLS/SSL encryption.
+3. **HTTP Request**: The browser transmits an HTTP request header asking for the specific path (e.g., `/app/login`).
+4. **Server Processing**: Apache intercepts the request, passes it to the `mod_perl` execution engine, and executes `TeamAssign::Dispatcher`. The Perl backend queries PostgreSQL, renders a `Template Toolkit` (`.tt`) HTML template, and returns the response payload back to the browser.
+
+### 2. HTTP Requests and Responses
+Every communication between the browser and TeamAssign consists of two parts:
+
+#### HTTP Request Methods & Parameters
+- **GET**: Requests data from the server without modifying database state (e.g., viewing a survey results page). Parameters are appended directly to the URL query string (`?survey_id=1042`).
+- **POST**: Submits data to the server to create or modify database records (e.g., submitting peer evaluation scores or creating a new team formation activity). Payload data is enclosed inside the request body.
+- **Headers**: Metadata transmitted alongside the request, including authentication cookies (`TeamAssignSession`), `User-Agent` strings, and `Content-Type` declarations (`application/x-www-form-urlencoded` or `multipart/form-data`).
+
+#### HTTP Status Codes
+When debugging API responses or inspecting `access_log`, familiarize yourself with standard status codes:
+- **`200 OK`**: The request succeeded, and the server returned the requested HTML or JSON payload.
+- **`302 Found`**: Temporary redirect. Frequently issued after successful form submissions (Post/Redirect/Get pattern) to redirect the browser to a confirmation dashboard.
+- **`400 Bad Request`**: Malformed request syntax or missing required form fields.
+- **`401 Unauthorized`**: Authentication failure (e.g., expired session cookie or missing OAuth bearer token).
+- **`403 Forbidden`**: The user is authenticated but lacks permission to view the resource (e.g., a student attempting to access an instructor-only gradebook URL).
+- **`404 Not Found`**: The requested activity, survey, or route does not exist.
+- **`500 Internal Server Error`**: Unhandled Perl runtime exception or database query failure. Check `make tail_logs` immediately to view the stack trace.
+
+---
+
+## Navigating TeamAssign Application Logic 🤝
+
+### 1. How to Delete an Activity in TeamAssign
+To protect academic data integrity and prevent accidental deletion of critical student evaluation grades, TeamAssign enforces a strict **Two-Step Deletion Lifecycle**:
+
+```mermaid
+stateDiagram-v2
+    [*] --> Active: Activity Created
+    Active --> Archived: Instructor clicks "Archive"
+    Archived --> Active: Instructor clicks "Restore"
+    Archived --> [*]: Instructor clicks "Delete" (Permanent)
 ```
 
-### Hash Arguments
-Subroutines that accept multiple parameters usually take a hash or hash reference for named arguments, improving readability.
+1. **Archive First**: Active surveys and activities cannot be deleted directly. An instructor must first locate the activity on their dashboard and select **Archive**. This hides the activity from active student views while preserving historical records.
+2. **Permanent Deletion**: Once an activity resides inside the **Archived Activities** tab, the instructor can click **Delete** to purge the records permanently from the database.
 
-```perl
-# Good
-my $team = TeamAssign::Model::Team->create({
-    course_id => 101,
-    name      => 'Team Alpha',
-    capacity  => 5,
-});
+### 2. TeamAssign’s Mentoring Feature
+By default, TeamAssign’s constraint solver enforces a **Strict Unique Team Membership Constraint**: a student user ID can belong to at most *one* team within a given course evaluation activity.
 
-# Bad (Avoid this)
-my $team = TeamAssign::Model::Team->create(101, 'Team Alpha', 5);
+However, many engineering and computer science capstone courses utilize **Upper-Class Mentors** or **Teaching Assistants** who need to evaluate and guide multiple teams simultaneously. To support this without violating relational database foreign keys, our **Mentoring Feature** relaxes the unique constraint:
+- When an instructor designates specific users as "Mentors" during survey setup, the backend bypasses standard 1-to-1 team assignment checks.
+- Mentors can be assigned across multiple team IDs within the same activity, granting them read/write peer evaluation access across all their assigned student groups.
+
+---
+
+## Working with GitHub & Version Control
+
+We enforce strict Git branching and pull request standards across all repositories (`teamassign/Teamassign-Web` and `teamassign-lib`).
+
+```mermaid
+gitGraph
+    commit
+    branch feature-issue-142
+    checkout feature-issue-142
+    commit id: "Fix grading calculation"
+    commit id: "Add unit tests"
+    checkout main
+    merge feature-issue-142 id: "PR #204 (Fixes #142)"
+    branch release-patch
+    checkout release-patch
+    cherry-pick id: "Fix grading calculation"
 ```
 
-## DBI and Database Best Practices
+### 1. Creating a Pull Request
+- **Protected Master / Main Branch**: Direct pushes to `master` (or `teamassign-web`) are strictly prohibited and blocked by repository branch protections.
+- **Feature Branches**: Always branch off the latest `master` before writing code:
+  ```bash
+  git checkout master
+  git pull origin master
+  git checkout -b feature/issue-<number>-short-description
+  ```
+- **Pull Request Submission**: Once tested locally on your dev VM, push your branch and open a Pull Request against `master`. Ensure your PR summary clearly describes the root cause and your testing steps.
 
-### Parameterized Queries
-**Never** interpolate user input directly into a SQL string. Always use placeholders (`?`) to prevent SQL injection attacks.
-
-```perl
-# DANGER: SQL Injection vulnerability
-my $sql = "SELECT * FROM users WHERE email = '" . $cgi->param('email') . "'";
-my $sth = $dbh->prepare($sql);
-
-# CORRECT: Using placeholders
-my $sql = "SELECT * FROM users WHERE email = ?";
-my $sth = $dbh->prepare($sql);
-$sth->execute($cgi->param('email'));
-my $user = $sth->fetchrow_hashref;
+### 2. Linking a Pull Request to an Issue
+To ensure automatic issue cleanup and clear traceability across our engineering sprint boards, always link your Pull Request to its corresponding GitHub Issue using exact keyword triggers inside the PR description body:
+```markdown
+Fixes #142
+# Or: Closes #142, Resolves #142
 ```
+When the pull request is merged into `master`, GitHub will automatically close the linked issue.
 
-### Transaction Handling
-For operations that modify multiple tables (e.g., creating a team and adding members), wrap the queries in a database transaction.
-
-```perl
-eval {
-    $dbh->begin_work;
-    
-    # ... execute multiple insert/update statements ...
-    
-    $dbh->commit;
-};
-if ($@) {
-    # If any error occurred, rollback the entire transaction
-    $dbh->rollback;
-    die "Transaction failed: $@";
-}
-```
-
-## Debugging Techniques
-
-### Data::Dumper
-`Data::Dumper` is your best friend for inspecting complex data structures, especially the results of complex database joins or nested JSON parsed from the frontend.
-
-```perl
-use Data::Dumper;
-# ...
-my $complex_data = $model->get_survey_results();
-# Log the structure to the Apache error log
-warn "Survey Data: " . Dumper($complex_data); 
-```
-
-<Aside type="caution">
-Never leave `Data::Dumper` calls in production code, as dumping massive objects (like a full course roster) can block the process and fill up error logs rapidly.
-</Aside>
-
-### Apache Error Logs
-Since the application runs under `mod_perl`, all `warn` and `die` statements, as well as compilation errors, are sent to the Apache error log.
+### 3. Duplicating a Commit to Another Branch (`git cherry-pick`)
+If you commit a critical bug fix to a feature branch or release branch and need to duplicate that exact commit onto another branch (such as `master` or a hotfix branch) without merging unrelated commits, use `git cherry-pick`:
 
 ```bash
-# Tail the error log during local development
-tail -f /path/to/teamassign/logs/error_log
+# 1. Locate the commit hash of your fix using git log
+git log --oneline
+
+# 2. Switch to your target branch (e.g., master or release branch)
+git checkout target-branch
+git pull origin target-branch
+
+# 3. Cherry-pick the specific commit hash right onto your current branch
+git cherry-pick <commit_hash>
+
+# 4. Push the updated target branch to remote
+git push origin target-branch
 ```
 
-## Common Gotchas
-
-### UTF-8 Encoding Issues
-Academic rosters often contain names with special characters. TeamAssign standardizes on UTF-8, but you must ensure the entire pipeline (Database -> DBI -> Perl -> Template Toolkit -> Browser) handles it correctly.
-
-- Ensure database tables use `utf8mb4`.
-- When reading from the database, ensure the `mysql_enable_utf8` flag is set in the DBI connection string.
-- If manually printing data, you may need to use `Encode::encode_utf8()`.
-
-### The `mod_perl` Variable Trap
-Because the Perl interpreter persists, global variables retain their values across different HTTP requests. 
-
-**Never use global package variables (`our $VAR`) to store request-specific data.**
-
-```perl
-package TeamAssign::Controller::Auth;
-
-# BAD: This will leak the logged-in user to the next person who hits this Apache worker!
-our $current_user; 
-
-sub login {
-    # ...
-    $current_user = $user; 
-}
-```
-Always pass data explicitly via parameters or store it in a request-scoped object (like the `$cgi` object or a customized request context).
-
-### CGI Parameter Context
-The `CGI.pm` module behaves differently in list context vs. scalar context.
-
-```perl
-# Assuming URL: ?role=student&role=ta
-
-# Scalar context: returns the first value ('student')
-my $role = $cgi->param('role'); 
-
-# List context: returns all values ('student', 'ta')
-my @roles = $cgi->param('role'); 
-```
-Be explicit about the context you expect to avoid subtle bugs when processing form arrays.
-
----
-
-## Core Web & HTTP Request Concepts for New Contributors
-
-Many engineers joining the TeamAssign project come from academic computer science backgrounds and may be onboarding to full-stack web architecture for the first time. Understanding foundational HTTP and browser-server mechanics clarifies why our CGI/mod_perl dispatcher behaves the way it does.
-
-### What Happens When You Type a URL?
-When an instructor navigates to `https://dev01.teamassign.org/login/index`, the browser initiates a multi-step resolution pipeline:
-1. **DNS Resolution**: The browser checks its local cache, OS cache, and DNS servers to resolve `dev01.teamassign.org` to an IP address (`10.0.x.x` or public EC2 IP).
-2. **TCP & TLS Handshake**: A secure TLS 1.3 connection is established with our Apache reverse proxy/load balancer on port 443.
-3. **HTTP Request Dispatch**: The browser constructs an HTTP GET request containing headers (`Host`, `User-Agent`, `Cookie`) and sends it over the socket.
-4. **Apache & mod_perl Routing**: Apache receives the request. Instead of spawning a new OS process, `mod_perl` hands the request structure directly to `TeamAssign::Dispatcher->handler()`.
-5. **CGI Response Construction**: The Perl dispatcher checks session cookies, executes controller logic, renders a Template Toolkit HTML view, and streams the HTTP response headers (`Content-Type: text/html`, `Status: 200 OK`) and body back to the browser.
-
----
-
-## Web Accessibility (a11y) & WCAG Compliance
-
-Because TeamAssign is deployed across hundreds of public universities receiving federal funding, our frontend interfaces must strictly comply with **Section 508** and **WCAG 2.1 AA** accessibility standards.
-
-### The TeamAssign Accessibility Initiative
-Our ongoing **Accessibility Project** audits and retrofits legacy CGI templates to ensure equitable access for students and faculty using screen readers (JAWS, NVDA, VoiceOver), keyboard navigation, and high-contrast displays:
-- **Semantic HTML & ARIA Attributes**: All survey questions, Likert scales, and team maker input forms must use proper `<label for="...">` associations and ARIA landmarks (`role="main"`, `aria-required="true"`, `aria-invalid="true"`).
-- **Keyboard Navigation & Focus Management**: Modal dialogs, date pickers, and dynamic team assignment boards must trap focus correctly and support `Tab` / `Shift+Tab` / `Esc` navigation without relying exclusively on mouse drag-and-drop events.
-- **Color Contrast & Error Messaging**: Error banners and peer evaluation notifications cannot rely solely on color (e.g., red vs. green text) to convey state. All validation errors must include descriptive text and icon identifiers.
-
----
-
-## Navigating TeamAssign Core Features & Beta Architecture
-
-### Deleting vs. Archiving Activities
-A frequent support question involves how instructors remove old surveys or peer evaluations. To maintain historical database integrity for institutional research, TeamAssign enforces a two-step deletion workflow:
-1. On the **Quick Summary** page, the instructor clicks the target activity name to enter the activity editor.
-2. The instructor clicks the **Archive Activity** button in the lower right corner. This updates the activity status to inactive while preserving `RESPONSE_SET` records.
-3. Once archived, an **Delete Activity** button appears on the updated page. Clicking this permanently removes the activity and purges associated orphan records.
-
-### Mentoring Feature Beta Architecture
-The **Mentoring Feature** allows instructors or senior TAs to participate in peer evaluation surveys to guide and rate student teams without being evaluated as regular team members themselves.
-- **Architectural Challenge**: TeamAssign’s core constraint solver and database schema originally enforced a strict invariant: *a user can belong to exactly one team per course*.
-- **Multi-Team Membership Modification**: To support mentors assigned across multiple teams simultaneously, significant architectural modifications were made to `TeamAssign::Model::Team` and `course_enrollments`. Role checks now differentiate between regular `student` memberships and `mentor` attachments.
-- **Beta Considerations**: Because this feature relaxes core uniqueness constraints, edge cases occasionally arise during bulk CSV export or end-of-term grading aggregation. When investigating bug reports where a user appears twice in survey reports, first verify whether the user is enrolled as a `mentor`.
-
----
-
-## Git & GitHub Workflow Conventions (`Catme-Web` / `TeamAssign`)
-
-Our central Git repository (`git@github.com:organization/TeamAssign.git`) follows strict branching and PR conventions. Because our codebase originated before GitHub's default branch transition, our primary development branch is named **`master`** (equivalent to `main` in modern repositories).
-
-### 1. Branching & Commit Workflow
-Always treat your local `master` branch as **read-only**. Never make commits directly on `master`.
-
-```bash
-# 1. Update your local read-only master branch before starting work
-git checkout master
-git pull origin master
-make update          # Restarts server and syncs dependencies
-
-# 2. Create a clean feature/bugfix branch stemming from master
-git checkout -b fix-survey-export-bug
-
-# 3. Verify active branch (must show '*' next to your branch name)
-git branch
-
-# 4. Stage and commit changes with clear descriptive messages
-git add lib/TeamAssign/Controller/Surveys.pm
-git commit -m "Fix N+1 query timeout during bulk survey export"
-
-# 5. Push branch to upstream repository (origin)
-git push origin fix-survey-export-bug
-```
-
-### 2. Linking Pull Requests to GitHub Issues
-Whenever you submit a pull request on the GitHub web interface that resolves an active issue, you **must** include the keyword `Fixes #<issue_ID>` (or `Closes #<issue_ID>`) in the PR description body (not the terminal commit message). This enables GitHub to automatically close and link the issue when the PR is merged into `master`.
-
-### 3. Duplicating Commits across Branches (`git cherry-pick`)
-If a critical hotfix was committed to a feature branch and must be applied immediately to a release branch, use `git cherry-pick`:
-
-```bash
-# 1. Inspect commit history on the source branch and copy the target commit ID
-git log --oneline -n 5
-
-# 2. Switch to the target destination branch
-git checkout release-2026.1
-
-# 3. Apply the specific commit cleanly onto the current branch
-git cherry-pick <commit_id>
-```
-<Aside type="caution">
-  Use `git cherry-pick` sparingly and only when absolutely necessary, as duplicating commit hashes across branches can complicate future merge histories.
-</Aside>
-
-### 4. Essential Git Recovery Commands
-- **Discard local modifications in a file**: `git checkout -- <path_to_file>`
-- **Unstage a file after `git add`**: `git reset <path_to_file>`
-- **Unstage all staged files**: `git reset`
-- **Inspect a historical commit read-only**: `git log` (copy commit hash) followed by `git checkout <commit_id>`. (Return to active work using `git checkout master`).
+### 4. Essential Git Command Reference
+When managing complex local changes inside `/var/www/src`, keep these essential cleanup commands in mind:
+- **`git status`**: Always run this before staging or committing to verify exactly which files are modified or untracked.
+- **`git stash`**: Temporarily shelves uncommitted changes so you can pull updates or switch branches cleanly without losing work. Restore them later using `git stash pop`.
+- **`git clean -fd`**: Permanently removes all untracked files (`-f`) and directories (`-d`) from your local working tree. Use with caution to clean out compiled artifacts or temporary logs.

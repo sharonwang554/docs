@@ -1,79 +1,95 @@
 ---
-title: Troubleshooting
-description: Common errors, diagnostic steps, and fixes for TeamAssign operational issues.
+title: "Troubleshooting: Canvas SIS Import & Roster Sync"
+description: "Diagnostic runbook for Canvas SIS CSV batch uploads, manual roster enrollment, and TeamAssign import validation workflows."
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+import { Aside, Steps } from '@astrojs/starlight/components';
 
-This runbook outlines common operational issues encountered in the TeamAssign production and development environments, along with diagnostic steps and proven resolutions.
+This runbook outlines standard operational workflows and diagnostic troubleshooting procedures when setting up Canvas LMS testing environments, executing Student Information System (SIS) batch uploads, and validating roster imports into TeamAssign.
 
-## 500 Internal Server Error After Deployment
+---
 
-**Symptom**: Users see a generic 500 error page immediately after a new release is deployed.
-**Diagnosis**: This is almost always a Perl compilation error in a recently modified module. Because `mod_perl` pre-compiles modules on startup, syntax errors prevent the Apache worker from handling the request.
-**Fix**:
-1. Check the Apache error log: `tail -n 50 /var/log/apache2/error.log`
-2. Look for lines starting with `Global symbol requires explicit package name` or `syntax error at...`
-3. Identify the file and line number, fix the syntax issue.
-4. Restart Apache to force `mod_perl` to recompile the modules: `sudo systemctl restart apache2`
+## Testing Import From Canvas to TeamAssign
 
-## Database Connection Failures
+When verifying OAuth 2.0 API integrations and student roster synchronization, developers frequently need to populate their Canvas testing instances with standardized course rosters before executing imports into TeamAssign.
 
-**Symptom**: The application loads but displays a "Database connection error" banner, or the error logs show `DBI connect failed: Can't connect to local MySQL server through socket`.
-**Diagnosis**: The application cannot communicate with the MySQL daemon. This could be due to credentials, network issues, or the MySQL service being down.
-**Fix**:
-1. Verify the MySQL service is running: `systemctl status mysql`
-2. Check the `.env` file credentials. Test them manually via CLI: `mysql -u [user] -p[password] -h [host]`
-3. If connecting via socket (localhost), ensure the socket path in `my.cnf` matches what DBI expects. If connecting via TCP (127.0.0.1), ensure MySQL is bound to that interface.
+```mermaid
+flowchart TD
+    Start([Start Roster Sync Test]) --> CSV[Prepare users.csv & enrollments.csv]
+    CSV --> Upload[Execute Canvas SIS Batch Import]
+    Upload --> Check{SIS Import Status?}
+    Check -->|Error / Corrupted| Fix[Verify UTF-8 Encoding & Required Headers]
+    Fix --> Upload
+    Check -->|Success| Manual[Verify Manual Enrollments / Teacher Role]
+    Manual --> TA_Link[Initiate TeamAssign Canvas OAuth Sync]
+    TA_Link --> Verify[Verify Roster Populated in TeamAssign DB]
+```
 
-## Slow Survey Response Loading (N+1 Query Issue)
+---
 
-**Symptom**: An instructor reports that viewing the results of a peer evaluation survey for a large class (300+ students) takes 30+ seconds or times out.
-**Diagnosis**: This is a classic N+1 query problem. The Controller is likely fetching all teams, and then looping through each team to fetch members, and then looping through members to fetch survey responses, executing hundreds of individual SQL queries.
-**Fix**:
-1. Identify the slow Controller endpoint (e.g., `TeamAssign::Controller::Reports->view`).
-2. Rewrite the underlying Model method to use a `JOIN` to fetch all necessary data in a single, well-indexed query.
-3. Example fix: Replace `$team->get_members()` inside a loop with a bulk fetch: `SELECT * FROM users u JOIN team_members tm ON u.id = tm.user_id WHERE tm.team_id IN (...)`.
+## How to SIS Import (Batch Upload) Using a CSV File in Canvas
 
-<Aside type="tip">
-Enable the MySQL slow query log (`slow_query_log = 1` in `my.cnf`) temporarily to identify the exact queries causing the bottleneck.
+Instead of manually creating dozens of individual student accounts through the Canvas UI when testing large class evaluation algorithms, administrators and developers can execute **SIS Batch Imports** using structured CSV files.
+
+### 1. Preparing the SIS CSV Files
+To batch upload a course roster, prepare two required comma-separated values files adhering strictly to Canvas SIS import specs:
+
+#### `users.csv` (Master User Account Records)
+Must include exact column headers defining user identities and authentication logins:
+```csv
+user_id,login_id,password,first_name,last_name,email,status
+stu101,student101@test.edu,TestPass123!,Alice,Smith,student101@test.edu,active
+stu102,student102@test.edu,TestPass123!,Bob,Jones,student102@test.edu,active
+```
+
+#### `enrollments.csv` (Course & Section Association)
+Links the `user_id` records directly into your specific Canvas test course (`course_id`) under defined academic roles (`StudentEnrollment` or `TeacherEnrollment`):
+```csv
+course_id,user_id,role,status
+test_course_01,stu101,StudentEnrollment,active
+test_course_01,stu102,StudentEnrollment,active
+```
+
+### 2. Executing the Batch Upload
+<Steps>
+1. Log into your Canvas LMS test instance as an administrative user (`https://<canvas_domain>`).
+2. In the left hand global navigation menu, select **Admin** and click on your root account (e.g., *Site Admin* or *Test University*).
+3. In the sub-navigation menu, click on **SIS Import**.
+4. Under **Import via CSV**, click **Choose File** and upload your zipped CSV bundle (or individual `users.csv` / `enrollments.csv` file).
+5. Select **Process as UI-Changes** and click **Process Data**.
+6. Monitor the **Current and Recent Imports** table below until the job status displays `Completed`.
+</Steps>
+
+---
+
+## How to Manually Add People to a Canvas Course
+
+If you only need to enroll a single test student or co-instructor to verify targeted edge cases in TeamAssign’s peer evaluation roster sync:
+
+<Steps>
+1. Navigate directly to your specific course window inside Canvas.
+2. In the course left navigation bar, select **People**.
+3. Click the **+ People** (`Add People`) button in the upper right corner.
+4. Select **Add user by Email Address** or **Login ID**, enter the test account credentials (`student_test@teamassign.org`), and select the desired role (**Student**, **Teacher**, or **TA**).
+5. Click **Next** and **Add Users**.
+</Steps>
+
+<Aside type="caution">
+**Pending Invitation States**: When manually adding users, Canvas initially places their enrollment in an `invited` state until the student logs in and accepts the course invitation. TeamAssign’s API roster import (`lib/LMS/Canvas.pm`) filters out unconfirmed invitations by default. Ensure the test user has accepted the course invitation (or use administrative SIS imports with `status=active`) before testing synchronization!
 </Aside>
 
-## Session Expiry During Long Surveys
+---
 
-**Symptom**: Students report losing all their work when they click "Submit" on a lengthy peer evaluation. They are redirected to the login page.
-**Diagnosis**: The user's session timed out while they were filling out the form. The default session lifetime is 2 hours. If a student leaves the tab open while working elsewhere, the session expires.
-**Fix**:
-1. **Immediate workaround**: Advise the instructor to warn students to save drafts frequently (if the feature is enabled for that survey).
-2. **System fix**: Implement a "heartbeat" AJAX ping on the survey taking page that hits an endpoint (e.g., `/app/ping`) every 15 minutes to keep the server-side session alive while the browser tab remains open.
+## Common SIS & Roster Sync Pitfalls
 
-## CSV Import Failures
+When debugging roster import issues between Canvas and TeamAssign, check these common operational causes first:
 
-**Symptom**: An instructor tries to upload a class roster CSV, but it fails with "Invalid file format" or silently imports corrupted names (e.g., "Jos").
-**Diagnosis**: This is typically caused by incorrect text encoding (saving as Mac OS Roman or ANSI instead of UTF-8) or using a different delimiter (semicolons instead of commas).
-**Fix**:
-1. Ask the user to open the file in a plain text editor (like Notepad or TextEdit) to verify it is comma-separated.
-2. Instruct the user to open their spreadsheet software (Excel/Numbers), select "Save As", and explicitly choose "CSV UTF-8 (Comma delimited)".
-3. If the backend parser is failing on valid files, ensure `Text::CSV` is configured to handle binary data and UTF-8: `my $csv = Text::CSV->new({ binary => 1, auto_diag => 1 });`
+### 1. CSV Encoding & Delimiter Mismatches
+- **Symptom**: Canvas rejects the SIS upload with `Invalid CSV file format` or imports garbled character strings.
+- **Root Cause**: The spreadsheet editor (Excel/Numbers) saved the file using Mac OS Roman or ANSI encoding instead of UTF-8, or used semicolon `;` delimiters instead of commas `,`.
+- **Resolution**: Open the CSV file in a plain text editor to verify comma separation, and re-save explicitly as **CSV UTF-8 (Comma delimited)**.
 
-## mod_perl Memory Leaks
-
-**Symptom**: Over a period of several days, the Apache processes consume increasingly more RAM until the server runs out of memory (OOM killer intervenes).
-**Diagnosis**: A memory leak in a Perl module. In `mod_perl`, if circular references are created (e.g., Object A holds a reference to Object B, and Object B holds a reference to Object A), Perl's reference-counting garbage collector cannot free the memory.
-**Fix**:
-1. Review recent code changes for circular data structures.
-2. Ensure you are using `Scalar::Util::weaken` on one side of any necessary circular reference.
-3. **Mitigation**: Configure Apache `MaxConnectionsPerChild` (e.g., set to 1000). This forces Apache to recycle worker processes after they serve a certain number of requests, preventing unbounded memory growth.
-
-<Aside type="danger">
-Do not use global variables (`our $data = {...}`) to cache large datasets across requests. This data will persist indefinitely in the Apache worker's memory space.
-</Aside>
-
-## Team Formation Algorithm Constraints Conflict
-
-**Symptom**: The team formation algorithm fails to generate teams and throws a "Cannot satisfy constraints" error.
-**Diagnosis**: The instructor has configured mutually exclusive or mathematically impossible rules. (e.g., "Teams must have exactly 5 people", in a class of 21 students; or requiring 3 diverse demographics in teams of 2).
-**Fix**:
-1. Review the course configuration.
-2. Loosen the constraints. Explain to the instructor that hard constraints (must) often cause failures, whereas soft constraints (prefer) allow the algorithm to find the "least bad" fit.
-3. Check the algorithm logs (set `LOG_LEVEL=DEBUG` in `.env`) to see exactly which student/team caused the constraint solver to backtrack and fail.
+### 2. Missing Administrative Scopes during OAuth Sync
+- **Symptom**: An instructor successfully links Canvas via OAuth 2.0, but clicking **Sync Roster** in TeamAssign returns a `401 Unauthorized` or `403 Forbidden` API error.
+- **Root Cause**: The API Client ID configured in Canvas lacks sufficient scopes to query course enrollment lists, or the linking instructor holds a `Teaching Assistant` role with restricted read permissions instead of a `TeacherEnrollment` role.
+- **Resolution**: Verify that the instructor holds the primary `Teacher` role across the target Canvas course and that the developer VM's OAuth `client_id` holds active scopes for `url:GET|/api/v1/courses/:course_id/enrollments`.

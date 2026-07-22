@@ -32,39 +32,47 @@ export default defineConfig({
       sidebar: [
         {
           label: '🎯 Developer Docs & API',
-          autogenerate: { directory: 'developer-docs' },
+          autogenerate: { directory: 'developer-docs', collapsed: false },
+          collapsed: false,
         },
         {
           label: '🎯 Troubleshooting & Runbooks',
-          autogenerate: { directory: 'troubleshooting' },
+          autogenerate: { directory: 'troubleshooting', collapsed: false },
+          collapsed: false,
         },
         {
           label: '🎯 Architecture & Project Logic',
-          autogenerate: { directory: 'architecture' },
+          autogenerate: { directory: 'architecture', collapsed: false },
+          collapsed: false,
         },
         {
           label: '📁 Complete System Repositories',
+          collapsed: false,
           items: [
             {
               label: '3D Space Portfolio',
               badge: { text: 'Live', variant: 'success' },
-              autogenerate: { directory: '3d-space-portfolio' },
+              autogenerate: { directory: '3d-space-portfolio', collapsed: false },
+              collapsed: true,
             },
             {
               label: 'Raised Church Website',
               badge: { text: 'Live', variant: 'success' },
-              autogenerate: { directory: 'raised-church-website' },
+              autogenerate: { directory: 'raised-church-website', collapsed: false },
+              collapsed: true,
             },
             {
               label: 'TeamAssign',
               badge: { text: 'Legacy', variant: 'note' },
-              autogenerate: { directory: 'teamassign' },
+              autogenerate: { directory: 'teamassign', collapsed: false },
+              collapsed: true,
             },
           ],
         },
         {
           label: '📚 Articles & Research',
-          autogenerate: { directory: 'articles' },
+          autogenerate: { directory: 'articles', collapsed: false },
+          collapsed: false,
         },
         {
           label: 'About This Knowledge Base',

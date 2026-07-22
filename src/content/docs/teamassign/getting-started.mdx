@@ -1,201 +1,127 @@
 ---
-title: Getting Started
-description: Development environment setup and first local run for TeamAssign.
+title: "Getting Started: Dev VM & Database Setup"
+description: "Step-by-step developer onboarding: SSH key setup, remote VM login with agent forwarding, VS Code configuration, and PostgreSQL database commands."
 ---
 
 import { Steps, Aside, Tabs, TabItem } from '@astrojs/starlight/components';
 
-Setting up a local development environment for a legacy Perl/mod_perl application requires specific configurations. This guide walks you through provisioning your local system to run TeamAssign.
+This guide walks new engineers through configuring their public crypto keys, logging into their assigned developer virtual machines (`*.teamassign.org`), setting up Visual Studio Code Remote-SSH sessions, and interacting with the backend PostgreSQL database.
 
-## Prerequisites
+---
 
-Before beginning, ensure your system has the following software installed:
+## Public Crypto Key Setup 🔑
 
-- **Perl**: version 5.16 or higher.
-- **MySQL**: version 5.7 or higher (or MariaDB equivalent).
-- **Apache HTTP Server**: version 2.4+ with `mod_perl2` enabled.
-- **cpanm** (`App::cpanminus`): For managing Perl dependencies.
-- **Git**: For version control.
-
-<Aside type="note">
-On macOS, we recommend using Homebrew to install MySQL and Apache, and `plenv` or `perlbrew` to manage your Perl versions independently of the system Perl.
-</Aside>
-
-## Installation Steps
+A public crypto key (`RSA` or `Ed25519`) is required to gain secure access to TeamAssign’s GitHub repository (`teamassign/Teamassign-Web`) and remote access to the AWS virtual instances used for development.
 
 <Steps>
+1. **Generate an SSH Key & Add to SSH-Agent**
+   Follow the official [GitHub SSH Setup Instructions](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) to generate a new key pair on your local machine and register it with your local `ssh-agent`.
 
-1.  **Clone the Repository**
+2. **Register Key with GitHub**
+   Add your generated public key (`~/.ssh/id_ed25519.pub` or `~/.ssh/id_rsa.pub`) to your GitHub account settings via [Adding a new SSH key to your GitHub account](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account).
 
-    Clone the TeamAssign repository to your local workspace:
-
-    ```bash
-    git clone git@github.com:organization/teamassign.git
-    cd teamassign
-    ```
-
-2.  **Install Perl Dependencies**
-
-    The project uses a `cpanfile` to declare its dependencies. Use `cpanm` to install them into a local directory (`local/`) or your global Perl environment.
-
-    ```bash
-    # Install dependencies locally using Carton or cpanm
-    cpanm --installdeps .
-    ```
-
-    Key modules installed include `DBI`, `DBD::mysql`, `CGI`, `Template`, and `Log::Log4perl`.
-
-3.  **Database Setup**
-
-    Create the local MySQL database and run the initial schema migrations.
-
-    ```bash
-    # Log into MySQL
-    mysql -u root -p
-    ```
-
-    ```sql
-    CREATE DATABASE teamassign_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-    CREATE USER 'ta_dev_user'@'localhost' IDENTIFIED BY 'local_dev_password';
-    GRANT ALL PRIVILEGES ON teamassign_dev.* TO 'ta_dev_user'@'localhost';
-    FLUSH PRIVILEGES;
-    ```
-
-    Apply the schema and seed data:
-
-    ```bash
-    mysql -u ta_dev_user -p teamassign_dev < db/schema.sql
-    mysql -u ta_dev_user -p teamassign_dev < db/seed_data.sql
-    ```
-
-4.  **Environment Variables**
-
-    Copy the example environment file and configure it for your local database.
-
-    ```bash
-    cp .env.example .env
-    ```
-
-    Edit `.env` and set the database credentials:
-
-    ```ini
-    # .env
-    DB_DSN=DBI:mysql:database=teamassign_dev;host=127.0.0.1
-    DB_USER=ta_dev_user
-    DB_PASS=local_dev_password
-    APP_ENV=development
-    LOG_LEVEL=DEBUG
-    ```
-
-5.  **Configure Apache and mod_perl**
-
-    You need to configure Apache to serve the application via `mod_perl`. Create a virtual host configuration.
-
-    <Tabs>
-      <TabItem label="Apache Config (httpd-vhosts.conf)">
-        ```apache
-        <VirtualHost *:8080>
-            ServerName teamassign.test
-            DocumentRoot "/path/to/teamassign/htdocs"
-
-            PerlRequire /path/to/teamassign/conf/startup.pl
-
-            <Location /app>
-                SetHandler perl-script
-                PerlResponseHandler TeamAssign::Dispatcher
-                PerlOptions +ParseHeaders
-                Options +ExecCGI
-            </Location>
-
-            <Directory "/path/to/teamassign/htdocs">
-                AllowOverride All
-                Require all granted
-            </Directory>
-            
-            ErrorLog "/path/to/teamassign/logs/error_log"
-            CustomLog "/path/to/teamassign/logs/access_log" common
-        </VirtualHost>
-        ```
-      </TabItem>
-      <TabItem label="startup.pl">
-        ```perl
-        # conf/startup.pl
-        use lib '/path/to/teamassign/lib';
-        use lib '/path/to/teamassign/local/lib/perl5';
-        
-        # Pre-load heavy modules for mod_perl performance
-        use DBI ();
-        use Template ();
-        use TeamAssign::Dispatcher ();
-        
-        1;
-        ```
-      </TabItem>
-    </Tabs>
-
-6.  **Verify First Run**
-
-    Start (or restart) your local Apache server.
-
-    ```bash
-    # On macOS with Homebrew
-    brew services restart httpd
-    ```
-
-    Navigate to `http://localhost:8080/app/login` in your browser. You should see the TeamAssign login page.
-
-    Use the default seed credentials to log in:
-    - **Username**: `admin@test.edu`
-    - **Password**: `password123`
-
+3. **Provide Key Fingerprint to System Admin**
+   Retrieve and save the public key fingerprint of your SSH key. Submit this fingerprint to your system supervisor so your credentials can be whitelisted across our developer virtual machines and internal AWS infrastructure.
 </Steps>
 
 ---
 
-## Legacy Dev Server & Makefile Utilities
+## Logging Into the Developer Virtual Machine ⚙️
 
-When working on dedicated developer virtual machines (`*.teamassign.org`), the environment provides pre-configured Makefile targets inside `/var/www/src` that streamline common build, migration, and server operations:
+Due to specialized Linux kernel dependencies and pre-compiled `mod_perl` environments, all active development is performed on dedicated remote virtual machines rather than natively on macOS or Windows.
 
-```makefile
-# /var/www/src Makefile Utilities
-make update          # Pulls git checkout off main/master and restarts the Apache server
-make update_db       # Runs pending SQL migrations against the active PostgreSQL database
-make update_cpanlib  # Installs new Perl dependencies declared in cpanfile
-make restart_httpd   # Gracefully restarts the Apache worker pool to recompile Perl modules
-make tail_logs       # Tails the Apache error log for Data::Dumper debugging and syntax errors
-make db              # Launches interactive PostgreSQL shell bound to current schema
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Dev as Local Developer Machine
+    participant Bastion as SSH Agent Forwarding (-A)
+    participant VM as Dev VM (*.teamassign.org)
+    participant GH as Internal GitHub Repositories
+
+    Dev->>VM: ssh -A username@dev01.teamassign.org
+    Note over Dev,VM: Authenticates via Local Private Key
+    VM->>VM: cd /var/www/src (Source Code Directory)
+    VM->>GH: git pull / git push
+    Note over Bastion,GH: Agent Forwarding allows VM to authenticate<br/>with GitHub using Local Developer Key!
 ```
+
+### 1. Connecting with SSH Agent Forwarding (`-A`)
+Connect from your local terminal using the `-A` flag (`Agent Forwarding`). This passes your local GitHub credentials through to the virtual machine so you can commit code and submit pull requests directly from `/var/www/src` without storing private keys on the remote server:
+
+```bash
+# Connect to your assigned developer instance (dev01, dev02, dev03, etc.)
+ssh -A yourName@devNum.teamassign.org
+
+# Or specifying your identity file explicitly if required:
+ssh -A -i ~/.ssh/id_ed25519 yourName@devNum.teamassign.org
+```
+
+### 2. Root Access & Source Directory
+Once logged into your virtual instance:
+- **Root Access**: If administrative maintenance is required, run `sudo -i` or `sudo -E su` and enter your assigned password. Remember to change your root password immediately after initial setup. Run `exit` to drop back to your standard user account.
+- **Source Code Navigation**: Run `cd /var/www/src` to enter the primary application directory where all Git repositories and build scripts are located.
+
+### 3. The 3-Terminal Development Workflow
+When developing code, we strongly recommend opening **three separate terminal windows** on your local machine, connecting each to your developer VM via `ssh -A`:
+
+| Terminal Session | Role & Primary Command | Description |
+| :--- | :--- | :--- |
+| **Terminal 1: Code Editor** | `cd /var/www/src`<br/>`sudo vi <filename>` | Used for editing Perl modules and templates. Note: Files inside `/var/www/src` are read-only to standard users, requiring `sudo vi` (or `sudo vim`). Type `:set number` inside Vim to view line numbers. |
+| **Terminal 2: Error Logs** | `cd /var/www/src`<br/>`make tail_logs` | Because runtime errors and stack traces are hidden from browser responses for security, run `make tail_logs` to stream live Apache/CGI compilation errors and debug output. |
+| **Terminal 3: Database Shell** | `cd /var/www/src`<br/>`make db` | Maintains an open interactive PostgreSQL connection (`psql`) for executing queries, inspecting schema modifications, and verifying test data. |
+
+<Aside type="note">
+**Restarting Apache (`make restart_httpd`)**: If you modify core modules inside the `teamassign-lib` submodule (such as `lib/LMS/`), `mod_perl` caches the old code in worker RAM. You must run `make restart_httpd` inside `/var/www/src` to reload the Apache server and apply your backend changes.
+</Aside>
+
+### 4. Debugging with `Data::Dumper` & `warn`
+When debugging Perl code, use `warn` for plain text output and `Data::Dumper` to inspect complex nested references (arrays and hashes):
+
+```perl
+# Print simple text or markers
+warn "......................... START OF DEBUG SECTION .........................";
+
+# Dump complex hash or array references
+use Data::Dumper;
+warn Dumper %sample_hash;
+warn Dumper $sample_array_ref;
+```
+
+Because `make tail_logs` streams high volumes of server background activity, prefix your debug strings with prominent visual markers (like `.............`) so your exact line numbers stand out clearly inside the log stream.
 
 ---
 
-## TeamAssign PostgreSQL Database Shell & Commands
+## SSH Sessions to Your Dev Machine Within VS Code
 
-While local development templates use MySQL, the production and developer virtual machines use **PostgreSQL**. To inspect schema data directly on your dev machine, run `make db` inside `/var/www/src` to enter the interactive PostgreSQL `psql` interface.
+If you prefer Visual Studio Code over terminal Vim, you can connect VS Code directly to your remote developer virtual machine:
 
-### Essential Database Commands
+### Initial VS Code Remote-SSH Setup
+1. Open VS Code and press `Cmd+P` (Mac) or `Ctrl+P` (Windows/Linux), then type `> ssh` and select **Remote-SSH: Add New SSH Host**.
+2. Enter your SSH connection command: `ssh -A yourName@devNum.teamassign.org` and hit Enter.
+3. Select your local SSH configuration file (`~/.ssh/config`) to save the host entry.
+4. Click **Connect** on the popup notification.
+5. Once inside the remote instance, click **Open Folder** in the File Explorer, type `/var/www/src`, and click **OK**.
+
+### Reconnecting & Troubleshooting
+- **Quick Reconnect**: On subsequent launches, select your dev machine directly from the **Remote Explorer** tab or choose `/var/www/src` under **Recent Folders** on the VS Code welcome screen.
+- **Connection Hanging / Overload**: Avoid opening too many simultaneous SSH windows to the same dev machine, as excessive language server background processes can exhaust VM memory. If connections hang, delete the remote `~/.vscode-server` folder on the VM and reconnect.
+- **Linux Distribution Compatibility (`glibc < 2.28`)**: If you receive an error stating *"You're connected to an OS version that is unsupported by Visual Studio Code"*, your local VS Code version has upgraded past support for the VM's legacy `glibc` kernel. To continue using Remote-SSH on older CentOS/Red Hat dev machines, downgrade your local VS Code installation to **version 1.85** or earlier.
+
+---
+
+## TeamAssign PostgreSQL Database Shell & Commands 📊
+
+All developer virtual machines use **PostgreSQL** as the primary relational database. To inspect tables, query test records, or modify user statuses directly on your dev machine, run `make db` inside `/var/www/src` to enter the interactive `psql` interface.
+
+### Essential Database Commands & SQL Reference
 
 | Command / SQL Syntax | Description & Practical Usage |
 | :--- | :--- |
-| `\dt` | Lists all tables in the current schema. Press `Space` to paginate through rows, and `q` to exit the pager. |
-| `\d <table_name>;` | Describes table structure, column types, constraints, and indexes. |
-| `table <table_name>;` | Lists all records inside `<table_name>` (equivalent to `SELECT * FROM <table_name>;`). |
-| `SELECT count(id) FROM <table_name> WHERE <criteria>;` | Counts records matching specific filter criteria. |
-| `SELECT * FROM <table_name> WHERE <column> = '<string>';` | Exact string match queries across academic rosters or survey tables. |
-| `SELECT * FROM <table_name> WHERE <column> LIKE '%' \|\| '<substring>' \|\| '%';` | Substring pattern search in PostgreSQL (using string concatenation `\|\|`). |
-| `UPDATE <table_name> SET <column> = <updated_data> WHERE <criteria>;` | Updates specific table attributes (e.g., modifying test account flags or survey deadlines). |
-| `\q` | Exits the PostgreSQL database interface and returns to the Linux shell. |
-
----
-
-## Common Setup Issues
-
-### Missing `DBD::mysql`
-If `cpanm` fails to install `DBD::mysql`, it is usually because the MySQL client libraries are missing on your system.
-**Fix**: Install the client libraries (e.g., `brew install mysql-client` on macOS or `apt-get install libmysqlclient-dev` on Ubuntu) and ensure `mysql_config` is in your PATH.
-
-### Apache 500 Internal Server Error on Startup
-This usually indicates a syntax error in `startup.pl` or a missing Perl module required by `TeamAssign::Dispatcher`.
-**Fix**: Check the Apache error log (`/path/to/teamassign/logs/error_log`). It will contain the exact Perl compilation error.
-
-### Database Connection Refused
-If the application loads but throws a database error, verify that the `DB_DSN` in your `.env` file matches your MySQL server configuration (e.g., using `127.0.0.1` vs `localhost` depending on socket vs TCP connection).
+| `\dt` | Lists all tables in the current database schema. Press `Space` to paginate through rows, and `q` to exit the pager. |
+| `\d <table_name>;` | Describes table structure, column types, foreign keys, and indexes for `<table_name>`. |
+| `table <table_name>;` | Lists all records inside `<table_name>` (shorthand equivalent to `SELECT * FROM <table_name>;`). |
+| `SELECT count(id) FROM <table_name> WHERE <criteria>;` | Counts total records matching specific filter criteria across rosters or surveys. |
+| `SELECT * FROM <table_name> WHERE <column> = '<string>';` | Exact string match queries (e.g., finding a student by `email` or `school`). |
+| `SELECT * FROM <table_name> WHERE <column> LIKE '%' \|\| '<substring>' \|\| '%';` | Substring pattern search in PostgreSQL using string concatenation (`\|\|`). |
+| `UPDATE <table_name> SET <column> = <updated_data> WHERE <criteria>;` | Updates specific attributes (such as resetting survey deadlines or activating test user flags). |
+| `\q` | Exits the PostgreSQL database interface and returns to the standard Linux shell. |
