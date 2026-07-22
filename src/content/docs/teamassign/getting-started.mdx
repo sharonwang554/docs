@@ -150,6 +150,43 @@ On macOS, we recommend using Homebrew to install MySQL and Apache, and `plenv` o
 
 </Steps>
 
+---
+
+## Legacy Dev Server & Makefile Utilities
+
+When working on dedicated developer virtual machines (`*.teamassign.org`), the environment provides pre-configured Makefile targets inside `/var/www/src` that streamline common build, migration, and server operations:
+
+```makefile
+# /var/www/src Makefile Utilities
+make update          # Pulls git checkout off main/master and restarts the Apache server
+make update_db       # Runs pending SQL migrations against the active PostgreSQL database
+make update_cpanlib  # Installs new Perl dependencies declared in cpanfile
+make restart_httpd   # Gracefully restarts the Apache worker pool to recompile Perl modules
+make tail_logs       # Tails the Apache error log for Data::Dumper debugging and syntax errors
+make db              # Launches interactive PostgreSQL shell bound to current schema
+```
+
+---
+
+## TeamAssign PostgreSQL Database Shell & Commands
+
+While local development templates use MySQL, the production and developer virtual machines use **PostgreSQL**. To inspect schema data directly on your dev machine, run `make db` inside `/var/www/src` to enter the interactive PostgreSQL `psql` interface.
+
+### Essential Database Commands
+
+| Command / SQL Syntax | Description & Practical Usage |
+| :--- | :--- |
+| `\dt` | Lists all tables in the current schema. Press `Space` to paginate through rows, and `q` to exit the pager. |
+| `\d <table_name>;` | Describes table structure, column types, constraints, and indexes. |
+| `table <table_name>;` | Lists all records inside `<table_name>` (equivalent to `SELECT * FROM <table_name>;`). |
+| `SELECT count(id) FROM <table_name> WHERE <criteria>;` | Counts records matching specific filter criteria. |
+| `SELECT * FROM <table_name> WHERE <column> = '<string>';` | Exact string match queries across academic rosters or survey tables. |
+| `SELECT * FROM <table_name> WHERE <column> LIKE '%' \|\| '<substring>' \|\| '%';` | Substring pattern search in PostgreSQL (using string concatenation `\|\|`). |
+| `UPDATE <table_name> SET <column> = <updated_data> WHERE <criteria>;` | Updates specific table attributes (e.g., modifying test account flags or survey deadlines). |
+| `\q` | Exits the PostgreSQL database interface and returns to the Linux shell. |
+
+---
+
 ## Common Setup Issues
 
 ### Missing `DBD::mysql`

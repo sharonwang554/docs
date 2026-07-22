@@ -143,3 +143,100 @@ my $role = $cgi->param('role');
 my @roles = $cgi->param('role'); 
 ```
 Be explicit about the context you expect to avoid subtle bugs when processing form arrays.
+
+---
+
+## Core Web & HTTP Request Concepts for New Contributors
+
+Many engineers joining the TeamAssign project come from academic computer science backgrounds and may be onboarding to full-stack web architecture for the first time. Understanding foundational HTTP and browser-server mechanics clarifies why our CGI/mod_perl dispatcher behaves the way it does.
+
+### What Happens When You Type a URL?
+When an instructor navigates to `https://dev01.teamassign.org/login/index`, the browser initiates a multi-step resolution pipeline:
+1. **DNS Resolution**: The browser checks its local cache, OS cache, and DNS servers to resolve `dev01.teamassign.org` to an IP address (`10.0.x.x` or public EC2 IP).
+2. **TCP & TLS Handshake**: A secure TLS 1.3 connection is established with our Apache reverse proxy/load balancer on port 443.
+3. **HTTP Request Dispatch**: The browser constructs an HTTP GET request containing headers (`Host`, `User-Agent`, `Cookie`) and sends it over the socket.
+4. **Apache & mod_perl Routing**: Apache receives the request. Instead of spawning a new OS process, `mod_perl` hands the request structure directly to `TeamAssign::Dispatcher->handler()`.
+5. **CGI Response Construction**: The Perl dispatcher checks session cookies, executes controller logic, renders a Template Toolkit HTML view, and streams the HTTP response headers (`Content-Type: text/html`, `Status: 200 OK`) and body back to the browser.
+
+---
+
+## Web Accessibility (a11y) & WCAG Compliance
+
+Because TeamAssign is deployed across hundreds of public universities receiving federal funding, our frontend interfaces must strictly comply with **Section 508** and **WCAG 2.1 AA** accessibility standards.
+
+### The TeamAssign Accessibility Initiative
+Our ongoing **Accessibility Project** audits and retrofits legacy CGI templates to ensure equitable access for students and faculty using screen readers (JAWS, NVDA, VoiceOver), keyboard navigation, and high-contrast displays:
+- **Semantic HTML & ARIA Attributes**: All survey questions, Likert scales, and team maker input forms must use proper `<label for="...">` associations and ARIA landmarks (`role="main"`, `aria-required="true"`, `aria-invalid="true"`).
+- **Keyboard Navigation & Focus Management**: Modal dialogs, date pickers, and dynamic team assignment boards must trap focus correctly and support `Tab` / `Shift+Tab` / `Esc` navigation without relying exclusively on mouse drag-and-drop events.
+- **Color Contrast & Error Messaging**: Error banners and peer evaluation notifications cannot rely solely on color (e.g., red vs. green text) to convey state. All validation errors must include descriptive text and icon identifiers.
+
+---
+
+## Navigating TeamAssign Core Features & Beta Architecture
+
+### Deleting vs. Archiving Activities
+A frequent support question involves how instructors remove old surveys or peer evaluations. To maintain historical database integrity for institutional research, TeamAssign enforces a two-step deletion workflow:
+1. On the **Quick Summary** page, the instructor clicks the target activity name to enter the activity editor.
+2. The instructor clicks the **Archive Activity** button in the lower right corner. This updates the activity status to inactive while preserving `RESPONSE_SET` records.
+3. Once archived, an **Delete Activity** button appears on the updated page. Clicking this permanently removes the activity and purges associated orphan records.
+
+### Mentoring Feature Beta Architecture
+The **Mentoring Feature** allows instructors or senior TAs to participate in peer evaluation surveys to guide and rate student teams without being evaluated as regular team members themselves.
+- **Architectural Challenge**: TeamAssign’s core constraint solver and database schema originally enforced a strict invariant: *a user can belong to exactly one team per course*.
+- **Multi-Team Membership Modification**: To support mentors assigned across multiple teams simultaneously, significant architectural modifications were made to `TeamAssign::Model::Team` and `course_enrollments`. Role checks now differentiate between regular `student` memberships and `mentor` attachments.
+- **Beta Considerations**: Because this feature relaxes core uniqueness constraints, edge cases occasionally arise during bulk CSV export or end-of-term grading aggregation. When investigating bug reports where a user appears twice in survey reports, first verify whether the user is enrolled as a `mentor`.
+
+---
+
+## Git & GitHub Workflow Conventions (`Catme-Web` / `TeamAssign`)
+
+Our central Git repository (`git@github.com:organization/TeamAssign.git`) follows strict branching and PR conventions. Because our codebase originated before GitHub's default branch transition, our primary development branch is named **`master`** (equivalent to `main` in modern repositories).
+
+### 1. Branching & Commit Workflow
+Always treat your local `master` branch as **read-only**. Never make commits directly on `master`.
+
+```bash
+# 1. Update your local read-only master branch before starting work
+git checkout master
+git pull origin master
+make update          # Restarts server and syncs dependencies
+
+# 2. Create a clean feature/bugfix branch stemming from master
+git checkout -b fix-survey-export-bug
+
+# 3. Verify active branch (must show '*' next to your branch name)
+git branch
+
+# 4. Stage and commit changes with clear descriptive messages
+git add lib/TeamAssign/Controller/Surveys.pm
+git commit -m "Fix N+1 query timeout during bulk survey export"
+
+# 5. Push branch to upstream repository (origin)
+git push origin fix-survey-export-bug
+```
+
+### 2. Linking Pull Requests to GitHub Issues
+Whenever you submit a pull request on the GitHub web interface that resolves an active issue, you **must** include the keyword `Fixes #<issue_ID>` (or `Closes #<issue_ID>`) in the PR description body (not the terminal commit message). This enables GitHub to automatically close and link the issue when the PR is merged into `master`.
+
+### 3. Duplicating Commits across Branches (`git cherry-pick`)
+If a critical hotfix was committed to a feature branch and must be applied immediately to a release branch, use `git cherry-pick`:
+
+```bash
+# 1. Inspect commit history on the source branch and copy the target commit ID
+git log --oneline -n 5
+
+# 2. Switch to the target destination branch
+git checkout release-2026.1
+
+# 3. Apply the specific commit cleanly onto the current branch
+git cherry-pick <commit_id>
+```
+<Aside type="caution">
+  Use `git cherry-pick` sparingly and only when absolutely necessary, as duplicating commit hashes across branches can complicate future merge histories.
+</Aside>
+
+### 4. Essential Git Recovery Commands
+- **Discard local modifications in a file**: `git checkout -- <path_to_file>`
+- **Unstage a file after `git add`**: `git reset <path_to_file>`
+- **Unstage all staged files**: `git reset`
+- **Inspect a historical commit read-only**: `git log` (copy commit hash) followed by `git checkout <commit_id>`. (Return to active work using `git checkout master`).

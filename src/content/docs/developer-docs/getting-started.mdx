@@ -175,6 +175,45 @@ Follow these sequential steps (`Steps`) to initialize your local development sta
 
 ---
 
+## Legacy TeamAssign Virtual Machine & Remote Development Onboarding
+
+For engineers contributing to our mature Perl/mod_perl legacy platform (**TeamAssign**), local execution is supplemented by dedicated, cloud-hosted Developer Virtual Machines (`*.teamassign.org`). Due to specialized Linux kernel dependencies, older Perl libraries, and pre-compiled `mod_perl2` environments, developers connect remotely to their assigned dev VM rather than running the full stack natively on macOS or Windows.
+
+### 1. SSH Agent Forwarding & VM Login (`ssh -A`)
+When connecting to your assigned developer VM (`<devNum>.teamassign.org`), you **must** enable SSH agent forwarding (`-A` flag or `ForwardAgent yes` in `~/.ssh/config`). This allows your remote VM to authenticate against internal GitHub repositories and institutional servers using your local SSH key without copying private keys onto the remote server.
+
+```bash
+# Connect to your assigned developer virtual machine with agent forwarding
+ssh -A <user>@<devNum>.teamassign.org
+
+# Verify agent forwarding is active inside the VM
+ssh -T git@github.com
+# Expected Output: Hi <user>! You've successfully authenticated...
+```
+
+### 2. Working Inside `/var/www/src` & The 3-Terminal Workflow
+All active application source code on the developer VM resides in `/var/www/src`. To maintain high velocity when debugging legacy CGI and `mod_perl` execution cycles, our engineering conventions mandate maintaining **three concurrent terminal sessions** inside `/var/www/src`:
+
+| Terminal Session | Role & Active Command | Technical Purpose & Workflow |
+| :--- | :--- | :--- |
+| **Terminal 1: Code & Build** | `cd /var/www/src && vim ...`<br/>`make update`<br/>`make restart_httpd` | Used for editing Perl modules (`.pm`), running Git commands (`git pull origin master`), pulling database updates (`make update_db`), and restarting the Apache worker pool. |
+| **Terminal 2: Live Error Log Tail** | `cd /var/www/src && make tail_logs` | Continuously streams `/var/log/apache2/error.log` (or `httpd/logs/error_log`). Because `mod_perl` directs all `warn`, `die`, and compilation syntax errors to the Apache error log, keeping this open allows real-time observation of `Data::Dumper` output. |
+| **Terminal 3: Database Shell** | `cd /var/www/src && make db` | Opens an interactive PostgreSQL client shell bound directly to the active development database schema. Used for quick ad-hoc queries (`\dt`, `\d table_name`, `SELECT * FROM ...`). |
+
+### 3. VS Code Remote-SSH Setup & Version Compatibility
+If you prefer IDE assistance over terminal Vim, configure **Visual Studio Code Remote-SSH** to edit files directly on your remote development virtual machine:
+
+1. Install the official **Remote - SSH** extension inside VS Code.
+2. Open the Command Palette (`Cmd+Shift+P` on macOS or `Ctrl+Shift+P` on Windows/Linux) and select **Remote-SSH: Connect to Host...**.
+3. Enter `ssh -A <user>@<devNum>.teamassign.org` or select your configured `~/.ssh/config` host alias.
+4. Once connected, open the workspace folder `/var/www/src`.
+
+<Aside type="caution" title="VS Code Version Compatibility Note for Legacy VMs">
+  Some older development virtual machines run enterprise Linux distributions (such as CentOS 7 or older Red Hat builds) with `glibc` versions below `2.28`. If Remote-SSH fails to connect with an `Unsupported server architecture or glibc version` error, you must downgrade your local VS Code installation to **Version 1.85 (December 2023)** or upgrade the target VM kernel. Version 1.85 is the last stable release of VS Code that supports legacy Linux distributions with `glibc < 2.28`.
+</Aside>
+
+---
+
 ## Troubleshooting & Common Onboarding Gotchas
 
 If you encounter initialization errors during your onboarding process, consult the diagnosis catalog below before escalating to the infrastructure on-call engineer.

@@ -47,15 +47,33 @@ sequenceDiagram
     Apache-->>Browser: Render Page
 ```
 
-## Module Organization
+## Module & Multi-Repository Organization
 
-The codebase is organized within the `lib/TeamAssign/` directory, adhering to standard Perl namespace conventions.
+The TeamAssign platform is distributed across two primary Git repositories that separate core platform controllers/views from shared backend library code:
+1. **`TeamAssign` (Main Web Repository)**: Contains the CGI scripts, Apache/mod_perl dispatcher configuration (`htdocs/`, `conf/`), Template Toolkit HTML presentation files (`templates/`), and frontend controllers.
+2. **`teamassign-lib` (Submodule & Core Engine)**: Contains all backend data access models, algorithmic constraint solvers, and third-party integration drivers under `lib/`.
 
-- **`Dispatcher.pm`**: The central entry point. It maps URLs to specific Controller modules and subroutines. It handles global setup, logging initialization, and session validation.
-- **`Controller/`**: Contains the business logic for specific domains (e.g., `Teams.pm`, `Surveys.pm`, `Auth.pm`). Controllers parse input, interact with Models, and prepare data for the view layer.
-- **`Model/`**: Encapsulates data access. Each major database entity has a corresponding Model class (e.g., `User.pm`, `Course.pm`). These classes abstract away the raw SQL using DBI.
-- **`View/`**: While HTML templates reside in the `templates/` directory, `View.pm` acts as a wrapper around Template Toolkit, providing global variables (like the current user) to all templates.
-- **`Utils/`**: Contains helper modules for tasks like CSV parsing, email generation, and date formatting.
+### Core Namespace Architecture (`lib/TeamAssign/` & `lib/LMS/`)
+
+```
+teamassign-lib/lib/
+├── TeamAssign/
+│   ├── Dispatcher.pm   # Central URI router, session check, and mod_perl handler
+│   ├── Controller/     # Domain business logic (Teams.pm, Surveys.pm, Auth.pm)
+│   ├── Model/          # Blessed hash object models & DBI access (User.pm, Course.pm)
+│   ├── View/           # Template Toolkit presentation wrapper & global contexts
+│   └── Utils/          # Helper utilities (CSV parser, mailer, date formatting)
+└── LMS/
+    ├── LMS.pm          # Common interface for Learning Management System providers
+    ├── Login.pm        # OAuth 2.0 PKCE / Authorization code handshake & refresh
+    ├── Canvas.pm       # Canvas LMS REST API client (SIS imports, roster sync)
+    └── Utils.pm        # API request formatting, user-agent headers, and logging
+```
+
+- **`Dispatcher.pm`**: The central entry point for `mod_perl`. Maps URLs to specific Controller modules and subroutines. Handles global setup, logging initialization, and session validation.
+- **`Controller/`**: Contains the business logic for specific domains (`Teams.pm`, `Surveys.pm`, `Auth.pm`). Controllers parse input, interact with Models, and prepare data for the view layer.
+- **`Model/`**: Encapsulates data access. Each major database entity has a corresponding Model class (`User.pm`, `Course.pm`, `Team.pm`). These classes abstract raw SQL queries using parameterized `DBI` placeholders.
+- **`LMS/` Subsystem**: Dedicated integration hierarchy where `Login.pm` and `Canvas.pm` handle external OAuth 2.0 token persistence (`canvas_tokens` table) and automatic pre-expiration token refreshes (`check_and_update_token`) prior to any roster synchronization.
 
 ## Database Schema Patterns
 

@@ -209,6 +209,63 @@ grant_type=refresh_token
 
 ---
 
+## Canvas LMS OAuth 2.0 Integration & Authorization Code Flow (Perl/mod_perl Implementation)
+
+For our core academic platform integration (**TeamAssign**), OAuth 2.0 connects external Learning Management Systems (such as **Canvas LMS**) to our backend. When instructors link their profiles or import rosters, TeamAssign acts as the OAuth **Client**, obtaining delegated credentials without handling the user's LMS password directly.
+
+### Core OAuth 2.0 Terminology in TeamAssign
+- **Resource Owner**: The entity granting access to protected data (e.g., a **Canvas Instructor** authorizing access to course rosters and grades).
+- **Client**: The application requesting access on behalf of the resource owner (the **TeamAssign** web platform).
+- **Authorization Server**: The server issuing access tokens after authenticating the resource owner (`https://<canvas_instance>.instructure.com/login/oauth2/auth`).
+- **Resource Server**: The server hosting the protected resources (`https://<canvas_instance>.instructure.com/api/v1/*`).
+- **Access / Bearer Token**: A credential representing authorization, passed inside the `Authorization: Bearer <token>` HTTP header when invoking Canvas REST APIs.
+- **Redirect URI**: The pre-registered TeamAssign callback endpoint (`https://<dev_or_prod>.teamassign.org/faculty/my_profile`) where Canvas returns the user along with a temporary authorization `code`.
+
+### 7-Step Authorization Sequence
+1. **Initiation**: The instructor navigates to **My Profile** inside TeamAssign and clicks **Link Canvas**.
+2. **Redirect to Canvas**: TeamAssign redirects the browser to the Canvas authorization endpoint, passing `client_id`, `response_type=code`, `redirect_uri`, and required `scope` strings (e.g., `url:GET|/api/v1/courses`).
+3. **Instructor Consent**: If the instructor is not logged in, Canvas authenticates them. Canvas displays a consent prompt asking the instructor to authorize TeamAssign for the requested scopes.
+4. **Callback with Authorization Code**: Upon approval, Canvas redirects the instructor back to `redirect_uri` with a short-lived `code` parameter.
+5. **Back-Channel Token Exchange**: TeamAssign intercepts the code and executes a server-to-server `POST` request to `/login/oauth2/token` containing `client_id`, `client_secret`, `code`, and `redirect_uri`.
+6. **Token Issuance**: Canvas returns a JSON payload containing the `access_token`, `refresh_token`, and `expires_in` (3600 seconds).
+7. **Persistence**: TeamAssign stores the tokens inside the `canvas_tokens` database table keyed to the instructor's `user_id`.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Instructor
+    participant TeamAssign as TeamAssign (Client)
+    participant CanvasAuth as Canvas OAuth (/login/oauth2/auth)
+    participant CanvasToken as Canvas Token Endpoint
+    participant DB as PostgreSQL (canvas_tokens)
+
+    Instructor->>TeamAssign: Click "Link Canvas" (My Profile)
+    TeamAssign->>Instructor: 302 Redirect to CanvasAuth (?client_id, &scope, &redirect_uri)
+    Instructor->>CanvasAuth: Approve Scopes & Authenticate
+    CanvasAuth->>TeamAssign: 302 Redirect to /my_profile (?code=XYZ)
+    TeamAssign->>CanvasToken: POST /login/oauth2/token (client_id, client_secret, code)
+    CanvasToken-->>TeamAssign: JSON Response (access_token, refresh_token, expires_in)
+    TeamAssign->>DB: Store tokens & calculate expire_at timestamp
+    TeamAssign-->>Instructor: Render My Profile ("Canvas Linked Successfully")
+```
+
+### Source Code Architecture & Module Hierarchy (`lib/LMS/`)
+The authorization logic inside the TeamAssign repository (`teamassign-lib`) is structurally separated across controller actions and LMS-specific integration providers:
+
+```
+teamassign-lib/lib/LMS/
+├── LMS.pm          # Abstract base class defining common LMS interface methods
+├── Login.pm        # Core OAuth 2.0 handshake, token exchange, and refresh handler
+├── Canvas.pm       # Canvas-specific API client (courses, sections, SIS imports)
+└── Utils.pm        # HTTP user-agent formatting, payload signing, and error logging
+```
+
+- **`TeamAssign::Controller::Faculty->my_profile`**: Intercepts the incoming callback URL. When a `code` query parameter is detected during a GET request to `/my_profile`, the controller invokes `$lms->get_auth($code, $redirect_uri)` inside `Login.pm`.
+- **`LMS::Login::get_auth()`**: Constructs the POST form payload, communicates with the Canvas token exchange endpoint using `LWP::UserAgent`, and stores the returned token structure inside the `canvas_tokens` table (`user_id`, `access_token`, `refresh_token`, `expire_at`).
+- **Automatic Token Refresh (`check_and_update_token`)**: Before executing any outbound Canvas API call (such as importing students inside `sw40_students` or exporting evaluations inside `tm_display_results` and `view_results`), the system calls `check_and_update_token()`. This method compares the stored `expire_at` timestamp against the current system time. If the token expires within **60 seconds**, `Login.pm` automatically dispatches a `grant_type=refresh_token` request to Canvas, updates the `canvas_tokens` table with the new access token and extended expiry, and seamlessly proceeds with the API request without interrupting the instructor.
+
+---
+
 ## Security Headers & Bearer Authorization
 
 Once authenticated, all API requests directed toward our AWS resource endpoints (`https://sharonwang.me/api/*` or `https://raisedchurch.com/api/*`) must enforce standardized security headers alongside the OAuth `Bearer` token:
