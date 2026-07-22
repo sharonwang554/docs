@@ -97,17 +97,17 @@ graph TD
     end
 
     %% Flow connections
-    ClientWeb -->|"PUT /api/v1/locale\n(Session Token)"| RateLimiter
+    ClientWeb -->|"PUT /api/v1/locale<br/>(Session Token)"| RateLimiter
     RateLimiter --> LocaleService
     LocaleService <-->|"Query/Update State"| Database
 
-    CMS -->|"POST /api/webhooks/contentful\n(HMAC Signature)"| HMACValidator
+    CMS -->|"POST /api/webhooks/contentful<br/>(HMAC Signature)"| HMACValidator
     HMACValidator -->|"Revalidate Caches"| ISRController
     ISRController -->|"Update Static Pages"| ClientChurch
 
     LMS -->|"OAuth 2.0 Token Exchange"| AuthService
     AuthService -->|"Access Token"| GradeEngine
-    GradeEngine -->|"POST /update_grades\n(Bearer Auth)"| LMS
+    GradeEngine -->|"POST /update_grades<br/>(Bearer Auth)"| LMS
 ```
 
 ---

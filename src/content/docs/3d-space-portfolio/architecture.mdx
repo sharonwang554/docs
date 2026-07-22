@@ -39,15 +39,15 @@ The application strictly separates the HTML/DOM overlay layer from the WebGL `<C
 ```mermaid
 graph TD
     App["App (Root)"]
-    
-    Providers["Context Providers\n(Theme, i18n)"]
+
+    Providers["Context Providers<br/>(Theme, i18n)"]
     App --> Providers
-    
+
     MainLayout["MainLayout"]
     Providers --> MainLayout
-    
-    Overlay["DOM Overlay\n(z-index: 10)"]
-    Canvas["R3F Canvas\n(z-index: 0)"]
+
+    Overlay["DOM Overlay<br/>(z-index: 10)"]
+    Canvas["R3F Canvas<br/>(z-index: 0)"]
     
     MainLayout --> Overlay
     MainLayout --> Canvas

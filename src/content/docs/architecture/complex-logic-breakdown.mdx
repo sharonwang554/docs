@@ -58,20 +58,20 @@ To process over $10^5$ distinct manuscript fragments with sub-second query perfo
 ```mermaid
 graph TD
     subgraph Ingestion ["Stage 1: Data Ingestion & Normalization"]
-        TEI["TEI / XML Manuscript Corpus\nAccordance & Dead Sea Scrolls Archives"]
-        Tokenizer["Consonantal Tokenizer\nUnicode Normalization & Strip Vowels"]
-        Aligner["Multiple Sequence Aligner\nNeedleman-Wunsch & Lacuna Handler"]
+        TEI["TEI / XML Manuscript Corpus<br/>Accordance & Dead Sea Scrolls Archives"]
+        Tokenizer["Consonantal Tokenizer<br/>Unicode Normalization & Strip Vowels"]
+        Aligner["Multiple Sequence Aligner<br/>Needleman-Wunsch & Lacuna Handler"]
     end
 
     subgraph AnalyticsEngine ["Stage 2: Graph Clustering Engine"]
-        DistCalc["Distance Matrix Processor\nWeighted Jaccard & Levenshtein Cost Matrix"]
-        GraphClustering["Bayesian Stemmatic Engine\nDAG Calculation & Probability Scoring"]
-        GraphDB["Neo4j / Graph Database\nManuscript Nodes & Transmission Edges"]
+        DistCalc["Distance Matrix Processor<br/>Weighted Jaccard & Levenshtein Cost Matrix"]
+        GraphClustering["Bayesian Stemmatic Engine<br/>DAG Calculation & Probability Scoring"]
+        GraphDB["Neo4j / Graph Database<br/>Manuscript Nodes & Transmission Edges"]
     end
 
     subgraph PresentationLayer ["Stage 3: Interactive Apparatus UI"]
-        GraphQL["GraphQL Apparatus API\nTargeted Locus Query Gateway"]
-        ApparatusUI["Interactive Critical Apparatus\nSvelteKit / WebGL Dynamic Layout"]
+        GraphQL["GraphQL Apparatus API<br/>Targeted Locus Query Gateway"]
+        ApparatusUI["Interactive Critical Apparatus<br/>SvelteKit / WebGL Dynamic Layout"]
     end
 
     TEI --> Tokenizer

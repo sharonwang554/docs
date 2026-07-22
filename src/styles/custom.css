@@ -69,7 +69,7 @@ header .social-icons a[href*="sharonwang.me"]:hover {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Request 6: Collapsible Left Navigation Sidebar & Expanded Reading Space    */
+/* Industry-Standard Collapsible Left Navigation Sidebar & Full Reading Width  */
 /* -------------------------------------------------------------------------- */
 .sidebar-collapse-btn {
   display: inline-flex;
@@ -83,7 +83,8 @@ header .social-icons a[href*="sharonwang.me"]:hover {
   border: 1px solid var(--sl-color-gray-5);
   border-radius: 0.375rem;
   cursor: pointer;
-  margin-right: 0.5rem;
+  margin-left: auto;
+  margin-right: 0.75rem;
   transition: all 0.15s ease-in-out;
 }
 
@@ -93,16 +94,27 @@ header .social-icons a[href*="sharonwang.me"]:hover {
   color: var(--sl-color-text-accent);
 }
 
+/* When collapsed: remove grid column track so no blank space remains on the left */
+html[data-sidebar-collapsed="true"] [data-has-sidebar],
+html[data-sidebar-collapsed="true"] .page,
+html[data-sidebar-collapsed="true"] .main-frame {
+  grid-template-columns: 1fr !important;
+}
+
 html[data-sidebar-collapsed="true"] .sidebar-pane,
 html[data-sidebar-collapsed="true"] aside.sidebar,
 html[data-sidebar-collapsed="true"] [data-has-sidebar] > nav.sidebar {
   display: none !important;
+  width: 0 !important;
+  visibility: hidden !important;
 }
 
 html[data-sidebar-collapsed="true"] .main-pane,
 html[data-sidebar-collapsed="true"] main {
   width: 100% !important;
-  max-width: 100% !important;
+  max-width: 1200px !important;
+  margin: 0 auto !important;
+  padding-left: 0 !important;
 }
 
 html[data-sidebar-collapsed="true"] .content-panel {

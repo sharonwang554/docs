@@ -20,23 +20,34 @@ export default defineConfig({
           tag: 'script',
           content: `
             document.addEventListener('DOMContentLoaded', () => {
-              const headerControls = document.querySelector('.header .sl-flex') || document.querySelector('header');
+              const headerControls = document.querySelector('.header .sl-flex:last-child') || document.querySelector('.header .sl-flex') || document.querySelector('header');
               if (!headerControls) return;
 
               const toggleBtn = document.createElement('button');
               toggleBtn.id = 'sidebar-collapse-btn';
               toggleBtn.className = 'sidebar-collapse-btn';
-              toggleBtn.setAttribute('title', 'Toggle left navigation sidebar for more reading space');
-              toggleBtn.innerHTML = \`
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>
-                </svg>
-                <span>Sidebar</span>
-              \`;
+              toggleBtn.setAttribute('title', 'Toggle left navigation sidebar for expanded reading space');
+              
+              const updateBtnContent = (isCollapsed) => {
+                toggleBtn.innerHTML = \`
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>
+                  </svg>
+                  <span>\${isCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}</span>
+                \`;
+              };
 
-              const searchOrSocial = headerControls.querySelector('.site-search') || headerControls.firstElementChild;
-              if (searchOrSocial) {
-                headerControls.insertBefore(toggleBtn, searchOrSocial);
+              const initialCollapsed = localStorage.getItem('sl-sidebar-collapsed') === 'true';
+              if (initialCollapsed) {
+                document.documentElement.setAttribute('data-sidebar-collapsed', 'true');
+              }
+              updateBtnContent(initialCollapsed);
+
+              const search = headerControls.querySelector('.site-search');
+              if (search) {
+                headerControls.insertBefore(toggleBtn, search);
+              } else if (headerControls.firstChild) {
+                headerControls.insertBefore(toggleBtn, headerControls.firstChild);
               } else {
                 headerControls.appendChild(toggleBtn);
               }
@@ -46,11 +57,8 @@ export default defineConfig({
                 const nextState = isCollapsed ? 'false' : 'true';
                 document.documentElement.setAttribute('data-sidebar-collapsed', nextState);
                 localStorage.setItem('sl-sidebar-collapsed', nextState);
+                updateBtnContent(!isCollapsed);
               });
-
-              if (localStorage.getItem('sl-sidebar-collapsed') === 'true') {
-                document.documentElement.setAttribute('data-sidebar-collapsed', 'true');
-              }
             });
           `,
         },
