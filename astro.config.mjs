@@ -3,6 +3,7 @@ import starlight from '@astrojs/starlight';
 import vercel from '@astrojs/vercel';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import astroMermaid from 'astro-mermaid';
 
 export default defineConfig({
   site: 'https://docs.sharonwang.me',
@@ -15,54 +16,6 @@ export default defineConfig({
     starlight({
       title: 'System Documentation & Architecture Hub',
       tagline: 'Developer Knowledge Base & Technical Runbooks',
-      head: [
-        {
-          tag: 'script',
-          content: `
-            document.addEventListener('DOMContentLoaded', () => {
-              const headerControls = document.querySelector('.header .sl-flex:last-child') || document.querySelector('.header .sl-flex') || document.querySelector('header');
-              if (!headerControls) return;
-
-              const toggleBtn = document.createElement('button');
-              toggleBtn.id = 'sidebar-collapse-btn';
-              toggleBtn.className = 'sidebar-collapse-btn';
-              toggleBtn.setAttribute('title', 'Toggle left navigation sidebar for expanded reading space');
-              
-              const updateBtnContent = (isCollapsed) => {
-                toggleBtn.innerHTML = \`
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>
-                  </svg>
-                  <span>\${isCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}</span>
-                \`;
-              };
-
-              const initialCollapsed = localStorage.getItem('sl-sidebar-collapsed') === 'true';
-              if (initialCollapsed) {
-                document.documentElement.setAttribute('data-sidebar-collapsed', 'true');
-              }
-              updateBtnContent(initialCollapsed);
-
-              const search = headerControls.querySelector('.site-search');
-              if (search) {
-                headerControls.insertBefore(toggleBtn, search);
-              } else if (headerControls.firstChild) {
-                headerControls.insertBefore(toggleBtn, headerControls.firstChild);
-              } else {
-                headerControls.appendChild(toggleBtn);
-              }
-
-              toggleBtn.addEventListener('click', () => {
-                const isCollapsed = document.documentElement.getAttribute('data-sidebar-collapsed') === 'true';
-                const nextState = isCollapsed ? 'false' : 'true';
-                document.documentElement.setAttribute('data-sidebar-collapsed', nextState);
-                localStorage.setItem('sl-sidebar-collapsed', nextState);
-                updateBtnContent(!isCollapsed);
-              });
-            });
-          `,
-        },
-      ],
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/sharonwang554' },
         { icon: 'linkedin', label: 'LinkedIn', href: 'https://linkedin.com/in/YOUR_HANDLE' },
@@ -128,9 +81,55 @@ export default defineConfig({
         },
       ],
 
+      head: [
+        {
+          tag: 'script',
+          attrs: { type: 'module' },
+          content: `
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+            mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+
+            async function renderMermaidDiagrams() {
+              const codeBlocks = document.querySelectorAll('code.language-mermaid, pre.language-mermaid');
+              for (let i = 0; i < codeBlocks.length; i++) {
+                const codeBlock = codeBlocks[i];
+                const preOrFigure = codeBlock.closest('.expressive-code') || codeBlock.closest('pre') || codeBlock;
+                const textContent = codeBlock.textContent || '';
+                if (!textContent.trim()) continue;
+
+                const container = document.createElement('div');
+                container.className = 'mermaid-diagram-container';
+                container.style.margin = '1.5rem 0';
+                container.style.display = 'flex';
+                container.style.justifyContent = 'center';
+                container.style.overflowX = 'auto';
+
+                const id = 'mermaid-svg-' + i + '-' + Math.random().toString(36).substring(2, 7);
+                try {
+                  const { svg } = await mermaid.render(id, textContent.trim());
+                  container.innerHTML = svg;
+                  if (preOrFigure.parentNode) {
+                    preOrFigure.parentNode.replaceChild(container, preOrFigure);
+                  }
+                } catch (err) {
+                  console.error('Mermaid render error:', err);
+                }
+              }
+            }
+
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', renderMermaidDiagrams);
+            } else {
+              renderMermaidDiagrams();
+            }
+          `,
+        },
+      ],
+
       editLink: {
         baseUrl: 'https://github.com/sharonwang554/docs/edit/main/',
       },
     }),
+    astroMermaid(),
   ],
 });
