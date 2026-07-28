@@ -32,7 +32,7 @@ export default defineConfig({
 
       sidebar: [
         {
-          label: '🚀 Featured Articles',
+          label: 'Featured Articles',
           collapsed: false,
           items: [
             { slug: 'articles/repomix-ai-case-study' },
@@ -40,13 +40,13 @@ export default defineConfig({
           ],
         },
         {
-          label: '📦 3D Space Portfolio',
+          label: '3D Space Portfolio',
           badge: { text: 'Live', variant: 'success' },
           autogenerate: { directory: '3d-space-portfolio', collapsed: false },
           collapsed: true,
         },
         {
-          label: '⛪ Raised Church Website',
+          label: 'Raised Church Website',
           badge: { text: 'Live', variant: 'success' },
           collapsed: true,
           items: [
@@ -91,7 +91,7 @@ export default defineConfig({
           ],
         },
         {
-          label: '🔧 TeamAssign Platform',
+          label: 'TeamAssign Platform',
           badge: { text: 'Legacy', variant: 'note' },
           collapsed: true,
           items: [
@@ -139,7 +139,7 @@ export default defineConfig({
           ],
         },
         {
-          label: '📚 Articles & Research',
+          label: 'Articles & Research',
           autogenerate: { directory: 'articles', collapsed: false },
           collapsed: false,
         },
