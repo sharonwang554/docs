@@ -1,73 +1,47 @@
 ---
-title: 'Overview'
-description: 'Project introduction and stakeholder context for the Raised Church bilingual website.'
+title: 'Raised Church Website Overview'
+description: 'Overview of the Raised Church bilingual website project.'
+diataxis: explanation
 sidebar:
-  order: 1
+  order: 0
 ---
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
 
-import { Card, CardGrid, LinkCard, Aside, Badge } from '@astrojs/starlight/components';
+This project is a bilingual (Traditional Chinese and English) church website built for 左營復活堂 (Raised Church) located in Zuoying District, Kaohsiung City, Taiwan. It serves as the digital front door for the church, providing information about services, activities, sermons, and community engagement.
 
-This project documents the design, development, and deployment of a bespoke bilingual website for 左營復活堂 (Raised Church), located in Kaohsiung, Taiwan. The goal was to provide a modern, fast, and easily manageable digital presence that serves both the local congregation and international visitors.
+## Why this stack?
 
-<Aside type="tip" title="Live Website">
-  <LinkCard title="Live Website (raisedchurch.com)" href="https://raisedchurch.com" description="Production environment deployed on Vercel." />
-</Aside>
+The project uses a modern web stack—**SvelteKit**, **Contentful CMS**, and **Vercel**—instead of traditional solutions like WordPress. This approach offers several advantages:
+- **Performance:** SvelteKit provides server-side rendering (SSR) and delivers a lightweight client bundle.
+- **Maintainability:** Using TypeScript and Svelte 5 runes (`$props()`, `$state()`, `$derived()`) ensures type safety and predictable reactivity.
+- **Flexibility:** A headless CMS (Contentful) separates content from presentation, allowing non-technical staff to easily manage site data without risking the site's layout.
+- **Reliability:** The Vercel edge network ensures fast delivery and seamless CI/CD.
 
-## Project Scoping and Motivation
+## Tech stack summary
 
-Historically, many local churches rely on Facebook pages or templated WordPress sites that quickly become bloated, difficult to maintain, and challenging to localize. Through initial stakeholder interviews with the pastoral staff, several key requirements emerged:
+- **Framework:** SvelteKit 2.50+ and Svelte 5.51+
+- **Language:** TypeScript 5.9+
+- **Styling:** **SCSS** (using shared variables and mixins for theming)
+- **CMS:** Contentful
+- **Deployment:** Vercel (Node.js 24.x runtime)
 
-1. **Bilingual Support First**: The congregation includes both native Mandarin speakers and English-speaking expats. Content needed to be natively bilingual rather than relying on automated browser translation, which often struggles with theological terminology.
-2. **Ease of Management**: Church staff needed a way to update weekly sermons, event announcements, and gathering times without touching HTML or calling a developer.
-3. **Mobile-First Engagement**: Analytics indicated that over 80% of the congregation accessed church information via smartphones, making mobile performance and responsive design critical.
-4. **Performance & SEO**: The church wanted to improve local discoverability in Kaohsiung to reach people seeking a church community.
+## Key features
 
-### Why Not WordPress?
+- **Bilingual support:** Full internationalization with routing for English (`/en/...`) and Traditional Chinese (`/zh/...` or default `/`).
+- **CMS-managed content:** Deep integration with Contentful for managing activities, news, sermons, and sharings.
+- **Sermon archive:** Dedicated pages for Sunday messages with embedded YouTube videos, PDF slides, and newsletters.
+- **Dynamic gathering schedule:** Time and location of recurring services are manageable through the CMS.
+- **Multi-church architecture:** Site profile resolution enables you to use the same codebase for multiple church websites (e.g., `raised-church`, `grace-church`) using domain mapping.
 
-While WordPress is a common choice for organizations, we opted against it for several reasons:
+## Quick links
 
-- **Security & Maintenance**: WordPress requires constant plugin updates and monitoring to prevent vulnerabilities. Church staff lacked the technical bandwidth for this overhead.
-- **Performance**: A static or server-rendered Jamstack approach provides superior Core Web Vitals out-of-the-box compared to a typical heavily-plugged WordPress site.
-- **Editorial Experience**: We needed a deeply customized, strictly typed content schema (e.g., specific fields for sermon YouTube links, speaker names, and bilingual text). A headless CMS like Contentful provides a cleaner, more tailored editor interface than WordPress's block editor for structured data.
-
-## Stakeholder Communication
-
-Managing technical projects for non-technical stakeholders requires a specific communication cadence:
-
-- **Discovery Phase**: Instead of asking "What tech stack do you want?", questions were framed around workflows: "How do you currently share the weekly sermon?" and "Who is responsible for updating the event calendar?"
-- **Prototyping**: We used wireframes and early Vercel preview links to demonstrate progress, rather than relying on abstract technical explanations.
-- **Training**: Delivering the final site included creating the [Content Editor Guide](/raised-church-website/content-editor-guide) tailored specifically to the staff's daily tasks, completely abstracted from the underlying code.
-
-## Technology Stack
-
-The solution utilizes a modern Jamstack architecture designed for performance, developer experience, and ease of content management.
-
-<CardGrid stagger>
-  <Card title="Frontend Framework" icon="laptop">
-    **SvelteKit**: Chosen for its exceptional performance, tiny bundle sizes, and intuitive developer experience. We heavily utilize its server-side rendering (SSR) and data loading capabilities.
-  </Card>
-  <Card title="Content Management" icon="document">
-    **Contentful**: A headless CMS providing a structured, heavily typed content model. It allows staff to input content in both English and Traditional Chinese side-by-side.
-  </Card>
-  <Card title="Styling" icon="pencil">
-    **Tailwind CSS**: Used for rapid, responsive UI development. The utility-first approach made it simple to build a consistent design system that adapts seamlessly to mobile devices.
-  </Card>
-  <Card title="Deployment" icon="rocket">
-    **Vercel**: Provides zero-config deployments, automatic preview environments for every pull request, and edge caching for global performance.
-  </Card>
+<CardGrid>
+  <LinkCard title="Getting Started" href="/raised-church-website/getting-started" description="Set up your local development environment." />
+  <LinkCard title="Architecture" href="/raised-church-website/architecture" description="Understand the system design and request lifecycle." />
+  <LinkCard title="Content Editor Guide" href="/raised-church-website/content-editor-guide" description="Instructions for church staff on managing CMS content." />
+  <LinkCard title="Changelog" href="/raised-church-website/changelog" description="View the project version history." />
 </CardGrid>
 
-## Key Features
+## Live site
 
-- **Weekly Sermon Archive**: A structured database of sermons filterable by speaker, series, and date, complete with embedded YouTube recordings and bilingual summaries.
-- **Dynamic Gathering Schedule**: Easy-to-read tables for service times, Sunday school, and small group meetings.
-- **Event Announcements**: Time-sensitive announcements that automatically unpublish when they expire.
-- **Bilingual Toggle**: A seamless language switcher that preserves the user's current page context while swapping locales.
-
----
-
-### Next Steps
-
-- Explore the [Architecture](/raised-church-website/architecture) to understand how SvelteKit and Contentful interact.
-- If you are a developer, read the [Developer Guide](/raised-church-website/developer-guide).
-- If you are church staff, proceed to the [Content Editor Guide](/raised-church-website/content-editor-guide).
+Check out the live production site at [raisedchurch.com](https://raisedchurch.com).

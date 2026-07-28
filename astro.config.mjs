@@ -32,41 +32,109 @@ export default defineConfig({
 
       sidebar: [
         {
-          label: '🎯 Developer Docs & API',
-          autogenerate: { directory: 'developer-docs', collapsed: false },
-          collapsed: false,
-        },
-        {
-          label: '🎯 Troubleshooting & Runbooks',
-          autogenerate: { directory: 'troubleshooting', collapsed: false },
-          collapsed: false,
-        },
-        {
-          label: '🎯 Architecture & Project Logic',
-          autogenerate: { directory: 'architecture', collapsed: false },
-          collapsed: false,
-        },
-        {
-          label: '📁 Complete System Repositories',
+          label: '🚀 Featured Articles',
           collapsed: false,
           items: [
+            { slug: 'articles/repomix-ai-case-study' },
+            { slug: 'articles/obsidian-pkm-setup' },
+          ],
+        },
+        {
+          label: '📦 3D Space Portfolio',
+          badge: { text: 'Live', variant: 'success' },
+          autogenerate: { directory: '3d-space-portfolio', collapsed: false },
+          collapsed: true,
+        },
+        {
+          label: '⛪ Raised Church Website',
+          badge: { text: 'Live', variant: 'success' },
+          collapsed: true,
+          items: [
+            { slug: 'raised-church-website/overview' },
             {
-              label: '3D Space Portfolio',
-              badge: { text: 'Live', variant: 'success' },
-              autogenerate: { directory: '3d-space-portfolio', collapsed: false },
+              label: 'Tutorials',
               collapsed: true,
+              items: [
+                { slug: 'raised-church-website/tutorials/getting-started' },
+                { slug: 'raised-church-website/tutorials/first-feature' },
+              ],
             },
             {
-              label: 'Raised Church Website',
-              badge: { text: 'Live', variant: 'success' },
-              autogenerate: { directory: 'raised-church-website', collapsed: false },
+              label: 'How-to Guides',
               collapsed: true,
+              items: [
+                { slug: 'raised-church-website/how-to/custom-pages' },
+                { slug: 'raised-church-website/how-to/deploy-to-vercel' },
+                { slug: 'raised-church-website/how-to/add-a-church' },
+                { slug: 'raised-church-website/how-to/contributing' },
+              ],
             },
             {
-              label: 'TeamAssign',
-              badge: { text: 'Legacy', variant: 'note' },
-              autogenerate: { directory: 'teamassign', collapsed: false },
+              label: 'Reference',
               collapsed: true,
+              items: [
+                { slug: 'raised-church-website/reference/environment-variables' },
+                { slug: 'raised-church-website/reference/components' },
+                { slug: 'raised-church-website/reference/content-types' },
+                { slug: 'raised-church-website/reference/i18n-api' },
+              ],
+            },
+            {
+              label: 'Explanation',
+              collapsed: true,
+              items: [
+                { slug: 'raised-church-website/architecture' },
+                { slug: 'raised-church-website/content-editor-guide' },
+              ],
+            },
+            { slug: 'raised-church-website/changelog' },
+          ],
+        },
+        {
+          label: '🔧 TeamAssign Platform',
+          badge: { text: 'Legacy', variant: 'note' },
+          collapsed: true,
+          items: [
+            {
+              label: 'TeamAssign Core',
+              collapsed: false,
+              items: [
+                { slug: 'teamassign/overview' },
+                { slug: 'teamassign/getting-started' },
+                { slug: 'teamassign/architecture' },
+                { slug: 'teamassign/developer-tips' },
+                { slug: 'teamassign/troubleshooting' },
+              ],
+            },
+            {
+              label: 'Developer Docs & API',
+              collapsed: true,
+              items: [
+                { slug: 'developer-docs/overview' },
+                { slug: 'developer-docs/authentication-flow' },
+                { slug: 'developer-docs/api-reference' },
+                { slug: 'developer-docs/getting-started' },
+              ],
+            },
+            {
+              label: 'Troubleshooting & Runbooks',
+              collapsed: true,
+              items: [
+                { slug: 'troubleshooting/overview' },
+                { slug: 'troubleshooting/canvas-lms-errors' },
+                { slug: 'troubleshooting/database-and-memory-runbooks' },
+                { slug: 'troubleshooting/debugging-playbook' },
+              ],
+            },
+            {
+              label: 'Architecture & Logic',
+              collapsed: true,
+              items: [
+                { slug: 'architecture/overview' },
+                { slug: 'architecture/canvas-aws-system-architecture' },
+                { slug: 'architecture/project-system-designs' },
+                { slug: 'architecture/complex-logic-breakdown' },
+              ],
             },
           ],
         },

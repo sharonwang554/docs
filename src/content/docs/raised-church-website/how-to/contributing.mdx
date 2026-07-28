@@ -1,0 +1,103 @@
+---
+title: 'Contribute to the codebase'
+description: 'How to contribute code, manage branches, and follow the project styling conventions.'
+diataxis: how-to
+sidebar:
+  order: 4
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+This guide outlines the workflow for contributing to the Raised Church website. The project values simplicity and relies heavily on built-in tooling provided by SvelteKit and TypeScript rather than heavy external linting pipelines.
+
+## Branch strategy
+
+The repository uses a simplified GitHub flow:
+- `main`: The production branch. What is here is deployed live.
+- **Feature branches**: Create a new branch off `main` for all changes (e.g., `feat/new-sermon-page`, `fix/navbar-mobile`).
+
+## Commit conventions
+
+Use Conventional Commits for all commit messages. This makes the project history clean and readable.
+
+- `feat:` for new features (e.g., `feat: add custom pages support`)
+- `fix:` for bug fixes (e.g., `fix: mobile menu not closing on navigation`)
+- `docs:` for documentation updates
+- `refactor:` for code changes that neither fix a bug nor add a feature
+- `style:` for changes to CSS/SCSS
+
+## Code style and enforcement
+
+You will notice this project has **no ESLint, Prettier, or Husky** configuration. This is a deliberate design choice to maintain simplicity and fast installation times.
+
+Instead, code quality is enforced strictly through:
+1. **TypeScript strict mode**: `tsconfig.json` requires explicit types and strict null checks (`strict: true`).
+2. **`svelte-check`**: SvelteKit's built-in type checker validates Svelte component props, reactive statements, and template bindings.
+3. **Manual code review**: Readability and formatting are maintained through peer review on pull requests.
+
+<Aside type="note">
+Because we use Svelte 5 (with runes like `$state()`, `$props()`, and `$derived()`), Svelte's compiler natively catches many reactivity errors that previously required complex linting rules. Do not use Svelte 4 legacy syntax (`export let`, `$:`).
+</Aside>
+
+### Running checks locally
+
+Before committing your code, you must ensure it passes the type checker. Run the following command:
+
+```bash
+npm run check
+```
+
+This runs `svelte-kit sync` followed by `svelte-check`. Resolve any errors output by this command before pushing your branch.
+
+For a continuous feedback loop while coding, run:
+
+```bash
+npm run check:watch
+```
+
+## Pull request workflow
+
+<Steps>
+
+1. Push your feature branch to GitHub.
+2. Open a Pull Request targeting the `main` branch.
+3. Vercel automatically builds a preview deployment. You can click the preview link in the PR checks to test your changes in a live environment.
+4. Request a review from another team member.
+5. Once approved and all checks pass, squash and merge into `main`.
+
+</Steps>
+
+## Release and versioning process
+
+The project uses Semantic Versioning (`MAJOR.MINOR.PATCH`). Versions are tagged on the `main` branch after a feature is merged. 
+
+<Steps>
+
+1. While still on your feature branch, manually bump the version number in `package.json`:
+   ```json
+   {
+     "version": "1.2.0"
+   }
+   ```
+2. Commit this change and merge the PR to `main` as normal.
+3. Switch to your local `main` branch and pull the latest changes:
+   ```bash
+   git checkout main
+   git pull origin main
+   ```
+4. Create an annotated git tag for the exact commit running in production:
+   ```bash
+   git tag -a v1.2.0 -m "v1.2.0 - Add custom pages support"
+   ```
+5. Push the tag to GitHub:
+   ```bash
+   git push origin v1.2.0
+   ```
+
+</Steps>
+
+### How the version is displayed
+
+The application surfaces the current version dynamically in the footer. 
+
+During the Vite build process, the `version` field from `package.json` is injected as a global constant (`__APP_VERSION__`). The `Footer.svelte` component renders this constant, ensuring that the version displayed on the site always matches the current release tag.

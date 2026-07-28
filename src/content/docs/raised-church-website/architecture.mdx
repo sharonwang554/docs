@@ -1,137 +1,105 @@
 ---
-title: 'Architecture'
-description: 'SvelteKit and Contentful integration, component design, and CMS data flow.'
+title: 'Architecture & Data Flow'
+description: 'Understand the system design and request lifecycle of the Raised Church website.'
+diataxis: explanation
+sidebar:
+  order: 1
 ---
 
-import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-The Raised Church website employs a decoupled Jamstack architecture. The frontend is built with **SvelteKit**, which consumes structured content via the **Contentful Delivery API (RESTful/GraphQL)**. This approach ensures that the frontend presentation is entirely separate from content management.
+This guide explains the architectural decisions, request lifecycle, and data flow of the Raised Church website. The system is designed to provide a fast, bilingual experience backed by a headless CMS, with a robust fallback mechanism.
 
-## System Overview
+## System overview
+
+The architecture separates the frontend presentation from the content data source using a repository pattern. Here is the high-level data flow:
 
 ```mermaid
-flowchart LR
-    subgraph Editors
-        Staff[Church Staff] -->|Manages Content| Contentful[(Contentful CMS)]
-    end
-
-    subgraph Build & Deploy
-        Contentful -->|Webhook Trigger| Vercel[Vercel CI/CD]
-        Github[GitHub Repo] -->|Push Trigger| Vercel
-    end
-
-    subgraph Runtime
-        Vercel -->|Hosts| SvelteKit[SvelteKit App]
-        SvelteKit -->|Fetches Data| ContentfulAPI[Contentful Delivery API]
-        SvelteKit -->|Renders HTML/JS| Client[Browser Client]
-    end
+flowchart TD
+    Client[Browser Request] --> Router[SvelteKit Router]
+    Router --> Hooks[hooks.server.ts]
+    Hooks --> Load[+page.server.ts Load Function]
+    Load --> Repo[ContentRepository Interface]
     
-    style Contentful fill:#f9f,stroke:#333,stroke-width:2px
-    style SvelteKit fill:#ff9,stroke:#333,stroke-width:2px
+    Repo -->|If Configured| Contentful[ContentfulAdapter]
+    Contentful -->|Live Data| API[Contentful API]
+    Contentful -.->|On Error| Fallback[FallbackAdapter]
+    
+    Repo -->|If Unconfigured| Fallback
+    Fallback --> JSON[Local fallback-*.json]
+    
+    API --> Render[+page.svelte Components]
+    JSON --> Render
+    Render --> Client
 ```
 
-## SvelteKit File-Based Routing
+## Request lifecycle
 
-SvelteKit uses filesystem-based routing. The directory structure in `src/routes` defines the URL structure of the application.
+When a user visits a page, the request goes through several layers before the browser renders the HTML.
 
-```text
-src/routes/
-├── +layout.svelte       # Global layout (Navbar, Footer, Language Context)
-├── +layout.server.ts    # Global data fetching (e.g., site settings)
-├── +page.svelte         # Homepage component
-├── +page.server.ts      # Homepage data loading (fetches featured events)
-├── sermons/
-│   ├── +page.svelte     # Sermon listing page
-│   ├── +page.server.ts  # Fetches all sermons from Contentful
-│   └── [slug]/          # Dynamic route for individual sermons
-│       ├── +page.svelte
-│       └── +page.server.ts # Fetches specific sermon by slug
-├── events/
-│   └── ...
-└── about/
-    └── ...
-```
+1. **Language and site detection (`hooks.server.ts`):** 
+   The hook inspects the URL to detect the requested language (`/en` or `/zh`). It also examines the hostname to resolve the correct site profile config (e.g., identity, theme colors).
+2. **Layout data loading (`+layout.server.ts`):** 
+   Global data like site configuration, contact information, and active news banners are fetched here so they are available to all child routes.
+3. **Page data loading (`+page.server.ts`):** 
+   Route-specific load functions call the `ContentRepository` to fetch data required for that specific page (e.g., sermons or activities).
+4. **Server-Side Rendering (SSR):** 
+   SvelteKit compiles the components and data into HTML on the server.
+5. **Client hydration:** 
+   The HTML is sent to the browser, and SvelteKit hydrates the page to enable client-side routing and reactivity.
 
-### Data Loading Pattern
+## The ContentRepository pattern
 
-We exclusively use server-side data loading (`+page.server.ts`) to fetch data from Contentful before rendering the page. This ensures API keys remain secure on the server and that the client receives fully hydrated HTML, which is critical for SEO.
+To abstract the data source from the UI components, the project uses the `ContentRepository` interface. You access data by calling `getContentRepository()` in your server load functions.
 
-```typescript
-// src/routes/sermons/+page.server.ts
-import { contentfulClient } from '$lib/server/contentful';
-import type { PageServerLoad } from './$types';
+This pattern exists to provide **graceful degradation** and to enable **development without CMS credentials**.
 
-export const load: PageServerLoad = async ({ locals }) => {
-    // `locals.locale` is set via middleware based on the user's language preference
-    const locale = locals.locale === 'zh' ? 'zh-Hant-TW' : 'en-US';
-
-    const response = await contentfulClient.getEntries({
-        content_type: 'sermon',
-        order: ['-fields.date'], // Order by date descending
-        locale: locale
-    });
-
-    return {
-        sermons: response.items
-    };
-};
-```
-
-## Contentful Data Model
-
-The content model in Contentful is strictly typed to ensure data consistency. We define specific Content Types that map to UI components.
-
-### Core Content Types
-
-1. **Sermon (`sermon`)**
-   - `title` (Symbol): Bilingual title.
-   - `slug` (Symbol): URL-friendly identifier.
-   - `date` (Date): When the sermon was preached.
-   - `speaker` (Reference): Link to a `Person` entry.
-   - `youtubeId` (Symbol): The 11-character YouTube video ID for embedding.
-   - `passage` (Symbol): Bible verses covered (e.g., "John 3:16-21").
-   - `summary` (Rich Text): Bilingual summary of the sermon.
-
-2. **Event (`event`)**
-   - `title`, `description`, `startDate`, `endDate`, `location`, `coverImage`.
-
-3. **Person (`person`)**
-   - `name`, `role` (e.g., "Senior Pastor"), `bio`, `profilePicture`.
-
-4. **Page Content (`page`)**
-   - Used for static pages like "About Us" or "Gathering Times".
-   - `pageId` (Symbol): Identifier (e.g., "about-page").
-   - `content` (Rich Text): The main body content.
+- **ContentfulAdapter:** This adapter queries the live Contentful SDK. If it encounters any network or API error, it catches the error and delegates the call to the `FallbackAdapter`.
+- **FallbackAdapter:** This adapter reads static JSON files located in `src/lib/data/`. It requires no network requests and ensures the site always builds and renders successfully, even if the CMS is completely down or unconfigured.
 
 <Aside type="tip">
-By keeping references normalized (e.g., `Sermon` references `Person`), updating a pastor's title updates it automatically across all past sermons they've preached.
+You should never import `ContentfulAdapter` or `FallbackAdapter` directly into your routes. Always use the `getContentRepository()` factory function.
 </Aside>
 
-## Bilingual Implementation
+## SvelteKit routing structure
 
-Handling bilingual content effectively was a primary architectural requirement.
+The app uses SvelteKit's file-based routing. The `src/routes/[[lang]]/` structure allows the language parameter to be optional. 
 
-We utilize Contentful's native localization features. Every field in Contentful is configured to accept both `en-US` (English) and `zh-Hant-TW` (Traditional Chinese) values. 
+- `+page.server.ts`: Responsible for fetching data on the server.
+- `+page.svelte`: Responsible for rendering the UI using the data provided.
 
-In SvelteKit, the user's language preference is stored in a cookie. A `hooks.server.ts` middleware intercepts every request, reads the cookie, and attaches the locale to the `event.locals` object. Load functions then pass this locale directly to the Contentful API, which returns only the localized strings.
+## Multi-church architecture
 
-This means our Svelte components do not need complex i18n dictionaries for Contentful data; they simply render the string they are given.
+The system is designed to host multiple church websites from a single codebase.
+
+In `hooks.server.ts`, the application matches the incoming request's hostname against site profiles defined in `src/lib/config/site.ts` (or files in a `sites/` directory). This runtime configuration resolution injects the correct identity, theme colors, and layout settings into the request locals, which are then passed down to the components.
+
+## Data flow in Svelte 5 components
+
+Data loaded on the server is passed to your components via props. You must use Svelte 5 runes to receive and process this data.
+
+Here is an example of how data flows into a page component:
 
 ```svelte
-<!-- src/routes/sermons/+page.svelte -->
 <script lang="ts">
-    export let data;
+  import { page } from "$app/state";
+  import { getTranslation, getLangFromParams } from "$lib/i18n";
+  import HeroSlider from "$lib/components/HeroSlider.svelte";
+
+  // Receive data from +page.server.ts
+  let { data } = $props();
+
+  // Derive localized strings based on the current URL
+  let lang = $derived(getLangFromParams(page.params));
+  let t = $derived(getTranslation(lang));
 </script>
 
-<h1>{data.dictionary.sermonArchive}</h1> <!-- Static UI string from i18n store -->
+<h1>{t.pages.home.title}</h1>
 
-<ul>
-    {#each data.sermons as sermon}
-        <li>
-            <!-- The title is already in the correct language based on the server fetch -->
-            <h2>{sermon.fields.title}</h2> 
-            <p>{sermon.fields.date} - {sermon.fields.speaker.fields.name}</p>
-        </li>
-    {/each}
-</ul>
+<!-- Pass data down to child components -->
+<HeroSlider slides={data.heroSlides} {lang} />
 ```
+
+<Aside type="danger">
+The project uses Svelte 5 strictly. Never use `export let data` or `\$: ` reactive statements. Always use `$props()`, `$state()`, and `$derived()`.
+</Aside>

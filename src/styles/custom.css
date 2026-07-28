@@ -67,3 +67,44 @@ header .social-icons a[href*="sharonwang.me"]:hover {
   color: #ffffff !important;
   transform: translateY(-1px);
 }
+
+/* -------------------------------------------------------------------------- */
+/* Homepage: Bucket section heading styling                                    */
+/* -------------------------------------------------------------------------- */
+[data-page-template="splash"] .sl-markdown-content h2 {
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--sl-color-accent-low);
+  margin-top: 2.5rem;
+}
+
+[data-page-template="splash"] .sl-markdown-content h2:first-of-type {
+  margin-top: 1rem;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Homepage: Card hover lift effect                                            */
+/* -------------------------------------------------------------------------- */
+[data-page-template="splash"] .card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+[data-page-template="splash"] .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+:root[data-theme='dark'] [data-page-template="splash"] .card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Homepage: Splash page spacing refinements                                   */
+/* -------------------------------------------------------------------------- */
+[data-page-template="splash"] .sl-markdown-content hr {
+  margin: 2rem 0;
+  border-color: var(--sl-color-gray-5);
+}
+
+[data-page-template="splash"] .sl-markdown-content .starlight-aside {
+  margin-top: 2rem;
+}

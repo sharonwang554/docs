@@ -1,0 +1,32 @@
+---
+title: 'Changelog'
+description: 'Version history and release notes for the Raised Church website.'
+diataxis: reference
+sidebar:
+  order: 99
+---
+
+This document outlines the version history and major feature additions for the Raised Church website.
+
+## Versioning strategy
+
+This project uses [Semantic Versioning (SemVer)](https://semver.org/). 
+- **Major (1.x.x):** Significant architectural changes or redesigns.
+- **Minor (x.1.x):** New features or pages.
+- **Patch (x.x.1):** Bug fixes and minor tweaks.
+
+The current version is defined in the project's `package.json` file. During the build process, this version number is injected into the application as `__APP_VERSION__` and is automatically displayed in the site footer and `humans.txt`.
+
+## [1.0.0] - Current Release
+
+The initial production release of the Raised Church website. 
+
+### Key features
+- **Bilingual support:** Full internationalization with English and Traditional Chinese routing and content.
+- **Contentful CMS integration:** Headless CMS integration for dynamic content management.
+- **Robust fallback data:** Static JSON fallback system ensures the site remains functional even if the CMS API is unavailable or unconfigured.
+- **Multi-church template architecture:** System designed with site profile configuration to support multiple church domains from a single codebase.
+- **Sermon archive:** Comprehensive media archive supporting YouTube embeds, PDF slide downloads, and weekly newsletters.
+- **Dynamic gathering schedule:** Time and location data for regular services driven by the CMS.
+- **SEO optimizations:** Automatic generation of sitemap, Schema.org structured data, and dynamic meta tags for social sharing.
+- **Vercel deployment:** Configured for Vercel edge delivery with auto-rebuild webhooks triggered by CMS updates.

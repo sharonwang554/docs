@@ -1,0 +1,105 @@
+---
+title: 'Deploy to Vercel'
+description: 'How to deploy the church website to Vercel and configure automated rebuilds.'
+diataxis: how-to
+sidebar:
+  order: 2
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+The website uses SvelteKit's Vercel adapter for deployment. This guide walks you through the deployment process, configuring environment variables, and setting up automated rebuilds when CMS content changes.
+
+## Prerequisites
+
+- A Vercel account
+- The source code pushed to a GitHub repository
+- Node.js >= 24.0.0
+
+## Vercel adapter configuration
+
+The project is already pre-configured to use `@sveltejs/adapter-vercel`. You do not need to change the configuration unless you are updating the Node.js version.
+
+```js
+// svelte.config.js
+import adapter from '@sveltejs/adapter-vercel';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+
+/** @type {import('@sveltejs/kit').Config} */
+const config = {
+  preprocess: vitePreprocess(),
+  kit: {
+    adapter: adapter({
+      runtime: 'nodejs24.x'
+    })
+  }
+};
+
+export default config;
+```
+
+## Initial deployment
+
+You can deploy the site either through the Vercel dashboard (connecting your GitHub repository) or via the CLI.
+
+### Deploying via GitHub (Recommended)
+
+<Steps>
+
+1. Log into the Vercel Dashboard and click **Add New** > **Project**.
+2. Import your GitHub repository.
+3. In the "Configure Project" section, expand **Environment Variables**.
+4. Add the required Contentful credentials:
+   - `CONTENTFUL_SPACE_ID`
+   - `CONTENTFUL_ACCESS_TOKEN`
+   - `CONTENTFUL_ENVIRONMENT` (usually `master`)
+5. Click **Deploy**. Vercel automatically detects SvelteKit and runs `npm run build`.
+
+</Steps>
+
+### Deploying via CLI
+
+If you prefer using the terminal, use the provided npm script which runs `vercel --prod`:
+
+```bash
+npm run deploy
+```
+
+<Aside type="note">
+Make sure you have configured your environment variables in the Vercel dashboard or pulled them locally using `vercel env pull` before running the CLI deployment.
+</Aside>
+
+## Automated rebuilds (Contentful Webhooks)
+
+Because SvelteKit renders pages on the server or pre-renders them, the site needs to rebuild when you publish new content in Contentful.
+
+<Steps>
+
+1. In your Vercel project dashboard, go to **Settings** > **Git** > **Deploy Hooks**.
+2. Create a new hook named "Contentful Updates" pointing to your `main` branch.
+3. Copy the generated URL.
+4. Go to your Contentful space dashboard. Navigate to **Settings** > **Webhooks**.
+5. Add a new webhook. Paste the Vercel deploy hook URL into the URL field (make sure the method is POST).
+6. Under **Triggers**, select "Select specific triggering events" and check "Publish" and "Unpublish" for "Entry" and "Asset".
+7. Save the webhook. Now, whenever you publish content, Vercel automatically redeploys your site.
+
+</Steps>
+
+## Previews and rollbacks
+
+- **Pull Requests**: Vercel automatically creates preview deployments for every pull request. This allows you to test code changes in a live environment before merging to `main`.
+- **Rollbacks**: If a deployment breaks production, go to the Vercel dashboard, find the previous successful deployment in the **Deployments** tab, click the three dots (`...`), and select **Promote to Production** to instantly rollback.
+
+## Common deployment errors
+
+### Build failures
+If `npm run build` fails during deployment, it is often due to TypeScript type errors. SvelteKit's `svelte-check` runs strictly. Run `npm run check` locally to find and fix type errors before deploying.
+
+### Missing environment variables
+If the site deploys but crashes at runtime or shows outdated fallback data, verify that your Contentful environment variables are set correctly in the Vercel project settings.
+
+### Node.js version mismatch
+Ensure your Vercel project settings define Node.js 24.x as the runtime, matching the `>=24.0.0` requirement in `package.json`. If Vercel defaults to an older version, the build will fail.
+
+### SSR errors
+Errors like "window is not defined" occur when browser-only APIs are accessed during Server-Side Rendering. Ensure browser-specific code runs inside `$effect()` or check `if (typeof window !== 'undefined')` or use SvelteKit's `browser` boolean from `$app/environment`.

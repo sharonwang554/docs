@@ -1,0 +1,205 @@
+---
+title: 'Content Types'
+description: 'Reference for Contentful content types, fields, and TypeScript interfaces.'
+diataxis: reference
+sidebar:
+  order: 3
+---
+
+This page details the Contentful content types used to manage the site's data. Each section specifies the Contentful ID, TS interface, consuming route, and a breakdown of all fields.
+
+## Site Info
+- **Content Type ID:** `siteInfo`
+- **TS Interface:** `ContentfulSiteInfo` / `SiteInfo`
+- **Consuming Route:** Global Layout (All pages)
+- **Description:** Global site information such as church name, contact info, and social links.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `name` | Short text | Yes | Yes | Short name (e.g. 左營復活堂) |
+| `nameEn` | Short text | No | Yes | English short name (e.g. Raised Church) |
+| `fullName` | Short text | Yes | Yes | Full localized name |
+| `fullNameEn` | Short text | No | Yes | Full English name |
+| `address` | Short text | Yes | Yes | Localized address |
+| `addressEn` | Short text | No | Yes | English address |
+| `phone` | Short text | No | Yes | Contact phone number |
+| `fax` | Short text | No | No | Fax number |
+| `email` | Short text | No | No | Contact email |
+| `facebookUrl` | Short text | No | No | Facebook page link |
+| `lineUrl` | Short text | No | No | Line official account link |
+| `youtubeUrl` | Short text | No | No | YouTube channel link |
+| `youtubeLiveStreamUrl` | Short text | No | No | Link to the Sunday live stream |
+| `mapEmbedUrl` | Long text | No | Yes | Google Maps `iframe` `src` URL |
+
+## News Banner
+- **Content Type ID:** `newsBanner`
+- **TS Interface:** `ContentfulNewsBanner` / `NewsBanner`
+- **Consuming Route:** Global Layout
+- **Description:** An alert banner that displays at the top of the site.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `isActive` | Boolean | No | Yes | Toggles the banner display |
+| `message` | Short text | Yes | Yes | The alert text |
+| `linkUrl` | Short text | No | No | Optional URL for the call-to-action |
+| `linkText` | Short text | Yes | No | The button text if `linkUrl` is present |
+
+## Church News
+- **Content Type ID:** `churchNews`
+- **TS Interface:** `ContentfulChurchNewsItem` / `ChurchNewsItem`
+- **Consuming Route:** `/`, `/events`
+- **Description:** Upcoming events and text announcements.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `title` | Short text | Yes | Yes | Announcement or event title |
+| `type` | Short text | No | Yes | Validation: `announcement` or `event` |
+| `date` | Date & time | No | No | Required if type is `event` |
+| `location` | Short text | Yes | No | Location of the event |
+| `body` | Long text | Yes | Yes | Main description |
+| `signUpUrl` | Short text | No | No | External registration link (e.g., Google Forms) |
+| `signUpDeadline` | Date | No | No | Deadline for registration |
+| `image` | Media | No | No | Optional cover image |
+| `isActive` | Boolean | No | Yes | Toggles visibility of the item |
+
+## Home Page
+- **Content Type ID:** `homePage`
+- **TS Interface:** `ContentfulHomePage`
+- **Consuming Route:** `/`
+- **Description:** Home page configuration.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `heroSlides` | References | No | Yes | Array of `heroSlide` entries |
+
+## Hero Slide
+- **Content Type ID:** `heroSlide`
+- **TS Interface:** `ContentfulHeroSlide` / `HeroSlide`
+- **Consuming Route:** `/`
+- **Description:** An image slide for the home page hero carousel.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `image` | Media | No | Yes | The slide image |
+| `altText` | Short text | Yes | Yes | Accessibility description |
+
+## Gathering Time
+- **Content Type ID:** `gatheringTime`
+- **TS Interface:** `ContentfulGatheringTime` / `GatheringTime`
+- **Consuming Route:** `/`
+- **Description:** Schedule for a church gathering or service.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `name` | Short text | Yes | Yes | Name of the gathering |
+| `day` | Short text | Yes | Yes | Day of the week (e.g., "日") |
+| `time` | Short text | No | Yes | Time (e.g., "10:00") |
+| `order` | Integer | No | Yes | Display order |
+
+## About Page
+- **Content Type ID:** `aboutPage`
+- **TS Interface:** `ContentfulAboutPage` / `AboutPage`
+- **Consuming Route:** `/about`
+- **Description:** Content for the About Us page.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `historyParagraphs` | Long text | Yes | Yes | Church history text (newlines for paragraphs) |
+| `ourBeliefs` | Long text | Yes | No | Core beliefs text |
+| `pastors` | References | No | Yes | Array of `pastor` entries |
+
+## Pastor
+- **Content Type ID:** `pastor`
+- **TS Interface:** `ContentfulPastor` / `Pastor`
+- **Consuming Route:** `/about`
+- **Description:** Profile information for a pastor or staff member.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `name` | Short text | Yes | Yes | Pastor's name |
+| `role` | Short text | Yes | Yes | Job title (e.g., 主任牧師) |
+| `period` | Short text | Yes | Yes | Service duration |
+| `photo` | Media | No | No | Profile photo |
+
+## Activity
+- **Content Type ID:** `activity`
+- **TS Interface:** `ContentfulActivity` / `Activity`
+- **Consuming Route:** `/activities`
+- **Description:** A church ministry or activity group.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `title` | Short text | Yes | Yes | Activity name |
+| `description` | Short text | Yes | Yes | Brief description |
+| `image` | Media | No | Yes | Uploaded photos (array) |
+
+## Sermon
+- **Content Type ID:** `sermon`
+- **TS Interface:** `ContentfulSermon` / `Sermon`
+- **Consuming Route:** `/messages`
+- **Description:** Sunday sermon records and media.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `title` | Short text | Yes | Yes | Sermon title |
+| `speaker` | Short text | Yes | Yes | Preacher's name |
+| `date` | Date | No | Yes | Date delivered |
+| `youtubeID` | Short text | No | Yes | ID part of the YouTube URL |
+| `slideFile` | Media | No | No | Presentation slides (PDF/PPT) |
+| `newsletterFile` | Media | No | No | Weekly bulletin/newsletter file |
+
+## Sharing (Testimony)
+- **Content Type ID:** `testimony`
+- **TS Interface:** `ContentfulSharing` / `Sharing`
+- **Consuming Route:** `/sharing`
+- **Description:** Testimonies and member sharings.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `title` | Short text | Yes | Yes | Post title |
+| `author` | Short text | Yes | Yes | Author name |
+| `date` | Date | No | Yes | Publication date |
+| `excerpt` | Short text | Yes | Yes | Short preview text |
+| `content` | Long text | Yes | Yes | Full testimony content |
+
+## Offering
+- **Content Type ID:** `offering`
+- **TS Interface:** `ContentfulOfferingPage` / `OfferingPage`
+- **Consuming Route:** `/offering`
+- **Description:** Bank details and instructions for tithes and offerings.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `introText` | Long text | Yes | Yes | Introductory text |
+| `bankName` | Short text | Yes | Yes | Receiving bank name |
+| `bankCode` | Short text | No | Yes | Bank identifier code |
+| `accountName` | Short text | Yes | Yes | Registered account name |
+| `accountNumber` | Short text | No | Yes | Account number |
+| `onSiteOfferingText` | Long text | Yes | Yes | Instructions for giving in person |
+| `note` | Long text | Yes | Yes | Additional notes |
+
+## Training Resource
+- **Content Type ID:** `trainingResource`
+- **TS Interface:** `ContentfulTrainingResource` / `TrainingResource`
+- **Consuming Route:** `/training`
+- **Description:** Links and descriptions for member training materials.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `title` | Short text | Yes | Yes | Resource title |
+| `description` | Long text | Yes | Yes | Resource description |
+| `url` | Short text | No | Yes | External link URL |
+| `icon` | Short text | No | Yes | Emoji or icon class |
+
+## Page Hero
+- **Content Type ID:** `pageHero`
+- **TS Interface:** `ContentfulPageHero` / `PageHero`
+- **Consuming Route:** Various pages
+- **Description:** Custom banner imagery and headings for specific pages.
+
+| Field Name | Type | Localized | Required | Notes |
+|---|---|---|---|---|
+| `pageId` | Short text | No | Yes | Page identifier (e.g., "about") |
+| `title` | Short text | Yes | Yes | Page heading |
+| `subtitle` | Short text | Yes | No | Optional sub-heading |
+| `backgroundImage` | Media | No | No | Background image asset |

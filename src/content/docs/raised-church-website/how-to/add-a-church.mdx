@@ -1,0 +1,119 @@
+---
+title: 'Add a new church'
+description: 'How to deploy a customized version of the website for a new church using site profiles.'
+diataxis: how-to
+sidebar:
+  order: 3
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+The website codebase is built as a multi-tenant application. You can deploy customized versions of the website for different churches or ministries from the exact same codebase without duplicating Svelte components.
+
+To add a new church, you create a new **site profile**, register it, and deploy it.
+
+## 1. Create a site profile
+
+Site profiles are stored in the `sites/` directory and must conform to the `SiteTemplateConfig` TypeScript interface.
+
+<Steps>
+
+1. Create a new file in `sites/` named after the church (e.g., `sites/my-church.config.ts`).
+2. Export a configuration object containing the church's identity, colors, and content. You can copy an existing file like `sites/grace-church.config.ts` as a starting point.
+3. Configure the **identity**:
+   ```ts
+   identity: {
+     zh: {
+       name: "我的教會",
+       fullName: "財團法人我的教會",
+       description: "歡迎您來參加主日崇拜。",
+       // ...
+     },
+     en: {
+       name: "My Church",
+       // ...
+     }
+   }
+   ```
+4. Configure the **theme**:
+   Specify custom hex codes for the church's branding.
+   ```ts
+   theme: {
+     colors: {
+       primary: "#d97706",
+       // ...
+     },
+     fonts: {
+       // Optional: inject Google Fonts
+       fontUrls: ["https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap"],
+       headingFont: "'Outfit', sans-serif"
+     }
+   }
+   ```
+5. Configure the **CMS** (Optional):
+   If this church has its own Contentful space, specify it here. Otherwise, it will fall back to the default space.
+   ```ts
+   cms: {
+     contentfulSpaceId: "custom_space_id",
+     contentfulEnvironment: "master"
+   }
+   ```
+
+</Steps>
+
+## 2. Register the profile
+
+Once your configuration file is ready, you must register it in the central registry so the server knows it exists.
+
+<Steps>
+
+1. Open `sites/index.ts`.
+2. Import your new configuration file.
+3. Add it to the `siteConfigs` object:
+
+   ```ts
+   import { myChurchConfig } from "./my-church.config";
+
+   export const siteConfigs: Record<string, SiteTemplateConfig> = {
+     "raised-church": raisedChurchConfig,
+     "grace-church": graceChurchConfig,
+     "my-church": myChurchConfig, // Add your new church here
+   };
+   ```
+
+</Steps>
+
+## 3. Deployment options
+
+The application uses `src/hooks.server.ts` to dynamically apply the correct site profile on every request. You have two main ways to deploy for multiple churches:
+
+### Option A: Hostname matching (Single Vercel Project)
+
+You can attach multiple custom domains (e.g., `raisedchurch.com` and `gracechurch.org`) to a **single** Vercel project. 
+
+The server checks `event.url.hostname` against the `domains` array in your site profiles. If a user visits `gracechurch.org`, the server automatically applies the Grace Church profile.
+
+This is the cheapest and easiest option, requiring no additional infrastructure.
+
+### Option B: Environment Variable (Multiple Vercel Projects)
+
+If you prefer isolated Vercel projects for each church, you can force a specific profile by setting the `PUBLIC_SITE_ID` environment variable in Vercel.
+
+If you set `PUBLIC_SITE_ID="my-church"`, the server will always use `myChurchConfig` regardless of the hostname.
+
+### Fleet Deployment with OpenTofu
+
+For managing many independent church deployments, the project includes Infrastructure as Code (IaC) using OpenTofu (`infra/opentofu/main.tf`). 
+
+This allows you to automate the creation of separate Vercel projects, inject the correct `PUBLIC_SITE_ID` for each one, and map custom domains programmatically.
+
+```hcl
+# Example OpenTofu resource for injecting the site ID
+resource "vercel_project_environment_variable" "site_id" {
+  for_each   = var.churches
+  project_id = vercel_project.church_site[each.key].id
+  key        = "PUBLIC_SITE_ID"
+  value      = each.value.site_id
+  target     = ["production", "preview", "development"]
+}
+```

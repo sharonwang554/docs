@@ -1,0 +1,115 @@
+---
+title: 'Getting started'
+description: 'Set up the Raised Church website locally and run it in development mode.'
+diataxis: tutorial
+sidebar:
+  order: 1
+---
+
+import { Aside, Steps, Tabs, TabItem, LinkCard } from '@astrojs/starlight/components';
+
+This tutorial guides you through setting up the Raised Church website on your local machine. Following these steps gives you a running development server and prepares your environment for making changes.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed on your system:
+
+- **Node.js** (version 24.0.0 or higher)
+- **Git**
+- A package manager (**npm** or **bun**)
+
+<Steps>
+
+1.  **Clone the repository**
+
+    Open your terminal and run the following command to clone the project repository:
+
+    ```bash
+    git clone <repository-url>
+    cd svelte-raised-church
+    ```
+
+2.  **Install dependencies**
+
+    Install the project dependencies using your preferred package manager. The project is configured to work with either npm or bun.
+
+    <Tabs>
+      <TabItem label="npm">
+        ```bash
+        npm install
+        ```
+      </TabItem>
+      <TabItem label="bun">
+        ```bash
+        bun install
+        ```
+      </TabItem>
+    </Tabs>
+
+3.  **Run without Contentful**
+
+    You can run this project without any Contentful credentials. The site is designed to degrade gracefully when CMS credentials are not present.
+
+    <Aside type="tip">
+      The application automatically falls back to reading static JSON files located in `src/lib/data/fallback-*.json`. This means you can preview and develop the entire site's UI structure immediately without setting up Contentful.
+    </Aside>
+
+4.  **Start the development server**
+
+    Start the development server to verify the setup works correctly:
+
+    <Tabs>
+      <TabItem label="npm">
+        ```bash
+        npm run dev
+        ```
+      </TabItem>
+      <TabItem label="bun">
+        ```bash
+        bun run dev
+        ```
+      </TabItem>
+    </Tabs>
+
+    Open your browser and navigate to `http://localhost:5173`. You see the homepage loaded with fallback data.
+
+5.  **(Optional) Connect Contentful**
+
+    To test live data from the CMS, connect your local environment to a Contentful space. Create a `.env.local` file in the root directory and add your credentials:
+
+    ```env
+    CONTENTFUL_SPACE_ID=your_space_id
+    CONTENTFUL_ENVIRONMENT=master
+    CONTENTFUL_ACCESS_TOKEN=your_access_token
+    ```
+
+    Restart your development server to fetch data from Contentful instead of the local JSON files.
+
+6.  **Run type checking**
+
+    The project uses TypeScript and Svelte 5. Run the check command to catch potential issues early by validating TypeScript types and Svelte template syntax before deployment:
+
+    <Tabs>
+      <TabItem label="npm">
+        ```bash
+        npm run check
+        ```
+      </TabItem>
+      <TabItem label="bun">
+        ```bash
+        bun run check
+        ```
+      </TabItem>
+    </Tabs>
+
+</Steps>
+
+## Next steps
+
+Now that you have the project running locally, you are ready to start building features.
+
+<LinkCard
+  title="Add your first feature"
+  description="Learn how to create a new page, load server-side data, and add translations."
+  href="/raised-church-website/tutorials/first-feature"
+/>

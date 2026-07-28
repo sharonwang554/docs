@@ -1,0 +1,115 @@
+---
+title: 'i18n API'
+description: 'Reference for internationalization routing, Contentful localization, and utility functions.'
+diataxis: reference
+sidebar:
+  order: 4
+---
+
+This page documents the API and architecture for internationalization (i18n) across the site, supporting both Traditional Chinese (default) and English.
+
+## Routing Architecture
+
+The site uses a unified SvelteKit route directory structure utilizing an optional `[[lang]]` parameter. 
+
+### URL Patterns
+- **Traditional Chinese (Default):** `/` (e.g. `/`, `/about`, `/events`)
+- **English:** `/en/...` (e.g. `/en`, `/en/about`, `/en/events`)
+
+### Parameter Validation
+The optional `[[lang]]` parameter is validated by `src/params/lang.ts`, which ensures it only matches `"en"` or `"zh"`.
+
+## Function Reference
+
+All i18n utilities are exported from `src/lib/i18n/index.ts`.
+
+### `getTranslation(lang)`
+Returns the full translation dictionary for the given language.
+- **Signature:** `getTranslation(lang: Language): TranslationDict`
+- **Parameters:** `lang` (`"en" | "zh"`)
+- **Returns:** The nested `TranslationDict` object for that language.
+
+### `getLangFromParams(params)`
+Extracts the language parameter safely from the SvelteKit `page.params` object.
+- **Signature:** `getLangFromParams(params: Record<string, string>): Language`
+- **Parameters:** `params` (usually `page.params`)
+- **Returns:** `"en"` if the parameter is `"en"`, otherwise defaults to `"zh"`.
+
+### `interpolate(template, variables)`
+Replaces placeholders in a translation string with dynamic variables.
+- **Signature:** `interpolate(template: string, variables: Record<string, string | number>): string`
+- **Example:** `interpolate("© {year} Raised Church", { year: 2026 })` returns `"© 2026 Raised Church"`.
+
+### `getNestedTranslation(t, path)`
+Gets a translated value from the dictionary using a dot-notation string path.
+- **Signature:** `getNestedTranslation(translations: TranslationDict, path: string): string`
+- **Example:** `getNestedTranslation(t, "pages.events.title")`
+
+### `formatDate(date, lang)`
+Formats a date string according to the locale's conventions.
+- **Signature:** `formatDate(dateString: string, lang: Language): string`
+- **Example:** `formatDate("2026-07-28", "en")` returns `"July 28, 2026"`.
+
+### `getBilingualContent(content, lang, fallback)`
+Safely extracts the correctly localized field from a bilingual content object (often returned by Contentful).
+- **Signature:** `getBilingualContent<T>(content: { zh?: T; en?: T } | undefined, lang: Language, fallback: T): T`
+
+### `localizePath(path, lang)`
+Prepends the correct language prefix (or no prefix for `"zh"`) to a given URL path.
+- **Signature:** `localizePath(path: string, lang: Language): string`
+- **Example:** `localizePath("/about", "en")` returns `"/en/about"`.
+
+### `togglePathLanguage(path, currentLang)`
+Swaps the language prefix on the current path, useful for language switcher buttons.
+- **Signature:** `togglePathLanguage(currentPath: string, currentLang: Language): string`
+- **Example:** `togglePathLanguage("/en/about", "en")` returns `"/about"`.
+
+### `useLang()`
+A reactive Svelte 5 rune helper for use inside components.
+- **Signature:** `useLang(): { lang: Language; t: TranslationDict }`
+- **Example:**
+  ```svelte
+  <script lang="ts">
+    import { useLang } from "$lib/i18n";
+    const { lang, t } = useLang();
+  </script>
+  <h1>{t.home.contact.title}</h1>
+  ```
+
+## Translation Dictionary Structure
+
+The static dictionary handles UI labels and structural text. Content text is managed via Contentful.
+
+```typescript
+{
+  nav: { ... },
+  home: {
+    heroSlides: [ ... ],
+    gatheringTimes: { ... },
+    contact: { ... }
+  },
+  pages: {
+    activities: { ... },
+    events: { ... },
+    messages: { ... },
+    sharing: { ... },
+    about: { ... },
+    offering: { ... },
+    training: { ... }
+  },
+  common: {
+    loading: "...",
+    error: "...",
+    retry: "..."
+  },
+  footer: { ... }
+}
+```
+
+## Contentful Locale Mapping
+
+To integrate Contentful's localization features with the routing architecture, the app expects these specific locale codes to be configured in your Contentful Space Settings:
+- `zh` corresponds to `zh-Hant-TW` (Chinese Traditional - Taiwan)
+- `en` corresponds to `en-US` (English - United States)
+
+Enable localization on Contentful fields for any text that requires bilingual support.

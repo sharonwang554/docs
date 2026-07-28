@@ -1,106 +1,95 @@
 ---
 title: 'Content Editor Guide'
-description: 'Step-by-step Contentful editing guide for non-technical church staff.'
+description: 'Instructions for non-technical church staff on managing website content via Contentful CMS.'
+diataxis: explanation
+sidebar:
+  order: 2
 ---
 
-import { Steps, Aside, Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside, Steps } from '@astrojs/starlight/components';
 
-Welcome to the website management guide! This manual is designed for church staff and volunteers. You do not need to know any programming to update the website. 
+This guide explains how you can update the church website's content using the Contentful platform. You do not need any programming knowledge to make changes—everything is done through a simple web interface.
 
-We use a system called **Contentful** to manage all the text, images, and sermons on the Raised Church website. When you save and publish changes in Contentful, the website automatically updates within a few minutes.
+## What is Contentful?
 
-## 1. Logging In
+Contentful is a Content Management System (CMS). You can think of it as the online control panel for your website. 
 
-1. Go to [app.contentful.com](https://app.contentful.com).
-2. Log in with your church email address and password.
-3. You will see the **Space Home** page for "Raised Church".
-4. Click on the **Content** tab at the very top of the screen. This is where you will do all your work.
+When you add, edit, or delete content in Contentful, those changes automatically update the live church website. The system manages your text, images, and files in one central place.
 
----
-
-## 2. Adding a New Weekly Sermon
-
-This is the most common task. We recommend doing this every Monday to upload Sunday's sermon.
+## Logging in to Contentful
 
 <Steps>
-1. Click the blue **Add entry** button in the top right corner.
-2. Select **Sermon** from the drop-down menu.
-3. Fill out the **Title**: 
-   - You will see two boxes for the title: one for English and one for Traditional Chinese (繁體中文). Please fill out both!
-4. Choose the **Date**: Click the calendar icon and select the Sunday the sermon was preached.
-5. Select the **Speaker**: Click "Link existing entry" and choose the pastor from the list.
-6. Add the **YouTube ID**:
-   - Go to the YouTube video for the sermon.
-   - Look at the link in the address bar (e.g., `https://www.youtube.com/watch?v=dQw4w9WgXcQ`).
-   - Copy *only* the 11 letters/numbers after the `=` sign (e.g., `dQw4w9WgXcQ`).
-   - Paste those 11 characters into the YouTube ID field.
-7. Fill in the **Passage** (e.g., "John 3:16-21").
-8. Write the **Summary**: Use the text box to write a short paragraph about the sermon. You can make text bold or add bullet points. Remember to fill out both English and Chinese boxes.
-9. Click the green **Publish** button on the right sidebar. 
+
+1. Open your web browser and navigate to [contentful.com](https://www.contentful.com).
+2. Click **Log in** in the top right corner.
+3. Choose **Continue with GitHub** (or your designated login method).
+4. Once logged in, you will see the workspace (Space) for the church website.
+
+</Steps>
+
+<Aside type="note">
+If you are logging in for the first time and cannot see any content, ask your website administrator to ensure you have been added to the correct workspace.
+</Aside>
+
+## Managing sermons
+
+You can upload weekly sermons, including video links and PDF resources.
+
+<Steps>
+
+1. Navigate to the **Content** tab at the top of the page.
+2. Click **Add entry** and select **Sermon**.
+3. Fill in the sermon **Title**, **Speaker**, and **Date**.
+4. To add the video, find the **YouTube ID** field. Do not paste the full URL. Instead, copy only the ID from the end of the YouTube link (e.g., if the link is `youtube.com/watch?v=dQw4w9WgXcQ`, enter `dQw4w9WgXcQ`).
+5. (Optional) Upload the presentation slides and weekly newsletter as PDF files in their respective fields.
+6. Click **Publish** to make the sermon live.
+
+</Steps>
+
+## Managing events and news
+
+You can post announcements and upcoming events.
+
+<Steps>
+
+1. Click **Add entry** and select **Church News**.
+2. Set the **Type** to either `announcement` (for general news) or `event` (for activities with a specific time/place).
+3. Fill in the **Title** and **Body** text.
+4. If it is an event, enter the **Date** and **Location**.
+5. (Optional) Provide a **Sign-up URL** (like a Google Form link) and upload a cover image (recommended size: 800×450 pixels).
+6. Ensure **Is Active** is set to "Yes".
+7. Click **Publish**.
+
 </Steps>
 
 <Aside type="tip">
-**Screenshot reference**: The Contentful editor shows English fields on the left and Chinese fields on the right, side-by-side. If you leave a Chinese field blank, the website will display the English text as a backup.
+When an event has passed, you don't need to delete it. Just change **Is Active** to "No" and republish. The event will disappear from the website.
 </Aside>
 
----
+## Updating static pages
 
-## 3. Adding or Updating Events
+Some pages have fixed structures but editable text, such as the About, Gathering Times, and Offering pages.
 
-Use this for special gatherings, holiday services, or church retreats.
+- **About Page:** Search for the "About Page" entry. You can edit the church history paragraphs and the statement of faith. You can also link "Pastor" entries here.
+- **Gathering Times:** Search for "Gathering Time" entries to update the weekly schedule shown on the homepage. Edit the Day, Time, and Order.
+- **Offering:** Search for the "Offering" entry to update bank transfer details, account numbers, and on-site offering instructions.
 
-<Steps>
-1. Go to the **Content** tab and click **Add entry** -> **Event**.
-2. Fill out the **Event Name** in both languages.
-3. Select the **Start Date & Time** and **End Date & Time**. 
-4. Write the **Location** (e.g., "Main Sanctuary" or "Church Retreat Center").
-5. Add a **Cover Image**:
-   - Click "Create new asset and link"
-   - Upload your image file.
-   - Give the image a title, click "Publish" on the image, and then go back to your Event.
-6. Write the **Description** with all the details.
-7. Click the green **Publish** button.
-</Steps>
+## Bilingual content
 
-<Aside type="caution">
-**Important**: Once the End Date of an event passes, it will automatically disappear from the website's Upcoming Events page. You do not need to delete old events manually!
-</Aside>
+The website supports both Traditional Chinese and English. When editing an entry, look for the language switcher in the sidebar (usually showing `zh-Hant-TW` and `en-US`). 
 
----
+Switch to English to fill in the English text, and switch back to Chinese for the Chinese text. Both will be saved and displayed to the user based on their language preference on the site.
 
-## 4. Updating Gathering Times or the About Page
+## Common mistakes and fixes
 
-Information like Sunday service times or the church's history changes rarely, but when it does, you can update it here.
+- **Changes aren't showing up on the website:** Did you click **Publish**? Clicking "Save" only creates a draft. Also, keep in mind that it may take 2-3 minutes for Vercel to rebuild and deploy the site after you publish changes in Contentful.
+- **YouTube video is broken:** Ensure you only entered the video ID (e.g., `dQw4w9WgXcQ`), not the entire `https://...` URL.
+- **Deleted something by accident:** Don't panic! Contentful keeps a version history. Open the entry, look for the **Versions** sidebar, and you can roll back to a previous state.
 
-<Steps>
-1. Go to the **Content** tab.
-2. In the search bar at the top, type "Gathering Times" or "About Us".
-3. Click on the entry to open it.
-4. Scroll down to the **Content** section. It looks like a standard word processor (like Microsoft Word).
-5. Make your text changes, add new tables, or fix typos.
-6. Click the green **Publish changes** button on the right.
-</Steps>
+## Requesting new custom pages
 
----
+If you need a completely new type of page (e.g., a special landing page for a conference) that doesn't fit the existing templates, you will need to request this from your developer. They will need to create a new content model in Contentful and write the corresponding Svelte code to display it.
 
-## Common Mistakes & How to Fix Them
+## Support contact
 
-<CardGrid>
-  <Card title="I made a mistake and published it!" icon="warning">
-    Don't panic! On the right sidebar, look for **Versions**. Click it, and you can see a history of all changes. Select an older version and click "Restore".
-  </Card>
-  <Card title="My changes aren't on the website yet" icon="clock">
-    When you click Publish, the website rebuilds itself. This takes about **2 to 3 minutes**. Wait a few minutes, go to the website, and refresh your browser (press F5 on your keyboard).
-  </Card>
-  <Card title="The YouTube video won't play" icon="youtube">
-    Make sure you only pasted the 11-character ID (like `dQw4w9WgXcQ`), not the entire `https://www.youtube.com...` link. Edit the Sermon entry, fix the ID, and click Publish again.
-  </Card>
-</CardGrid>
-
-## Need Help?
-
-If you are stuck, cannot log in, or the website is showing an error, please contact the tech team:
-- **Email**: webmaster@raisedchurch.com
-- **Line ID**: @raisedchurchtech
-
-Thank you for helping keep the church website up to date!
+If you encounter technical issues or need access permissions adjusted, please contact your website administrator or the technical lead for the church.

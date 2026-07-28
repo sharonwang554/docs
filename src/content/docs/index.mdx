@@ -1,84 +1,129 @@
 ---
-title: System Documentation & Architecture Hub
-description: Official developer documentation, API specifications, system architecture designs, and troubleshooting runbooks across modern and legacy technical stacks.
+title: Technical Documentation Portfolio
+description: Production-grade developer documentation, API specifications, onboarding guides, and end-user product docs — demonstrating technical communication across diverse audiences and systems.
 template: splash
 hero:
-  tagline: Developer Knowledge Base & Technical Runbooks. Exploring system architecture decomposition, API specifications, OAuth 2.0 sequence diagrams, and operational incident playbooks.
+  tagline: Technical writer & software engineer. I build documentation that developers actually read — from API specifications and onboarding runbooks to non-technical product guides and AI agent context files.
   actions:
-    - text: Explore Developer Docs
-      link: /developer-docs/overview
+    - text: View Featured Work
+      link: '#featured-work'
       icon: right-arrow
       variant: primary
-    - text: View Live Applications
-      link: '#live-production-applications'
+    - text: About & Methodology
+      link: /about
       icon: external
       variant: secondary
 ---
 
 import { Card, CardGrid, LinkCard, Aside, Badge } from '@astrojs/starlight/components';
 
-<Aside type="note" title="Official Developer Knowledge Base">
-  Welcome to the central technical documentation center. Select a specialized knowledge hub below or explore our production application repositories directly.
-</Aside>
+<div id="featured-work"></div>
 
-## Specialized Knowledge Hubs
+## Developer Experience & AI Workflows
 
-<CardGrid stagger>
-  <Card title="Developer Docs & API" icon="document">
-    Pure technical specifications, OAuth 2.0 authorization sequence diagrams (`Mermaid.js`), unified API endpoints with request/response JSON payload schemas, and AWS EC2 developer onboarding tutorials.
+<Badge text="🎯 Senior Engineers · DevEx Leads · API Architects" variant="note" size="small" />
 
-    [Explore Developer Docs &rarr;](/developer-docs/overview)
+<CardGrid>
+  <Card title="Repomix + AI Workflow Case Study ★" icon="rocket">
+    <Badge text="Hero Project" variant="success" size="small" />
+    <Badge text="Coming Soon" variant="caution" size="small" />
+    <br/><br/>
+    How Repomix enables local RAG bundling for AI-assisted development — API specifications, context packaging strategies, and integration patterns for modern 2026 AI workflows.
+
+    [Read Case Study &rarr;](/articles/repomix-ai-case-study)
   </Card>
-  <Card title="Troubleshooting & Runbooks" icon="warning">
-    Structured Standard Operating Procedures (`Symptom → Diagnosis → Fix`), 5 common Canvas LMS integration error resolutions, distributed log tracing, and local SSL certificate expiration runbooks (`thisisunsafe` bypass protocol).
+  <Card title="React Three Fiber & Spec-Driven Docs" icon="star">
+    <Badge text="Live Production Site" variant="success" size="small" />
+    <br/><br/>
+    Complete documentation suite for an interactive WebGL-powered 3D portfolio built with React 18, Three.js / React Three Fiber, SCSS Modules, and bilingual i18n. R3F is notoriously math-heavy and complex — documenting it proves comfort with high-abstraction frontend libraries.
 
-    [Explore Runbooks &rarr;](/troubleshooting/overview)
-  </Card>
-  <Card title="Architecture & Project Logic" icon="puzzle">
-    High-level Canvas LMS + AWS cloud infrastructure architecture diagrams, comparative system design trade-offs across live WebGL/CMS deployments, and abstract mathematical/philological algorithm decomposition (`KaTeX`).
-
-    [Explore Architecture &rarr;](/architecture/overview)
+    - **Live Site**: [sharonwang.me](https://sharonwang.me)
+    - **Docs**: [Explore 3D Portfolio Docs &rarr;](/3d-space-portfolio/overview)
   </Card>
 </CardGrid>
 
 ---
 
-<div id="live-production-applications"></div>
+## Internal Enablement & Onboarding
 
-## Live Production Applications
-
-Explore our complete documentation suites alongside their live production websites:
+<Badge text="🎯 Engineering Managers · VPs of Engineering" variant="note" size="small" />
 
 <CardGrid>
-  <Card title="3D Space Portfolio" icon="rocket">
-    <Badge text="Live Production Site" variant="success" size="small" />
+  <Card title="Sanitized Internship Onboarding Docs" icon="setting">
+    <Badge text="Zero-to-One Knowledge Base" variant="success" size="small" />
     <br/><br/>
-    Interactive WebGL-powered 3D personal website built with React 18, Three.js / React Three Fiber, SCSS Modules, Vitest, and bilingual i18n.
+    Institutional knowledge base for a 15-year-old Perl 5 / `mod_perl` / MySQL academic platform deployed across 100+ universities. Took a chaotic, undocumented engineering team and built foundational documentation — developer onboarding, OAuth 2.0 architecture, API specifications, troubleshooting runbooks, and system debugging playbooks.
     <br/><br/>
-    - **Live Website**: [https://sharonwang.me](https://sharonwang.me)
-    - **Documentation Suite**: [Explore 3D Portfolio Docs &rarr;](/3d-space-portfolio/overview)
+    **Impact**: Halved intern onboarding time by creating structured getting-started guides, architecture walkthroughs, and diagnostic SOPs.
+
+    [Explore TeamAssign Onboarding Docs &rarr;](/teamassign/overview)
   </Card>
-  <Card title="Raised Church Website" icon="sun">
-    <Badge text="Live Production Site" variant="success" size="small" />
+  <Card title="Obsidian PKM: Internal Tooling & Information Architecture" icon="open-book">
+    <Badge text="Coming Soon" variant="caution" size="small" />
     <br/><br/>
-    Bilingual (Chinese/English) church platform for 左營復活堂 in Kaohsiung, Taiwan, powered by SvelteKit SSR and Contentful Headless CMS.
-    <br/><br/>
-    - **Live Website**: [https://raisedchurch.com](https://raisedchurch.com)
-    - **Documentation Suite**: [Explore Church Website Docs &rarr;](/raised-church-website/overview)
+    A case study on designing taxonomy, linking strategy, and knowledge graphs for a local-first personal knowledge management system — and how these architectural principles transfer directly to building internal documentation systems at scale.
+
+    [Read Article &rarr;](/articles/obsidian-pkm-setup)
   </Card>
-  <Card title="TeamAssign Academic Platform" icon="setting">
-    <Badge text="Legacy Institutional System" variant="danger" size="small" />
-    <br/><br/>
-    Anonymized institutional knowledge base for a Perl 5 / CGI / `mod_perl` / MySQL academic management system deployed across 100+ universities since 2005.
-    <br/><br/>
-    - **System Status**: Active across participating higher education institutions.
-    - **Documentation Suite**: [Explore TeamAssign Runbooks &rarr;](/teamassign/overview)
+</CardGrid>
+
+---
+
+## End-User & Product Guides
+
+<Badge text="🎯 Product Managers · Developer Advocates · Customer Success Leads" variant="note" size="small" />
+
+<Card title="Svelte + Contentful Non-Profit Documentation" icon="sun">
+  <Badge text="Live Production Site" variant="success" size="small" />
+  <Badge text="Multi-Audience" variant="tip" size="small" />
+  <br/><br/>
+  Tri-audience documentation for a bilingual (Chinese/English) church platform built with SvelteKit SSR and Contentful Headless CMS. Writing developer docs requires technical precision; writing non-technical docs requires extreme empathy. This suite proves both:
+
+  - **Developer Guide**: SvelteKit architecture, component patterns, contribution workflow
+  - **Content Editor Guide**: Step-by-step Contentful CMS instructions for non-technical church staff — zero jargon
+  - **AI Agent Guide**: Machine-readable structured instructions optimized for LLM consumption
+  <br/>
+  - **Live Site**: [raisedchurch.com](https://raisedchurch.com)
+  - **Docs**: [Explore Church Website Docs &rarr;](/raised-church-website/overview)
+</Card>
+
+---
+
+## Academic Research
+
+<Badge text="🎯 Research-Adjacent Roles" variant="note" size="small" />
+
+<Card title="Textual Data Analysis: Dead Sea Scrolls" icon="open-book">
+  <Badge text="Research Paper" variant="note" size="small" />
+  <br/><br/>
+  A comparative analysis of the Great Isaiah Scroll (1QIsaᵃ) and the Masoretic Text across key biblical passages. Demonstrates structured argumentation, scholarly methodology, formal citations, and polished long-form English prose.
+
+  [Read Paper &rarr;](/articles/textual-criticism)
+</Card>
+
+---
+
+<Aside type="tip" title="Documentation Quality & Methodology">
+  All documentation on this site is prose-linted with [Vale.sh](https://vale.sh/) using the [Google Developer Documentation Style Guide](https://developers.google.com/style) and [Microsoft Writing Style Guide](https://learn.microsoft.com/en-us/style-guide/developer-content/) as baselines. Content is structured per the [Diátaxis framework](https://diataxis.fr/) — classifying every page as a Tutorial, How-to Guide, Reference, or Explanation based on user needs.
+</Aside>
+
+---
+
+## Explore All Documentation
+
+<CardGrid>
+  <Card title="TeamAssign: Full Documentation Suite" icon="setting">
+    Deep-dive into the complete TeamAssign platform documentation — developer API specs, OAuth 2.0 sequence diagrams, Canvas LMS troubleshooting SOPs, AWS infrastructure architecture, and system debugging playbooks.
+
+    - [Developer Docs & API &rarr;](/developer-docs/overview)
+    - [Troubleshooting Runbooks &rarr;](/troubleshooting/overview)
+    - [Architecture & System Design &rarr;](/architecture/overview)
   </Card>
-  <Card title="Academic Articles & Research" icon="open-book">
-    <Badge text="Research Case Studies" variant="note" size="small" />
-    <br/><br/>
-    Long-form technical writing and academic papers on textual criticism, algorithm comparison, and stemmatic theory.
-    <br/><br/>
-    - **Research Repository**: [Explore Articles &rarr;](/articles/textual-criticism)
+  <Card title="3D Portfolio: Full Documentation Suite" icon="rocket">
+    Complete technical documentation for the React Three Fiber portfolio — architecture, 3D graphics implementation, SCSS styling system, i18n, testing strategy, and API reference.
+
+    - [Architecture &rarr;](/3d-space-portfolio/architecture)
+    - [3D Graphics &rarr;](/3d-space-portfolio/3d-graphics)
+    - [API Reference &rarr;](/3d-space-portfolio/api-reference)
   </Card>
 </CardGrid>
