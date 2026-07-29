@@ -126,54 +126,6 @@ export default defineConfig({
             { slug: 'raised-church-website/changelog' },
           ],
         },
-        {
-          label: 'TeamAssign Platform',
-          collapsed: true,
-          items: [
-            { slug: 'teamassign/overview' },
-            {
-              label: 'Tutorials',
-              collapsed: true,
-              items: [
-                { slug: 'teamassign/tutorials/getting-started' },
-                { slug: 'teamassign/tutorials/developer-getting-started' },
-              ],
-            },
-            {
-              label: 'How-to Guides',
-              collapsed: true,
-              items: [
-                { slug: 'teamassign/how-to/developer-tips' },
-                { slug: 'teamassign/how-to/troubleshooting' },
-                { slug: 'teamassign/how-to/troubleshooting-overview' },
-                { slug: 'teamassign/how-to/canvas-lms-errors' },
-                { slug: 'teamassign/how-to/database-and-memory-runbooks' },
-                { slug: 'teamassign/how-to/debugging-playbook' },
-              ],
-            },
-            {
-              label: 'Reference',
-              collapsed: true,
-              items: [
-                { slug: 'teamassign/reference/developer-overview' },
-                { slug: 'teamassign/reference/api-endpoints' },
-                { slug: 'teamassign/reference/api-reference' },
-              ],
-            },
-            {
-              label: 'Explanation',
-              collapsed: true,
-              items: [
-                { slug: 'teamassign/explanation/architecture-overview' },
-                { slug: 'teamassign/explanation/architecture' },
-                { slug: 'teamassign/explanation/authentication-flow' },
-                { slug: 'teamassign/explanation/canvas-aws-system-architecture' },
-                { slug: 'teamassign/explanation/project-system-designs' },
-                { slug: 'teamassign/explanation/complex-logic-breakdown' },
-              ],
-            },
-          ],
-        },
       ],
 
       head: [
