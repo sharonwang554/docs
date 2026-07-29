@@ -130,70 +130,46 @@ export default defineConfig({
           label: 'TeamAssign Platform',
           collapsed: true,
           items: [
+            { slug: 'teamassign/overview' },
             {
-              label: 'TeamAssign Core',
-              collapsed: false,
+              label: 'Tutorials',
+              collapsed: true,
               items: [
-                { slug: 'teamassign/overview' },
-                {
-                  label: 'Tutorials',
-                  collapsed: true,
-                  items: [
-                    { slug: 'teamassign/tutorials/getting-started' },
-                  ],
-                },
-                {
-                  label: 'How-to Guides',
-                  collapsed: true,
-                  items: [
-                    { slug: 'teamassign/how-to/developer-tips' },
-                    { slug: 'teamassign/how-to/troubleshooting' },
-                  ],
-                },
-                {
-                  label: 'Reference',
-                  collapsed: true,
-                  items: [
-                    { slug: 'teamassign/reference/api-endpoints' },
-                  ],
-                },
-                {
-                  label: 'Explanation',
-                  collapsed: true,
-                  items: [
-                    { slug: 'teamassign/explanation/architecture' },
-                  ],
-                },
+                { slug: 'teamassign/tutorials/getting-started' },
+                { slug: 'teamassign/tutorials/developer-getting-started' },
               ],
             },
             {
-              label: 'Developer Docs & API',
+              label: 'How-to Guides',
               collapsed: true,
               items: [
-                { slug: 'developer-docs/overview' },
-                { slug: 'developer-docs/authentication-flow' },
-                { slug: 'developer-docs/api-reference' },
-                { slug: 'developer-docs/getting-started' },
+                { slug: 'teamassign/how-to/developer-tips' },
+                { slug: 'teamassign/how-to/troubleshooting' },
+                { slug: 'teamassign/how-to/troubleshooting-overview' },
+                { slug: 'teamassign/how-to/canvas-lms-errors' },
+                { slug: 'teamassign/how-to/database-and-memory-runbooks' },
+                { slug: 'teamassign/how-to/debugging-playbook' },
               ],
             },
             {
-              label: 'Troubleshooting & Runbooks',
+              label: 'Reference',
               collapsed: true,
               items: [
-                { slug: 'troubleshooting/overview' },
-                { slug: 'troubleshooting/canvas-lms-errors' },
-                { slug: 'troubleshooting/database-and-memory-runbooks' },
-                { slug: 'troubleshooting/debugging-playbook' },
+                { slug: 'teamassign/reference/developer-overview' },
+                { slug: 'teamassign/reference/api-endpoints' },
+                { slug: 'teamassign/reference/api-reference' },
               ],
             },
             {
-              label: 'Architecture & Logic',
+              label: 'Explanation',
               collapsed: true,
               items: [
-                { slug: 'architecture/overview' },
-                { slug: 'architecture/canvas-aws-system-architecture' },
-                { slug: 'architecture/project-system-designs' },
-                { slug: 'architecture/complex-logic-breakdown' },
+                { slug: 'teamassign/explanation/architecture-overview' },
+                { slug: 'teamassign/explanation/architecture' },
+                { slug: 'teamassign/explanation/authentication-flow' },
+                { slug: 'teamassign/explanation/canvas-aws-system-architecture' },
+                { slug: 'teamassign/explanation/project-system-designs' },
+                { slug: 'teamassign/explanation/complex-logic-breakdown' },
               ],
             },
           ],
