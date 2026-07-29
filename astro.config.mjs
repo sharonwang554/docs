@@ -33,6 +33,10 @@ export default defineConfig({
 
       sidebar: [
         {
+          label: 'About This Knowledge Base',
+          slug: 'about',
+        },
+        {
           label: 'Featured Articles',
           collapsed: false,
           items: [
@@ -138,15 +142,6 @@ export default defineConfig({
               ],
             },
           ],
-        },
-        {
-          label: 'Articles & Research',
-          autogenerate: { directory: 'articles', collapsed: false },
-          collapsed: false,
-        },
-        {
-          label: 'About This Knowledge Base',
-          slug: 'about',
         },
       ],
 
