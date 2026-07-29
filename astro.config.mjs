@@ -47,8 +47,41 @@ export default defineConfig({
         {
           label: '3D Space Portfolio',
           badge: { text: 'Live', variant: 'success' },
-          autogenerate: { directory: '3d-space-portfolio', collapsed: false },
           collapsed: true,
+          items: [
+            { slug: '3d-space-portfolio/overview' },
+            {
+              label: 'Tutorials',
+              collapsed: true,
+              items: [
+                { slug: '3d-space-portfolio/tutorials/first-steps' },
+              ],
+            },
+            {
+              label: 'How-to Guides',
+              collapsed: true,
+              items: [
+                { slug: '3d-space-portfolio/how-to/testing-strategy' },
+                { slug: '3d-space-portfolio/how-to/internationalization' },
+              ],
+            },
+            {
+              label: 'Reference',
+              collapsed: true,
+              items: [
+                { slug: '3d-space-portfolio/reference/api-reference' },
+                { slug: '3d-space-portfolio/reference/styling-system' },
+              ],
+            },
+            {
+              label: 'Explanation',
+              collapsed: true,
+              items: [
+                { slug: '3d-space-portfolio/explanation/3d-graphics' },
+                { slug: '3d-space-portfolio/explanation/architecture' },
+              ],
+            },
+          ],
         },
         {
           label: 'Raised Church Website',
@@ -105,10 +138,35 @@ export default defineConfig({
               collapsed: false,
               items: [
                 { slug: 'teamassign/overview' },
-                { slug: 'teamassign/getting-started' },
-                { slug: 'teamassign/architecture' },
-                { slug: 'teamassign/developer-tips' },
-                { slug: 'teamassign/troubleshooting' },
+                {
+                  label: 'Tutorials',
+                  collapsed: true,
+                  items: [
+                    { slug: 'teamassign/tutorials/getting-started' },
+                  ],
+                },
+                {
+                  label: 'How-to Guides',
+                  collapsed: true,
+                  items: [
+                    { slug: 'teamassign/how-to/developer-tips' },
+                    { slug: 'teamassign/how-to/troubleshooting' },
+                  ],
+                },
+                {
+                  label: 'Reference',
+                  collapsed: true,
+                  items: [
+                    { slug: 'teamassign/reference/api-endpoints' },
+                  ],
+                },
+                {
+                  label: 'Explanation',
+                  collapsed: true,
+                  items: [
+                    { slug: 'teamassign/explanation/architecture' },
+                  ],
+                },
               ],
             },
             {
