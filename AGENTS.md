@@ -33,6 +33,14 @@ Every section in this repository targets a specific reader persona. Agents must 
 - **Content Editors & Non-Technical Staff (`*/content-editor-guide.mdx`)**: Gentle, jargon-free, numbered step-by-step instructions utilizing clear callouts.
 - **AI Coding Agents (`*/ai-agent-guide.mdx`)**: Structured, scannable directives optimized for LLM token consumption and context retrieval.
 
+### 4. Strict Diátaxis Framework Structuring
+All major project documentation (e.g., `3d-space-portfolio/`, `raised-church-website/`, `teamassign/`) must be strictly organized into the four quadrants of the **Diátaxis framework**:
+- `tutorials/`: Learning-oriented, practical guides for beginners (e.g., `getting-started.mdx`).
+- `how-to/`: Problem-oriented, step-by-step practical guides for specific tasks.
+- `reference/`: Information-oriented, theoretical documentation (e.g., API endpoints, environment variables).
+- `explanation/`: Understanding-oriented, theoretical overviews (e.g., architecture, design patterns).
+When creating new documentation sections, always place them in the correct Diátaxis subdirectory and update `astro.config.mjs` accordingly.
+
 ---
 
 ## 🛠️ Tech Stack & Configuration Protocols
