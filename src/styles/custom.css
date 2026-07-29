@@ -27,6 +27,7 @@ header .social-icons a svg {
 .social-icons a,
 starlight-social-icons a,
 header .social-icons a {
+  position: relative;
   padding: 0.35rem 0.45rem !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -42,31 +43,35 @@ header .social-icons a:hover {
   background-color: var(--sl-color-gray-5);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Request 5: Professional Main Portfolio Link Badge                          */
-/* -------------------------------------------------------------------------- */
-.social-icons a[href*="sharonwang.me"],
-starlight-social-icons a[href*="sharonwang.me"],
-header .social-icons a[href*="sharonwang.me"] {
-  background-color: var(--sl-color-accent-low);
-  color: var(--sl-color-accent-high) !important;
-  padding: 0.3rem 0.75rem !important;
-  border-radius: 9999px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  text-decoration: none !important;
-  border: 1px solid var(--sl-color-accent);
-  gap: 0.35rem;
-  margin-left: 0.5rem;
+/* CSS tooltip for social icons */
+starlight-social-icons a[data-tooltip]::after,
+.social-icons a[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: -2.25rem;
+  left: 50%;
+  transform: translateX(-50%) scale(0.95);
+  padding: 0.25rem 0.5rem;
+  background: var(--sl-color-gray-1);
+  color: var(--sl-color-gray-7);
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+  border-radius: 0.25rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  z-index: 10;
 }
 
-.social-icons a[href*="sharonwang.me"]:hover,
-starlight-social-icons a[href*="sharonwang.me"]:hover,
-header .social-icons a[href*="sharonwang.me"]:hover {
-  background-color: var(--sl-color-accent);
-  color: #ffffff !important;
-  transform: translateY(-1px);
+starlight-social-icons a[data-tooltip]:hover::after,
+.social-icons a[data-tooltip]:hover::after {
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
 }
+
+
+
 
 /* -------------------------------------------------------------------------- */
 /* Homepage: Bucket section heading styling                                    */

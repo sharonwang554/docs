@@ -20,7 +20,7 @@ export default defineConfig({
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/sharonwang554' },
         { icon: 'linkedin', label: 'LinkedIn', href: 'https://linkedin.com/in/YOUR_HANDLE' },
-        { icon: 'laptop', label: 'Main Portfolio (sharonwang.me)', href: 'https://sharonwang.me' },
+        { icon: 'rocket', label: 'Visit sharonwang.me', href: 'https://sharonwang.me' },
       ],
       customCss: ['./src/styles/custom.css', 'katex/dist/katex.min.css'],
 
@@ -202,6 +202,17 @@ export default defineConfig({
             } else {
               renderMermaidDiagrams();
             }
+          `,
+        },
+        // Social icon tooltips (CSS-driven via data-tooltip)
+        {
+          tag: 'script',
+          attrs: { type: 'module' },
+          content: `
+            document.querySelectorAll('starlight-social-icons a, .social-icons a').forEach(a => {
+              const sr = a.querySelector('.sr-only');
+              if (sr) a.dataset.tooltip = sr.textContent;
+            });
           `,
         },
         // Back-to-top button
