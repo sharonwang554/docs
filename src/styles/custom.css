@@ -52,8 +52,8 @@ starlight-social-icons a[data-tooltip]::after,
   left: 50%;
   transform: translateX(-50%) scale(0.95);
   padding: 0.25rem 0.5rem;
-  background: var(--sl-color-text);
-  color: var(--sl-color-bg);
+  background: var(--sl-color-accent);
+  color: #ffffff;
   font-size: 0.75rem;
   font-weight: 500;
   white-space: nowrap;
