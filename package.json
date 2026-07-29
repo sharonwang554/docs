@@ -12,6 +12,7 @@
     "lint:prose": "vale src/content/docs/"
   },
   "dependencies": {
+    "@astrojs/rss": "^4.0.19",
     "@astrojs/starlight": "^0.34.0",
     "@astrojs/vercel": "^8.0.0",
     "astro": "^5.8.0",

@@ -1,0 +1,88 @@
+---
+import starlightConfig from 'virtual:starlight/user-config';
+---
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Page Not Found — Sharon Wang Docs</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #0f172a;
+      color: #e2e8f0;
+      text-align: center;
+      padding: 2rem;
+    }
+    .error-code {
+      font-size: 8rem;
+      font-weight: 700;
+      line-height: 1;
+      background: linear-gradient(135deg, #6366f1, #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 1rem 0 0.75rem;
+      color: #f1f5f9;
+    }
+    p {
+      font-size: 1rem;
+      color: #94a3b8;
+      max-width: 28rem;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    .actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      font-size: 0.9rem;
+      text-decoration: none;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    a:hover { transform: translateY(-1px); }
+    .primary {
+      background: #6366f1;
+      color: #fff;
+    }
+    .primary:hover { box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4); }
+    .secondary {
+      background: #1e293b;
+      color: #e2e8f0;
+      border: 1px solid #334155;
+    }
+    .secondary:hover { border-color: #6366f1; }
+  </style>
+</head>
+<body>
+  <div class="error-code">404</div>
+  <h1>Page not found</h1>
+  <p>The page you're looking for doesn't exist or has been moved. Try navigating from the homepage or using the search bar.</p>
+  <div class="actions">
+    <a href="/" class="primary">← Back to Home</a>
+    <a href="/about" class="secondary">About This Site</a>
+  </div>
+</body>
+</html>

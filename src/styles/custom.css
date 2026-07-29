@@ -108,3 +108,102 @@ header .social-icons a[href*="sharonwang.me"]:hover {
 [data-page-template="splash"] .sl-markdown-content .starlight-aside {
   margin-top: 2rem;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Back-to-top button                                                          */
+/* -------------------------------------------------------------------------- */
+#back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 100;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 1px solid var(--sl-color-gray-5);
+  background: var(--sl-color-bg);
+  color: var(--sl-color-text);
+  font-size: 1.25rem;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition: opacity 0.25s ease, transform 0.25s ease, background-color 0.15s ease;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+#back-to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+#back-to-top:hover {
+  background: var(--sl-color-accent);
+  color: #fff;
+  border-color: var(--sl-color-accent);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Print-friendly styles                                                       */
+/* -------------------------------------------------------------------------- */
+@media print {
+  /* Hide navigation, sidebar, header, footer, ToC, and interactive elements */
+  header,
+  nav,
+  .sidebar,
+  starlight-toc,
+  .right-sidebar,
+  .pagination-links,
+  starlight-menu-button,
+  #back-to-top,
+  .social-icons,
+  starlight-social-icons,
+  .edit-link,
+  .site-title,
+  footer {
+    display: none !important;
+  }
+
+  /* Maximize content width */
+  .main-pane,
+  main,
+  .content-panel,
+  .sl-container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0.5in !important;
+  }
+
+  /* Ensure readable text */
+  body {
+    font-size: 11pt;
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  /* Show link URLs in parentheses */
+  a[href]::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.85em;
+    color: #555;
+  }
+
+  /* Don't show URLs for internal/anchor links */
+  a[href^="#"]::after,
+  a[href^="/"]::after {
+    content: '';
+  }
+
+  /* Prevent code blocks from being cut across pages */
+  pre, .expressive-code {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Ensure images don't overflow */
+  img {
+    max-width: 100% !important;
+    break-inside: avoid;
+  }
+}

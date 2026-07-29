@@ -1,13 +1,16 @@
 ---
-title: 'Raised Church Website Overview'
-description: 'Overview of the Raised Church bilingual website project.'
+title: 'Case Study: Raised Church Website'
+description: 'A case study on building and documenting a bilingual Jamstack website for a non-profit organization.'
 diataxis: explanation
 sidebar:
+  label: 'Case Study Overview'
   order: 0
 ---
-import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
 
-This project is a bilingual (Traditional Chinese and English) church website built for 左營復活堂 (Raised Church) located in Zuoying District, Kaohsiung City, Taiwan. It serves as the digital front door for the church, providing information about services, activities, sermons, and community engagement.
+This document serves as a **Case Study** for the design, development, and documentation of a bilingual (Traditional Chinese and English) platform built for 左營復活堂 (Raised Church) in Kaohsiung, Taiwan. 
+
+Building and documenting software for a non-profit requires a unique approach: you must cater to developers (who need technical precision) and volunteer staff (who need extreme empathy and zero jargon). This case study explores how we balanced those needs using a modern Jamstack architecture.
 
 ## Why this stack?
 
@@ -33,15 +36,21 @@ The project uses a modern web stack—**SvelteKit**, **Contentful CMS**, and **V
 - **Dynamic gathering schedule:** Time and location of recurring services are manageable through the CMS.
 - **Multi-church architecture:** Site profile resolution enables you to use the same codebase for multiple church websites (e.g., `raised-church`, `grace-church`) using domain mapping.
 
-## Quick links
+## Internal Documentation
+
+The documentation created for this project is presented here in this portfolio, split into distinct guides targeting different audiences:
 
 <CardGrid>
   <LinkCard title="Getting Started" href="/raised-church-website/getting-started" description="Set up your local development environment." />
   <LinkCard title="Architecture" href="/raised-church-website/architecture" description="Understand the system design and request lifecycle." />
-  <LinkCard title="Content Editor Guide" href="/raised-church-website/content-editor-guide" description="Instructions for church staff on managing CMS content." />
+  <LinkCard title="Content Editor Guide" href="/raised-church-website/content-editor-guide" description="Instructions for non-technical church staff on managing CMS content." />
   <LinkCard title="Changelog" href="/raised-church-website/changelog" description="View the project version history." />
 </CardGrid>
 
-## Live site
+## External Links & Production Resources
 
-Check out the live production site at [raisedchurch.com](https://raisedchurch.com).
+<Aside type="note" title="Project Links">
+  - **Live Production Site**: [raisedchurch.com](https://raisedchurch.com)
+  - **Live Church Documentation Site**: [Insert Link Here](#)
+  - **Source Code Repository**: [Insert Link Here](#)
+</Aside>

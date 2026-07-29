@@ -14,8 +14,9 @@ export default defineConfig({
   },
   integrations: [
     starlight({
-      title: 'System Documentation & Architecture Hub',
-      tagline: 'Developer Knowledge Base & Technical Runbooks',
+      title: 'Sharon Wang — Docs',
+      tagline: 'Technical Documentation Portfolio',
+      lastUpdated: true,
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/sharonwang554' },
         { icon: 'linkedin', label: 'LinkedIn', href: 'https://linkedin.com/in/YOUR_HANDLE' },
@@ -150,6 +151,17 @@ export default defineConfig({
       ],
 
       head: [
+        // Open Graph social meta
+        { tag: 'meta', attrs: { property: 'og:image', content: 'https://docs.sharonwang.me/og-image.jpg' } },
+        { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
+        { tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+        { tag: 'meta', attrs: { property: 'og:type', content: 'website' } },
+        { tag: 'meta', attrs: { property: 'og:site_name', content: 'Sharon Wang — Technical Documentation Portfolio' } },
+        { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
+        { tag: 'meta', attrs: { name: 'twitter:image', content: 'https://docs.sharonwang.me/og-image.jpg' } },
+        // RSS autodiscovery
+        { tag: 'link', attrs: { rel: 'alternate', type: 'application/rss+xml', title: 'Sharon Wang Docs RSS', href: '/rss.xml' } },
+        // Mermaid diagram rendering
         {
           tag: 'script',
           attrs: { type: 'module' },
@@ -190,6 +202,27 @@ export default defineConfig({
             } else {
               renderMermaidDiagrams();
             }
+          `,
+        },
+        // Back-to-top button
+        {
+          tag: 'script',
+          attrs: { type: 'module' },
+          content: `
+            const btn = document.createElement('button');
+            btn.id = 'back-to-top';
+            btn.setAttribute('aria-label', 'Back to top');
+            btn.innerHTML = '↑';
+            document.body.appendChild(btn);
+
+            const toggle = () => {
+              btn.classList.toggle('visible', window.scrollY > 400);
+            };
+            window.addEventListener('scroll', toggle, { passive: true });
+            btn.addEventListener('click', () => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            toggle();
           `,
         },
       ],
