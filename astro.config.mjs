@@ -46,7 +46,6 @@ export default defineConfig({
         },
         {
           label: '3D Space Portfolio',
-          badge: { text: 'Live', variant: 'success' },
           collapsed: true,
           items: [
             { slug: '3d-space-portfolio/overview' },
@@ -85,7 +84,6 @@ export default defineConfig({
         },
         {
           label: 'Raised Church Website',
-          badge: { text: 'Live', variant: 'success' },
           collapsed: true,
           items: [
             { slug: 'raised-church-website/overview' },
@@ -130,7 +128,6 @@ export default defineConfig({
         },
         {
           label: 'TeamAssign Platform',
-          badge: { text: 'Legacy', variant: 'note' },
           collapsed: true,
           items: [
             {

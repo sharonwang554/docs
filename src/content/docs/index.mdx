@@ -5,8 +5,8 @@ template: splash
 hero:
   tagline: Technical writer & software engineer. I build documentation that developers actually read — from API specifications and onboarding runbooks to non-technical product guides and AI agent context files.
   actions:
-    - text: View Featured Work
-      link: '#featured-work'
+    - text: Read Featured Case Study
+      link: /articles/repomix-ai-case-study
       icon: right-arrow
       variant: primary
     - text: About & Methodology
@@ -21,28 +21,20 @@ import { Card, CardGrid, LinkCard, Aside, Badge } from '@astrojs/starlight/compo
 
 <CardGrid>
   <Card title="Developer Experience & AI Workflows" icon="rocket">
-    <Badge text="Senior Engineers · DevEx Leads" variant="note" size="small" />
-    <br/><br/>
     - [Repomix + AI Workflow Case Study ★](/articles/repomix-ai-case-study)
     - [React Three Fiber & Spec-Driven Docs](/3d-space-portfolio/overview)
   </Card>
 
   <Card title="Internal Enablement & Onboarding" icon="setting">
-    <Badge text="Engineering Managers" variant="note" size="small" />
-    <br/><br/>
     - [TeamAssign: Internship Onboarding Docs](/teamassign/overview)
     - [Obsidian PKM: Information Architecture](/articles/obsidian-pkm-setup)
   </Card>
 
   <Card title="End-User & Product Guides" icon="sun">
-    <Badge text="Product Managers · DevRel" variant="note" size="small" />
-    <br/><br/>
     - [Svelte + Contentful Non-Profit Documentation](/raised-church-website/overview)
   </Card>
 
   <Card title="Academic Research" icon="open-book">
-    <Badge text="Research-Adjacent Roles" variant="note" size="small" />
-    <br/><br/>
     - [Textual Data Analysis: Dead Sea Scrolls](/articles/textual-criticism)
   </Card>
 </CardGrid>
