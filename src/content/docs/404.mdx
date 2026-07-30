@@ -1,0 +1,32 @@
+---
+title: '404'
+template: splash
+editUrl: false
+hero:
+  title: '404'
+  tagline: The page you're looking for doesn't exist or has been moved. Check the URL or try using the search bar.
+  actions:
+    - text: Back to Home
+      icon: right-arrow
+      link: /
+      variant: primary
+    - text: About This Site
+      link: /about
+      variant: secondary
+---
+
+<style>
+  {`
+    /* Add gradient effect specifically to the 404 hero title */
+    h1[id="_top"] {
+      font-size: 8rem !important;
+      font-weight: 800 !important;
+      line-height: 1 !important;
+      background: linear-gradient(135deg, var(--sl-color-accent), #818cf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 2rem;
+    }
+  `}
+</style>

@@ -1,84 +1,46 @@
 ---
-title: System Documentation & Architecture Hub
-description: Official developer documentation, API specifications, system architecture designs, and troubleshooting runbooks across modern and legacy technical stacks.
+title: Technical Documentation Portfolio
+description: Production-grade developer documentation, API specifications, onboarding guides, and end-user product docs — demonstrating technical communication across diverse audiences and systems.
 template: splash
 hero:
-  tagline: Developer Knowledge Base & Technical Runbooks. Exploring system architecture decomposition, API specifications, OAuth 2.0 sequence diagrams, and operational incident playbooks.
+  tagline: Technical writer & software engineer. I build documentation that developers actually read — from API specifications and onboarding runbooks to non-technical product guides and AI agent context files.
   actions:
-    - text: Explore Developer Docs
-      link: /developer-docs/overview
+    - text: Read Featured Case Study
+      link: /articles/repomix-ai-case-study
       icon: right-arrow
       variant: primary
-    - text: View Live Applications
-      link: '#live-production-applications'
+    - text: About & Methodology
+      link: /about
       icon: external
       variant: secondary
 ---
 
 import { Card, CardGrid, LinkCard, Aside, Badge } from '@astrojs/starlight/components';
 
-<Aside type="note" title="Official Developer Knowledge Base">
-  Welcome to the central technical documentation center. Select a specialized knowledge hub below or explore our production application repositories directly.
-</Aside>
+<div id="featured-work"></div>
 
-## Specialized Knowledge Hubs
-
-<CardGrid stagger>
-  <Card title="Developer Docs & API" icon="document">
-    Pure technical specifications, OAuth 2.0 authorization sequence diagrams (`Mermaid.js`), unified API endpoints with request/response JSON payload schemas, and AWS EC2 developer onboarding tutorials.
-
-    [Explore Developer Docs &rarr;](/developer-docs/overview)
+<CardGrid>
+  <Card title="Developer Experience & AI Workflows" icon="rocket">
+    - [Repomix + AI Workflow Case Study ★](/articles/repomix-ai-case-study)
+    - [React Three Fiber & Spec-Driven Docs](/3d-space-portfolio/overview)
   </Card>
-  <Card title="Troubleshooting & Runbooks" icon="warning">
-    Structured Standard Operating Procedures (`Symptom → Diagnosis → Fix`), 5 common Canvas LMS integration error resolutions, distributed log tracing, and local SSL certificate expiration runbooks (`thisisunsafe` bypass protocol).
 
-    [Explore Runbooks &rarr;](/troubleshooting/overview)
+  <Card title="Internal Enablement & Onboarding" icon="setting">
+    - [TMS: Internship Onboarding Docs](/tms/overview)
+    - [Obsidian PKM: Information Architecture](/articles/obsidian-pkm-setup)
   </Card>
-  <Card title="Architecture & Project Logic" icon="puzzle">
-    High-level Canvas LMS + AWS cloud infrastructure architecture diagrams, comparative system design trade-offs across live WebGL/CMS deployments, and abstract mathematical/philological algorithm decomposition (`KaTeX`).
 
-    [Explore Architecture &rarr;](/architecture/overview)
+  <Card title="End-User & Product Guides" icon="sun">
+    - [Svelte + Contentful Non-Profit Documentation](/raised-church-website/overview)
+  </Card>
+
+  <Card title="Academic Research" icon="open-book">
+    - [Textual Data Analysis: Dead Sea Scrolls](/articles/textual-criticism)
   </Card>
 </CardGrid>
 
 ---
 
-<div id="live-production-applications"></div>
-
-## Live Production Applications
-
-Explore our complete documentation suites alongside their live production websites:
-
-<CardGrid>
-  <Card title="3D Space Portfolio" icon="rocket">
-    <Badge text="Live Production Site" variant="success" size="small" />
-    <br/><br/>
-    Interactive WebGL-powered 3D personal website built with React 18, Three.js / React Three Fiber, SCSS Modules, Vitest, and bilingual i18n.
-    <br/><br/>
-    - **Live Website**: [https://sharonwang.me](https://sharonwang.me)
-    - **Documentation Suite**: [Explore 3D Portfolio Docs &rarr;](/3d-space-portfolio/overview)
-  </Card>
-  <Card title="Raised Church Website" icon="sun">
-    <Badge text="Live Production Site" variant="success" size="small" />
-    <br/><br/>
-    Bilingual (Chinese/English) church platform for 左營復活堂 in Kaohsiung, Taiwan, powered by SvelteKit SSR and Contentful Headless CMS.
-    <br/><br/>
-    - **Live Website**: [https://raisedchurch.com](https://raisedchurch.com)
-    - **Documentation Suite**: [Explore Church Website Docs &rarr;](/raised-church-website/overview)
-  </Card>
-  <Card title="TMS Academic Platform" icon="setting">
-    <Badge text="Legacy Institutional System" variant="danger" size="small" />
-    <br/><br/>
-    Anonymized institutional knowledge base for a Perl 5 / CGI / `mod_perl` / MySQL academic management system deployed across 100+ universities since 2005.
-    <br/><br/>
-    - **System Status**: Active across participating higher education institutions.
-    - **Documentation Suite**: [Explore TMS Runbooks &rarr;](/tms/overview)
-  </Card>
-  <Card title="Academic Articles & Research" icon="open-book">
-    <Badge text="Research Case Studies" variant="note" size="small" />
-    <br/><br/>
-    Long-form technical writing and academic papers on textual criticism, algorithm comparison, and stemmatic theory.
-    <br/><br/>
-    - **Research Repository**: [Explore Articles &rarr;](/articles/textual-criticism)
-  </Card>
-</CardGrid>
+<Aside type="tip" title="Documentation Quality & Methodology">
+  All documentation on this site is prose-linted with [Vale.sh](https://vale.sh/) using the [Google Developer Documentation Style Guide](https://developers.google.com/style) and [Microsoft Writing Style Guide](https://learn.microsoft.com/en-us/style-guide/developer-content/) as baselines. Content is structured per the [Diátaxis framework](https://diataxis.fr/) — classifying every page as a Tutorial, How-to Guide, Reference, or Explanation based on user needs.
+</Aside>

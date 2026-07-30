@@ -14,12 +14,13 @@ export default defineConfig({
   },
   integrations: [
     starlight({
-      title: 'System Documentation & Architecture Hub',
-      tagline: 'Developer Knowledge Base & Technical Runbooks',
+      title: 'Sharon Wang — Docs',
+      tagline: 'Technical Documentation Portfolio',
+      lastUpdated: true,
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/sharonwang554' },
         { icon: 'linkedin', label: 'LinkedIn', href: 'https://linkedin.com/in/YOUR_HANDLE' },
-        { icon: 'laptop', label: 'Main Portfolio (sharonwang.me)', href: 'https://sharonwang.me' },
+        { icon: 'rocket', label: 'Visit sharonwang.me', href: 'https://sharonwang.me' },
       ],
       customCss: ['./src/styles/custom.css', 'katex/dist/katex.min.css'],
 
@@ -32,56 +33,161 @@ export default defineConfig({
 
       sidebar: [
         {
-          label: '🎯 Developer Docs & API',
-          autogenerate: { directory: 'developer-docs', collapsed: false },
-          collapsed: false,
+          label: 'About This Knowledge Base',
+          slug: 'about',
         },
         {
-          label: '🎯 Troubleshooting & Runbooks',
-          autogenerate: { directory: 'troubleshooting', collapsed: false },
-          collapsed: false,
-        },
-        {
-          label: '🎯 Architecture & Project Logic',
-          autogenerate: { directory: 'architecture', collapsed: false },
-          collapsed: false,
-        },
-        {
-          label: '📁 Complete System Repositories',
+          label: 'Featured Articles',
           collapsed: false,
           items: [
+            { slug: 'articles/repomix-ai-case-study' },
+            { slug: 'articles/obsidian-pkm-setup' },
+          ],
+        },
+        {
+          label: '3D Space Portfolio',
+          collapsed: true,
+          items: [
+            { slug: '3d-space-portfolio/overview' },
             {
-              label: '3D Space Portfolio',
-              badge: { text: 'Live', variant: 'success' },
-              autogenerate: { directory: '3d-space-portfolio', collapsed: false },
+              label: 'Tutorials',
               collapsed: true,
+              items: [
+                { slug: '3d-space-portfolio/tutorials/first-steps' },
+              ],
             },
             {
-              label: 'Raised Church Website',
-              badge: { text: 'Live', variant: 'success' },
-              autogenerate: { directory: 'raised-church-website', collapsed: false },
+              label: 'How-to Guides',
               collapsed: true,
+              items: [
+                { slug: '3d-space-portfolio/how-to/testing-strategy' },
+                { slug: '3d-space-portfolio/how-to/internationalization' },
+              ],
             },
             {
-              label: 'TMS',
-              badge: { text: 'Legacy', variant: 'note' },
-              autogenerate: { directory: 'tms', collapsed: false },
+              label: 'Reference',
               collapsed: true,
+              items: [
+                { slug: '3d-space-portfolio/reference/api-reference' },
+                { slug: '3d-space-portfolio/reference/styling-system' },
+              ],
+            },
+            {
+              label: 'Explanation',
+              collapsed: true,
+              items: [
+                { slug: '3d-space-portfolio/explanation/3d-graphics' },
+                { slug: '3d-space-portfolio/explanation/architecture' },
+              ],
             },
           ],
         },
         {
-          label: '📚 Articles & Research',
-          autogenerate: { directory: 'articles', collapsed: false },
-          collapsed: false,
+          label: 'Raised Church Website',
+          collapsed: true,
+          items: [
+            { slug: 'raised-church-website/overview' },
+            {
+              label: 'Tutorials',
+              collapsed: true,
+              items: [
+                { slug: 'raised-church-website/tutorials/getting-started' },
+                { slug: 'raised-church-website/tutorials/first-feature' },
+              ],
+            },
+            {
+              label: 'How-to Guides',
+              collapsed: true,
+              items: [
+                { slug: 'raised-church-website/how-to/custom-pages' },
+                { slug: 'raised-church-website/how-to/deploy-to-vercel' },
+                { slug: 'raised-church-website/how-to/add-a-church' },
+                { slug: 'raised-church-website/how-to/contributing' },
+              ],
+            },
+            {
+              label: 'Reference',
+              collapsed: true,
+              items: [
+                { slug: 'raised-church-website/reference/environment-variables' },
+                { slug: 'raised-church-website/reference/components' },
+                { slug: 'raised-church-website/reference/content-types' },
+                { slug: 'raised-church-website/reference/i18n-api' },
+              ],
+            },
+            {
+              label: 'Explanation',
+              collapsed: true,
+              items: [
+                { slug: 'raised-church-website/architecture' },
+                { slug: 'raised-church-website/content-editor-guide' },
+              ],
+            },
+            { slug: 'raised-church-website/changelog' },
+          ],
         },
         {
-          label: 'About This Knowledge Base',
-          slug: 'about',
+          label: 'TMS Platform',
+          collapsed: true,
+          items: [
+            { slug: 'tms/overview' },
+            {
+              label: 'Tutorials',
+              collapsed: true,
+              items: [
+                { slug: 'tms/tutorials/getting-started' },
+                { slug: 'tms/tutorials/developer-getting-started' },
+              ],
+            },
+            {
+              label: 'How-to Guides',
+              collapsed: true,
+              items: [
+                { slug: 'tms/how-to/developer-tips' },
+                { slug: 'tms/how-to/troubleshooting' },
+                { slug: 'tms/how-to/troubleshooting-overview' },
+                { slug: 'tms/how-to/canvas-lms-errors' },
+                { slug: 'tms/how-to/database-and-memory-runbooks' },
+                { slug: 'tms/how-to/debugging-playbook' },
+              ],
+            },
+            {
+              label: 'Reference',
+              collapsed: true,
+              items: [
+                { slug: 'tms/reference/developer-overview' },
+                { slug: 'tms/reference/api-endpoints' },
+                { slug: 'tms/reference/api-reference' },
+              ],
+            },
+            {
+              label: 'Explanation',
+              collapsed: true,
+              items: [
+                { slug: 'tms/explanation/architecture-overview' },
+                { slug: 'tms/explanation/architecture' },
+                { slug: 'tms/explanation/authentication-flow' },
+                { slug: 'tms/explanation/canvas-aws-system-architecture' },
+                { slug: 'tms/explanation/project-system-designs' },
+                { slug: 'tms/explanation/complex-logic-breakdown' },
+              ],
+            },
+          ],
         },
       ],
 
       head: [
+        // Open Graph social meta
+        { tag: 'meta', attrs: { property: 'og:image', content: 'https://docs.sharonwang.me/og-image.jpg' } },
+        { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
+        { tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+        { tag: 'meta', attrs: { property: 'og:type', content: 'website' } },
+        { tag: 'meta', attrs: { property: 'og:site_name', content: 'Sharon Wang — Technical Documentation Portfolio' } },
+        { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
+        { tag: 'meta', attrs: { name: 'twitter:image', content: 'https://docs.sharonwang.me/og-image.jpg' } },
+        // RSS autodiscovery
+        { tag: 'link', attrs: { rel: 'alternate', type: 'application/rss+xml', title: 'Sharon Wang Docs RSS', href: '/rss.xml' } },
+        // Mermaid diagram rendering
         {
           tag: 'script',
           attrs: { type: 'module' },
@@ -122,6 +228,38 @@ export default defineConfig({
             } else {
               renderMermaidDiagrams();
             }
+          `,
+        },
+        // Social icon tooltips (CSS-driven via data-tooltip)
+        {
+          tag: 'script',
+          attrs: { type: 'module' },
+          content: `
+            document.querySelectorAll('starlight-social-icons a, .social-icons a').forEach(a => {
+              const sr = a.querySelector('.sr-only');
+              if (sr) a.dataset.tooltip = sr.textContent;
+            });
+          `,
+        },
+        // Back-to-top button
+        {
+          tag: 'script',
+          attrs: { type: 'module' },
+          content: `
+            const btn = document.createElement('button');
+            btn.id = 'back-to-top';
+            btn.setAttribute('aria-label', 'Back to top');
+            btn.innerHTML = '↑';
+            document.body.appendChild(btn);
+
+            const toggle = () => {
+              btn.classList.toggle('visible', window.scrollY > 400);
+            };
+            window.addEventListener('scroll', toggle, { passive: true });
+            btn.addEventListener('click', () => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            toggle();
           `,
         },
       ],
