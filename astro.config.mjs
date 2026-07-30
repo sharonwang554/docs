@@ -32,10 +32,12 @@ export default defineConfig({
       },
 
       sidebar: [
+/*
         {
           label: 'About This Knowledge Base',
           slug: 'about',
         },
+*/
 /*
         {
           label: 'Featured Articles',
