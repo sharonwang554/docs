@@ -38,6 +38,10 @@ export default defineConfig({
           slug: 'about',
         },
 */
+        {
+          label: 'Documentation',
+          slug: 'coming-soon',
+        },
 /*
         {
           label: 'Featured Articles',
