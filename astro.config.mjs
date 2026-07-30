@@ -36,6 +36,7 @@ export default defineConfig({
           label: 'About This Knowledge Base',
           slug: 'about',
         },
+/*
         {
           label: 'Featured Articles',
           collapsed: false,
@@ -126,6 +127,7 @@ export default defineConfig({
             { slug: 'raised-church-website/changelog' },
           ],
         },
+*/
       ],
 
       head: [
