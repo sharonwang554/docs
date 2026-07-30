@@ -6,72 +6,8 @@ sidebar:
   order: 1
 ---
 
-This page lists all environment variables required to run the Raised Church Website.
+import { Aside } from '@astrojs/starlight/components';
 
-## Contentful CMS Variables
-
-Set these variables to connect the application to your Contentful CMS workspace.
-
-| Property | Value |
-|---|---|
-| Name | `CONTENTFUL_SPACE_ID` |
-| Required | Yes (for CMS mode) |
-| Default | `dummy_space` |
-| Description | The unique ID of your Contentful space. |
-| Where to set | `.env.local` (local), Vercel dashboard (production) |
-
-| Property | Value |
-|---|---|
-| Name | `CONTENTFUL_ACCESS_TOKEN` |
-| Required | Yes (for CMS mode) |
-| Default | `dummy_token` |
-| Description | The Content Delivery API access token used to fetch published content. |
-| Where to set | `.env.local` (local), Vercel dashboard (production) |
-
-| Property | Value |
-|---|---|
-| Name | `CONTENTFUL_ENVIRONMENT` |
-| Required | No |
-| Default | `master` |
-| Description | The Contentful environment environment to query. |
-| Where to set | `.env.local` (local), Vercel dashboard (production) |
-
-## Application Variables
-
-| Property | Value |
-|---|---|
-| Name | `PUBLIC_SITE_ID` |
-| Required | No |
-| Default | None |
-| Description | Overrides the site profile used by the application, allowing for multi-tenant church site generation. |
-| Where to set | `.env.local` (local), Vercel dashboard (production) |
-
-| Property | Value |
-|---|---|
-| Name | `WEB3FORMS_ID` |
-| Required | Yes (for contact form) |
-| Default | None |
-| Description | The Web3Forms access key used to receive contact form submissions. |
-| Where to set | `.env.local` (local), Vercel dashboard (production) |
-
-| Property | Value |
-|---|---|
-| Name | `PUBLIC_SITE_URL` |
-| Required | No |
-| Default | None |
-| Description | The canonical URL of the site, used for SEO, sitemaps, and canonical links. |
-| Where to set | `.env.local` (local), Vercel dashboard (production) |
-
-| Property | Value |
-|---|---|
-| Name | `INTERNAL_GUIDE_PASSWORD` |
-| Required | Yes (for internal guide) |
-| Default | None |
-| Description | The secure password required to access the internal staff guide. |
-| Where to set | `.env.local` (local), Vercel dashboard (production) |
-
-## Fallback Behavior
-
-When the CMS environment variables (`CONTENTFUL_SPACE_ID` and `CONTENTFUL_ACCESS_TOKEN`) are not provided or are invalid, the application gracefully degrades to using static JSON fallback files.
-
-Instead of querying the Contentful API, the application reads the contents of the `src/lib/data/` directory (e.g., `src/lib/data/fallback-*.json`). This ensures the site remains accessible during initial development or when the CMS connection is disrupted.
+<Aside type="caution" title="Coming Soon">
+  This article is currently being authored and polished. Check back soon for the full version!
+</Aside>

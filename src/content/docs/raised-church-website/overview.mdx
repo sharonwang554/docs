@@ -6,52 +6,9 @@ sidebar:
   label: 'Case Study Overview'
   order: 0
 ---
-import { CardGrid, LinkCard, Aside, Badge } from '@astrojs/starlight/components';
 
-<Badge text="Live" variant="success" size="large" />
+import { Aside } from '@astrojs/starlight/components';
 
-This document serves as a **Case Study** for the design, development, and documentation of a bilingual (Traditional Chinese and English) platform built for 左營復活堂 (Raised Church) in Kaohsiung, Taiwan. 
-
-Building and documenting software for a non-profit requires a unique approach: you must cater to developers (who need technical precision) and volunteer staff (who need extreme empathy and zero jargon). This case study explores how we balanced those needs using a modern Jamstack architecture.
-
-## Why this stack?
-
-The project uses a modern web stack—**SvelteKit**, **Contentful CMS**, and **Vercel**—instead of traditional solutions like WordPress. This approach offers several advantages:
-- **Performance:** SvelteKit provides server-side rendering (SSR) and delivers a lightweight client bundle.
-- **Maintainability:** Using TypeScript and Svelte 5 runes (`$props()`, `$state()`, `$derived()`) ensures type safety and predictable reactivity.
-- **Flexibility:** A headless CMS (Contentful) separates content from presentation, allowing non-technical staff to easily manage site data without risking the site's layout.
-- **Reliability:** The Vercel edge network ensures fast delivery and seamless CI/CD.
-
-## Tech stack summary
-
-- **Framework:** SvelteKit 2.50+ and Svelte 5.51+
-- **Language:** TypeScript 5.9+
-- **Styling:** **SCSS** (using shared variables and mixins for theming)
-- **CMS:** Contentful
-- **Deployment:** Vercel (Node.js 24.x runtime)
-
-## Key features
-
-- **Bilingual support:** Full internationalization with routing for English (`/en/...`) and Traditional Chinese (`/zh/...` or default `/`).
-- **CMS-managed content:** Deep integration with Contentful for managing activities, news, sermons, and sharings.
-- **Sermon archive:** Dedicated pages for Sunday messages with embedded YouTube videos, PDF slides, and newsletters.
-- **Dynamic gathering schedule:** Time and location of recurring services are manageable through the CMS.
-- **Multi-church architecture:** Site profile resolution enables you to use the same codebase for multiple church websites (e.g., `raised-church`, `grace-church`) using domain mapping.
-
-## Internal Documentation
-
-The documentation created for this project is presented here in this portfolio, split into distinct guides targeting different audiences:
-
-<CardGrid>
-  <LinkCard title="Getting Started" href="/raised-church-website/getting-started" description="Set up your local development environment." />
-  <LinkCard title="Architecture" href="/raised-church-website/architecture" description="Understand the system design and request lifecycle." />
-  <LinkCard title="Content Editor Guide" href="/raised-church-website/content-editor-guide" description="Instructions for non-technical church staff on managing CMS content." />
-  <LinkCard title="Changelog" href="/raised-church-website/changelog" description="View the project version history." />
-</CardGrid>
-
-## External Links & Production Resources
-
-<Aside type="note" title="Project Links">
-  - **Live Production Site**: [raisedchurch.com](https://raisedchurch.com)
-  - **Live Church Documentation Site**: [Insert Link Here](#)
+<Aside type="caution" title="Coming Soon">
+  This article is currently being authored and polished. Check back soon for the full version!
 </Aside>
