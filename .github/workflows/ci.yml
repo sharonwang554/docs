@@ -9,6 +9,20 @@ on:
       - main
 
 jobs:
+  lint-prose:
+    name: Lint Prose (Vale)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Run Vale Linter
+        uses: errata-ai/vale-action@v2
+        with:
+          files: 'src/content/docs'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build:
     name: Build Documentation
     runs-on: ubuntu-latest

@@ -19,7 +19,7 @@ export default defineConfig({
       lastUpdated: true,
       social: [
         { icon: 'github', label: 'GitHub', href: 'https://github.com/sharonwang554' },
-        { icon: 'linkedin', label: 'LinkedIn', href: 'https://linkedin.com/in/YOUR_HANDLE' },
+        { icon: 'linkedin', label: 'LinkedIn', href: 'https://www.linkedin.com/in/shihyin-sharon-wang/' },
         { icon: 'rocket', label: 'Visit sharonwang.me', href: 'https://sharonwang.me' },
       ],
       customCss: ['./src/styles/custom.css', 'katex/dist/katex.min.css'],
@@ -33,147 +33,11 @@ export default defineConfig({
 
       sidebar: [
         {
-          label: 'About This Knowledge Base',
-          slug: 'about',
-        },
-        {
           label: 'Featured Articles',
           collapsed: false,
-          items: [
-            { slug: 'articles/repomix-ai-case-study' },
-            { slug: 'articles/obsidian-pkm-setup' },
-          ],
+          autogenerate: { directory: 'articles' },
         },
-        {
-          label: '3D Space Portfolio',
-          collapsed: true,
-          items: [
-            { slug: '3d-space-portfolio/overview' },
-            {
-              label: 'Tutorials',
-              collapsed: true,
-              items: [
-                { slug: '3d-space-portfolio/tutorials/first-steps' },
-              ],
-            },
-            {
-              label: 'How-to Guides',
-              collapsed: true,
-              items: [
-                { slug: '3d-space-portfolio/how-to/testing-strategy' },
-                { slug: '3d-space-portfolio/how-to/internationalization' },
-              ],
-            },
-            {
-              label: 'Reference',
-              collapsed: true,
-              items: [
-                { slug: '3d-space-portfolio/reference/api-reference' },
-                { slug: '3d-space-portfolio/reference/styling-system' },
-              ],
-            },
-            {
-              label: 'Explanation',
-              collapsed: true,
-              items: [
-                { slug: '3d-space-portfolio/explanation/3d-graphics' },
-                { slug: '3d-space-portfolio/explanation/architecture' },
-              ],
-            },
-          ],
-        },
-        {
-          label: 'Raised Church Website',
-          collapsed: true,
-          items: [
-            { slug: 'raised-church-website/overview' },
-            {
-              label: 'Tutorials',
-              collapsed: true,
-              items: [
-                { slug: 'raised-church-website/tutorials/getting-started' },
-                { slug: 'raised-church-website/tutorials/first-feature' },
-              ],
-            },
-            {
-              label: 'How-to Guides',
-              collapsed: true,
-              items: [
-                { slug: 'raised-church-website/how-to/custom-pages' },
-                { slug: 'raised-church-website/how-to/deploy-to-vercel' },
-                { slug: 'raised-church-website/how-to/add-a-church' },
-                { slug: 'raised-church-website/how-to/contributing' },
-              ],
-            },
-            {
-              label: 'Reference',
-              collapsed: true,
-              items: [
-                { slug: 'raised-church-website/reference/environment-variables' },
-                { slug: 'raised-church-website/reference/components' },
-                { slug: 'raised-church-website/reference/content-types' },
-                { slug: 'raised-church-website/reference/i18n-api' },
-              ],
-            },
-            {
-              label: 'Explanation',
-              collapsed: true,
-              items: [
-                { slug: 'raised-church-website/architecture' },
-                { slug: 'raised-church-website/content-editor-guide' },
-              ],
-            },
-            { slug: 'raised-church-website/changelog' },
-          ],
-        },
-        {
-          label: 'TMS Platform',
-          collapsed: true,
-          items: [
-            { slug: 'tms/overview' },
-            {
-              label: 'Tutorials',
-              collapsed: true,
-              items: [
-                { slug: 'tms/tutorials/getting-started' },
-                { slug: 'tms/tutorials/developer-getting-started' },
-              ],
-            },
-            {
-              label: 'How-to Guides',
-              collapsed: true,
-              items: [
-                { slug: 'tms/how-to/developer-tips' },
-                { slug: 'tms/how-to/troubleshooting' },
-                { slug: 'tms/how-to/troubleshooting-overview' },
-                { slug: 'tms/how-to/canvas-lms-errors' },
-                { slug: 'tms/how-to/database-and-memory-runbooks' },
-                { slug: 'tms/how-to/debugging-playbook' },
-              ],
-            },
-            {
-              label: 'Reference',
-              collapsed: true,
-              items: [
-                { slug: 'tms/reference/developer-overview' },
-                { slug: 'tms/reference/api-endpoints' },
-                { slug: 'tms/reference/api-reference' },
-              ],
-            },
-            {
-              label: 'Explanation',
-              collapsed: true,
-              items: [
-                { slug: 'tms/explanation/architecture-overview' },
-                { slug: 'tms/explanation/architecture' },
-                { slug: 'tms/explanation/authentication-flow' },
-                { slug: 'tms/explanation/canvas-aws-system-architecture' },
-                { slug: 'tms/explanation/project-system-designs' },
-                { slug: 'tms/explanation/complex-logic-breakdown' },
-              ],
-            },
-          ],
-        },
+
       ],
 
       head: [

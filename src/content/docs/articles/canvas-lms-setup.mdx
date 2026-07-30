@@ -1,0 +1,84 @@
+---
+title: "Local Environment Setup Guide: Docker & Canvas LMS"
+description: "A step-by-step runbook for provisioning a local Canvas LMS Docker instance for API integration testing."
+diataxis: how-to
+sidebar:
+  order: 2
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+<Aside type="note" title="Portfolio Context">
+This documentation captures the internal architecture and developer runbooks for an academic evaluation system. It has been genericized and published here to demonstrate technical writing, system architecture design, and Developer Experience (DevEx) engineering. There are no proprietary IP or NDA encumbrances.
+</Aside>
+
+This runbook outlines the manual infrastructure provisioning process used strictly for initial integration testing. While manual setup is sufficient for early staging, a production-grade Developer Experience (DevEx) implementation would automate this using EC2 user-data scripts or Terraform to bootstrap the Mutagen containers on launch—eliminating the need for developers to manually SSH into the instance or manage server security concerns.
+
+## Prerequisites
+
+If you need to provision a Canvas instance from scratch rather than using the existing pre-configured AWS server, ensure the host machine has the following dependencies installed:
+- Git
+- Docker & Docker Compose
+- Mutagen & Mutagen Compose
+- Dory
+
+<Aside type="caution">
+**Environment Variances:** Installation commands vary based on the host operating system (e.g., using `yum` on Amazon Linux versus `apt-get` on Ubuntu/Debian). Furthermore, Canvas is highly memory-intensive; ensure your EC2 instance is sufficiently provisioned to avoid out-of-memory (OOM) crashes. Ensure all necessary firewall ports are open for HTTP/HTTPS traffic.
+</Aside>
+
+For a comprehensive from-scratch installation guide, refer to the [Canvas LMS GitHub Repository Quick Start](https://github.com/instructure/canvas-lms/wiki/Quick-Start).
+
+---
+
+## 1. Starting the Canvas Instance
+
+Follow these steps to boot the pre-configured Canvas testing environment on AWS:
+
+<Steps>
+1. **SSH into the Host Server:** Connect to your designated EC2 instance. You can find the public IPv4 address for the testing server in the AWS EC2 dashboard.
+
+2. **Navigate to the Repository:**
+   ```bash
+   cd canvas-lms
+   ```
+
+3. **Initialize the Dev Setup (First Time Only):** If the instance is not already running, execute the setup script.
+   ```bash
+   ./script/docker_dev_setup.sh
+   ```
+   *Note: This process takes significant time. When prompted to create an administrator account, provide a testing email address.*
+
+4. **Start the Containers:** Spin up the Docker stack using Mutagen.
+   ```bash
+   mutagen-compose up -d
+   ```
+
+5. **Verify Container Health:** Ensure all containers booted successfully.
+   ```bash
+   docker ps -a
+   ```
+
+6. **Access the Web Interface:** Replace `<EC2_PUBLIC_IPV4_ADDRESS>` with the actual public IPv4 address of your EC2 instance. Open your browser and navigate to `http://<EC2_PUBLIC_IPV4_ADDRESS>`. Log in using the testing credentials established during step 3.
+</Steps>
+
+---
+
+## 2. Generating the OAuth Developer Key
+
+To allow your application to communicate with Canvas, you must register it as an authorized client application.
+
+<Steps>
+1. **Navigate to Developer Keys:** Within the Canvas web interface, click **Admin** > **Site Admin** > **Developer Keys** from the left sidebar.
+2. **Create a New Key:** Click **+ Developer Key** > **+ API Key**.
+3. **Configure Key Parameters:**
+   - **Key Name:** `Local Integration Testing`
+   - **Owner Email:** Enter your designated testing admin email.
+   - **Redirect URIs:** Enter your application's OAuth callback URL (e.g., `https://api.your-app.com/oauth/callback`).
+   - **Redirect URI (Legacy):** (Enter the same URI as above to prevent legacy routing issues).
+4. **Enforce Scopes:** Toggle **Enforce Scopes** and select the specific API endpoints required by your application.
+5. **Save and Extract Credentials:** Click **Save Key**. The system will generate two critical values:
+   - **Client ID:** The numerical string visible under the "Details" column.
+   - **Client Secret:** Click **Show Key** to reveal the alphanumeric secret. *Store these securely.*
+</Steps>
+
+Your Canvas instance is now actively running and configured to accept OAuth 2.0 requests from your client application!
