@@ -37,18 +37,13 @@ export default defineConfig({
           label: 'About This Knowledge Base',
           slug: 'about',
         },
-*/
-        {
-          label: 'Documentation',
-          slug: 'coming-soon',
-        },
-/*
         {
           label: 'Featured Articles',
           collapsed: false,
           items: [
-            { slug: 'articles/repomix-ai-case-study' },
-            { slug: 'articles/obsidian-pkm-setup' },
+            { slug: 'articles/tms-canvas-oauth2' },
+            // { slug: 'articles/repomix-ai-case-study' },
+            // { slug: 'articles/obsidian-pkm-setup' },
           ],
         },
         {
