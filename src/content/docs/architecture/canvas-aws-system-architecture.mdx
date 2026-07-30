@@ -18,31 +18,31 @@ The architecture leverages AWS managed services deployed across multi-AZ (Availa
 ```mermaid
 graph TB
     subgraph ClientLayer ["Client & LTI Integration Layer"]
-        Canvas["Canvas LMS Cloud\nLTI 1.3 Advantage / REST API"]
-        Browser["Faculty & Student Clients\nWeb Browsers & Mobile Apps"]
+        Canvas["Canvas LMS Cloud<br/>LTI 1.3 Advantage / REST API"]
+        Browser["Faculty & Student Clients<br/>Web Browsers & Mobile Apps"]
     end
 
     subgraph SecurityLayer ["API Gateway & Security Layer"]
-        WAF["AWS WAF & Shield\nDDoS & Rate Limiting"]
-        ALB["Application Load Balancer\nTLS Termination & Routing"]
-        Cognito["AWS Cognito / LTI Auth Gateway\nJWT Validation & FERPA Roles"]
+        WAF["AWS WAF & Shield<br/>DDoS & Rate Limiting"]
+        ALB["Application Load Balancer<br/>TLS Termination & Routing"]
+        Cognito["AWS Cognito / LTI Auth Gateway<br/>JWT Validation & FERPA Roles"]
     end
 
     subgraph ComputeLayer ["Compute & Microservices Cluster (EC2 / ECS)"]
-        IngestionSvc["Ingestion Microservice\nNode.js / Express Gateway"]
-        AnalyticsSvc["Analytics Aggregator\nPython / FastAPI Engine"]
-        GradePassbackSvc["Grade Passback Worker\nGo / Event Processor"]
+        IngestionSvc["Ingestion Microservice<br/>Node.js / Express Gateway"]
+        AnalyticsSvc["Analytics Aggregator<br/>Python / FastAPI Engine"]
+        GradePassbackSvc["Grade Passback Worker<br/>Go / Event Processor"]
     end
 
     subgraph MessagingLayer ["Asynchronous Decoupling Layer"]
-        SQS["AWS SQS Event Queues\nGrade Passback & Telemetry Topics"]
-        DLQ["AWS Dead-Letter Queue (DLQ)\nFailed Message Isolation"]
+        SQS["AWS SQS Event Queues<br/>Grade Passback & Telemetry Topics"]
+        DLQ["AWS Dead-Letter Queue (DLQ)<br/>Failed Message Isolation"]
     end
 
     subgraph StorageLayer ["Persistence & Storage Layer"]
-        RDS["Amazon RDS PostgreSQL\nMulti-AZ Relational Roster & Grades"]
-        DynamoDB["Amazon DynamoDB\nSession State & Idempotency Cache"]
-        S3["Amazon S3 Data Lake\nEncrypted Audit Logs & Export Archives"]
+        RDS["Amazon RDS PostgreSQL<br/>Multi-AZ Relational Roster & Grades"]
+        DynamoDB["Amazon DynamoDB<br/>Session State & Idempotency Cache"]
+        S3["Amazon S3 Data Lake<br/>Encrypted Audit Logs & Export Archives"]
     end
 
     %% Flow connections

@@ -25,10 +25,10 @@ Every incoming request entering our API gateways (`https://api.sharonwang.me` or
 
 ```mermaid
 graph LR
-    A["Client Browser / SPA\n(React / SvelteKit)"] -->|POST /api/v1/sync\nHeaders: X-Correlation-ID| B["AWS API Gateway /\nCloudFront Edge"]
-    B -->|Event Payload\nrequestContext.requestId| C["AWS Lambda Worker\n(Node.js / Express)"]
-    C -->|SQL Query + Comment\n/* trace_id: req-8f92a */| D["Relational Database\n(RDS / MySQL / PostgreSQL)"]
-    C -->|Async Publish\nMessageAttributes| E["AWS EventBridge /\nSQS Event Bus"]
+    A["Client Browser / SPA<br/>(React / SvelteKit)"] -->|POST /api/v1/sync<br/>Headers: X-Correlation-ID| B["AWS API Gateway /<br/>CloudFront Edge"]
+    B -->|Event Payload<br/>requestContext.requestId| C["AWS Lambda Worker<br/>(Node.js / Express)"]
+    C -->|SQL Query + Comment<br/>/* trace_id: req-8f92a */| D["Relational Database<br/>(RDS / MySQL / PostgreSQL)"]
+    C -->|Async Publish<br/>MessageAttributes| E["AWS EventBridge /<br/>SQS Event Bus"]
     
     style A fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
     style B fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#fff

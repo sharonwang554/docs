@@ -1,6 +1,8 @@
 ---
 title: System Architecture & Complex Logic Decomposition
 description: High-level system design, cross-functional project alignment, and technical decomposition case studies.
+sidebar:
+  order: 1
 ---
 
 import { Card, CardGrid, Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
@@ -17,9 +19,9 @@ We evaluate architectural decisions using a formal prioritization matrix grounde
 
 ```mermaid
 graph TD
-    A["Architectural Objectives"] --> B["1. Technical Scalability\nElastic resources, fault isolation, low latency"]
-    A --> C["2. Stakeholder Visibility\nAuditable workflows, transparent SLAs, cost governance"]
-    A --> D["3. Delivery Velocity\nIterative milestones, CI/CD automation, clear interfaces"]
+    A["Architectural Objectives"] --> B["1. Technical Scalability<br/>Elastic resources, fault isolation, low latency"]
+    A --> C["2. Stakeholder Visibility<br/>Auditable workflows, transparent SLAs, cost governance"]
+    A --> D["3. Delivery Velocity<br/>Iterative milestones, CI/CD automation, clear interfaces"]
     B --> E["Production Reliability & Performance"]
     C --> E
     D --> E

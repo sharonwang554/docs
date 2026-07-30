@@ -12,3 +12,58 @@
   --sl-color-accent: #818cf8;
   --sl-color-accent-high: #e0e7ff;
 }
+
+/* -------------------------------------------------------------------------- */
+/* Request 4: Larger LinkedIn and GitHub Header Social Icons                   */
+/* -------------------------------------------------------------------------- */
+.social-icons a svg,
+starlight-social-icons a svg,
+header .social-icons a svg {
+  width: 1.5rem !important;
+  height: 1.5rem !important;
+  font-size: 1.5rem !important;
+}
+
+.social-icons a,
+starlight-social-icons a,
+header .social-icons a {
+  padding: 0.35rem 0.45rem !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 0.375rem;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.social-icons a:hover,
+starlight-social-icons a:hover,
+header .social-icons a:hover {
+  transform: scale(1.12);
+  background-color: var(--sl-color-gray-5);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Request 5: Professional Main Portfolio Link Badge                          */
+/* -------------------------------------------------------------------------- */
+.social-icons a[href*="sharonwang.me"],
+starlight-social-icons a[href*="sharonwang.me"],
+header .social-icons a[href*="sharonwang.me"] {
+  background-color: var(--sl-color-accent-low);
+  color: var(--sl-color-accent-high) !important;
+  padding: 0.3rem 0.75rem !important;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none !important;
+  border: 1px solid var(--sl-color-accent);
+  gap: 0.35rem;
+  margin-left: 0.5rem;
+}
+
+.social-icons a[href*="sharonwang.me"]:hover,
+starlight-social-icons a[href*="sharonwang.me"]:hover,
+header .social-icons a[href*="sharonwang.me"]:hover {
+  background-color: var(--sl-color-accent);
+  color: #ffffff !important;
+  transform: translateY(-1px);
+}

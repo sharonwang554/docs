@@ -22,37 +22,37 @@ The following sequence diagram traces the complete lifecycle of a secure token e
 ```mermaid
 sequenceDiagram
     autonumber
-    actor User as "End User / Instructor"
-    participant Client as "Client App\n(LTI Tool / SPA)"
-    participant AuthServer as "Authorization Server\n(Canvas LMS / Identity Provider)"
-    participant TokenEndpoint as "Token Endpoint\n(/login/oauth2/token)"
-    participant ResourceServer as "Resource Server\n(AWS API Gateway & Lambda)"
+    actor User as End User / Instructor
+    participant Client as Client App (LTI Tool / SPA)
+    participant AuthServer as Authorization Server (Canvas LMS / Identity Provider)
+    participant TokenEndpoint as Token Endpoint (/login/oauth2/token)
+    participant ResourceServer as Resource Server (AWS API Gateway & Lambda)
 
-    Note over Client: Step 1: Generate PKCE Challenge\nCreate code_verifier (43-128 chars)\nCompute code_challenge = S256(verifier)
+    Note over Client: Step 1: Generate PKCE Challenge<br/>Create code_verifier (43-128 chars)<br/>Compute code_challenge = S256(verifier)
 
     User->>Client: Initiate Canvas LMS Integration / Course Sync
-    Client->>AuthServer: GET /login/oauth2/auth\n(?client_id, redirect_uri, response_type=code,\ncode_challenge, code_challenge_method=S256, state, scope)
+    Client->>AuthServer: GET /login/oauth2/auth (client_id, redirect_uri, response_type=code, code_challenge, code_challenge_method=S256, state, scope)
     
     AuthServer->>User: Display Authentication Prompt & Scope Consent
     User->>AuthServer: Authenticate Credentials & Authorize Scopes
     
-    AuthServer-->>Client: 302 Redirect to redirect_uri\n(?code=AUTHORIZATION_CODE & state=STATE_HASH)
+    AuthServer-->>Client: 302 Redirect to redirect_uri (?code=AUTHORIZATION_CODE & state=STATE_HASH)
     
-    Note over Client: Verify returned state matches\ninitially dispatched state
+    Note over Client: Verify returned state matches initially dispatched state
     
-    Client->>TokenEndpoint: POST /login/oauth2/token\n(grant_type=authorization_code, code, client_id,\nredirect_uri, code_verifier)
+    Client->>TokenEndpoint: POST /login/oauth2/token (grant_type=authorization_code, code, client_id, redirect_uri, code_verifier)
     
-    Note over TokenEndpoint: Cryptographic Verification:\nAssert S256(code_verifier) == code_challenge
+    Note over TokenEndpoint: Cryptographic Verification: Assert S256(code_verifier) == code_challenge
     
-    TokenEndpoint-->>Client: 200 OK Response\n(access_token, refresh_token, token_type=Bearer, expires_in=3600)
+    TokenEndpoint-->>Client: 200 OK Response (access_token, refresh_token, token_type=Bearer, expires_in=3600)
     
-    Note over Client: Securely store access_token in memory\nStore refresh_token in HttpOnly/Secure cookie
+    Note over Client: Securely store access_token in memory<br/>Store refresh_token in HttpOnly/Secure cookie
     
-    Client->>ResourceServer: POST /api/v1/courses/:id/assignments/:id/submissions/update_grades\nHeader: Authorization: Bearer <access_token>
+    Client->>ResourceServer: POST /api/v1/courses/:id/assignments/:id/submissions/update_grades (Authorization: Bearer access_token)
     
     Note over ResourceServer: Validate JWT Signature & Check Expiration against Auth Public Keys
     
-    ResourceServer-->>Client: 200 OK Response\n(Submission processed successfully)
+    ResourceServer-->>Client: 200 OK Response (Submission processed successfully)
 ```
 
 ---
