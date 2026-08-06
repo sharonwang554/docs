@@ -70,10 +70,3 @@ npm run build
 ```
 
 Compiles all static routes, renders KaTeX formulas, and generates the Pagefind search index inside `dist/`.
-
----
-
-## 📬 Contact
-
-- **Portfolio**: [sharonwang.me](https://sharonwang.me)
-- **GitHub**: [@sharonwang554](https://github.com/sharonwang554)
