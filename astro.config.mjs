@@ -35,12 +35,31 @@ export default defineConfig({
         {
           label: 'Featured Articles',
           collapsed: false,
-          autogenerate: { directory: 'articles' },
+          items: [
+            { slug: 'articles/tms-canvas-oauth2' },
+            { slug: 'articles/canvas-lms-setup' },
+          ],
         },
-
       ],
 
       head: [
+        // Biel AI chat widget (CDN embed — avoids plugin compatibility issues)
+        { tag: 'link', attrs: { rel: 'stylesheet', href: 'https://cdn.jsdelivr.net/npm/biel-search/dist/biel-search/biel-search.css' } },
+        { tag: 'script', attrs: { type: 'module', src: 'https://cdn.jsdelivr.net/npm/biel-search/dist/biel-search/biel-search.esm.js' } },
+        {
+          tag: 'script',
+          attrs: { type: 'module' },
+          content: `
+            const biel = document.createElement('biel-button');
+            biel.setAttribute('project', '${process.env.BIEL_PROJECT_ID || 'PENDING_SETUP'}');
+            biel.setAttribute('header-title', 'Docs AI Search');
+            biel.setAttribute('button-position', 'bottom-right');
+            biel.setAttribute('modal-position', 'bottom-right');
+            biel.setAttribute('button-style', 'dark');
+            biel.textContent = 'Ask AI';
+            document.body.appendChild(biel);
+          `,
+        },
         // Open Graph social meta
         { tag: 'meta', attrs: { property: 'og:image', content: 'https://docs.sharonwang.me/og-image.jpg' } },
         { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
