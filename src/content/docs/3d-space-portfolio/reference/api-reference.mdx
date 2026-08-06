@@ -1,0 +1,460 @@
+---
+title: 'Api Reference'
+description: 'Api Reference'
+---
+
+# API Reference - 3D Space Portfolio
+
+## Core Types & Interfaces
+
+### Language Types
+
+```typescript
+type Language = "en" | "zh";
+
+interface UITranslations {
+  about: string;
+  aboutContent: string;
+  education: string;
+  experience: string;
+  skills: string;
+  programmingLanguages: string;
+  frameworks: string;
+  databases: string;
+  cloudTech: string;
+  cicd: string;
+  tools: string;
+  dataPlatforms: string;
+  present: string;
+  greeting: string;
+  intro: string;
+  email: string;
+  contact: string;
+  yourName: string;
+  message: string;
+  sendMessage: string;
+  sending: string;
+  messageSent: string;
+  typeMessage: string;
+  errorSendingMessage: string;
+  home: string;
+  welcomeMessage: string;
+}
+```
+
+### Content Types
+
+```typescript
+interface Education {
+  school: string;
+  schoolZh: string;
+  degree: string;
+  degreeZh: string;
+  date: string;
+  dateZh: string;
+  location: string;
+  locationZh: string;
+  gpa?: string;
+  concentration?: string;
+  concentrationZh?: string;
+  minor?: string;
+  minorZh?: string;
+}
+
+interface Job {
+  company: string;
+  companyZh: string;
+  title: string;
+  titleZh: string;
+  date: string;
+  dateZh: string;
+  location: string;
+  locationZh: string;
+  responsibilities: string[];
+  responsibilitiesZh: string[];
+}
+
+type SkillCategory =
+  | "programmingLanguages"
+  | "frameworks"
+  | "databases"
+  | "cloudTech"
+  | "cicd"
+  | "tools"
+  | "dataPlatforms";
+
+interface Skill {
+  category: SkillCategory;
+  items: string[];
+}
+
+interface SocialLinks {
+  linkedin: string;
+  github: string;
+}
+
+interface SelfIntro {
+  intro: string;
+  introZh: string;
+}
+```
+
+## Context Providers
+
+### LanguageContext
+
+```typescript
+interface LanguageContextType {
+  currentLang: Language;
+  toggleLanguage: () => void;
+  t: (key: keyof UITranslations | SkillCategory) => string;
+}
+
+// Usage
+const { currentLang, toggleLanguage, t } = useLanguage();
+```
+
+**Methods:**
+
+- `toggleLanguage()`: Switches between 'en' and 'zh'
+- `t(key)`: Returns translated string for given key
+- `currentLang`: Current active language
+
+**Features:**
+
+- Automatic browser language detection
+- localStorage persistence
+- Document language attribute updates
+
+## State Management
+
+### Loading Store (Zustand)
+
+```typescript
+// From src/lib/LoadingStore/loadingStore.ts
+interface LoadingState {
+  isLoading: boolean;
+  setLoading: (loading: boolean) => void;
+}
+
+// Usage
+const { isLoading, setLoading } = useLoadingStore();
+```
+
+## Component Props
+
+### Hero Component
+
+```typescript
+interface HeroProps {
+  // No props - uses context for language
+}
+```
+
+### Education Component
+
+```typescript
+interface EducationProps {
+  educationList: Education[];
+}
+```
+
+### Experience Component
+
+```typescript
+interface ExperienceProps {
+  jobs: Job[];
+}
+```
+
+### Skills Component
+
+```typescript
+interface SkillsProps {
+  skills: Skill[];
+}
+```
+
+### Contact Component
+
+```typescript
+interface ContactProps {
+  // No props - self-contained with form state
+}
+```
+
+## Data Exports
+
+### Static Data
+
+```typescript
+// From src/lib/Data/personalData.ts
+export const socialLinks: SocialLinks;
+export const education: Education[];
+export const experience: Job[];
+export const skills: Skill[];
+export const selfIntro: SelfIntro;
+```
+
+### Translation Data
+
+```typescript
+// From src/lib/Data/sectionTranslations.ts
+export const translations: {
+  en: UITranslations;
+  zh: UITranslations;
+};
+```
+
+### Type Definitions
+
+```typescript
+// From src/lib/Data/types.ts
+export type Language = "en" | "zh";
+export interface UITranslations {
+  /* ... */
+}
+export interface Education {
+  /* ... */
+}
+export interface Job {
+  /* ... */
+}
+export interface Skill {
+  /* ... */
+}
+```
+
+## Utility Functions
+
+### Language Detection
+
+```typescript
+const getInitialLanguage = (): Language => {
+  const savedLang = localStorage.getItem("language");
+  if (savedLang && (savedLang === "en" || savedLang === "zh")) {
+    return savedLang as Language;
+  }
+
+  const browserLang = navigator.language.toLowerCase();
+  return browserLang.startsWith("zh") ? "zh" : "en";
+};
+```
+
+### Viewport Utilities
+
+```typescript
+// Viewport dimension updates (in App.tsx)
+const updateDimensions = () => {
+  const vw = document.documentElement.clientWidth * 0.01;
+  document.documentElement.style.setProperty("--vw," `${vw}px`);
+
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty("--vh," `${vh}px`);
+};
+```
+
+## CSS Custom Properties
+
+### Breakpoints
+
+```css
+:root {
+  --breakpoint-xs: 320px;
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1440px;
+  --breakpoint-2xl: 1920px;
+}
+```
+
+### Typography Scale
+
+```css
+:root {
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5rem;
+}
+```
+
+### Container System
+
+```css
+:root {
+  --container-max-width-sm: 440px;
+  --container-max-width-md: 720px;
+  --container-max-width-lg: 960px;
+  --container-max-width-xl: 1280px;
+  --container-max-width-2xl: 1400px;
+}
+```
+
+### Font Families
+
+```css
+:root {
+  --font-primary: "Inter," -apple-system, BlinkMacSystemFont, "Segoe UI," sans-serif;
+  --font-heading: "Poppins," sans-serif;
+  --font-chinese: "Noto Sans TC," sans-serif;
+}
+```
+
+## Build Configuration
+
+### Vite Aliases
+
+```typescript
+resolve: {
+    alias: {
+        '@': resolve(__dirname, './src'),
+        '@components': resolve(__dirname, './src/components'),
+        '@assets': resolve(__dirname, './src/assets'),
+        '@styles': resolve(__dirname, './src/styles'),
+        '@css': resolve(__dirname, './src/components/**/Footer.scss'),
+        'three-mesh-bvh': resolve(__dirname, 'node_modules/three-mesh-bvh/build/index.module.js'),
+    },
+    extensions: ['.js', '.jsx', '.ts', '.tsx', '.scss'],
+    dedupe: ['react', 'react-dom', 'three']
+}
+```
+
+### Environment Variables
+
+- All client-side variables must be prefixed with `VITE_`
+- Available in `import.meta.env` object
+- Build-time substitution
+
+## Event Handlers
+
+### Common Patterns
+
+```typescript
+// Scroll to top
+const scrollToTop = () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+// Language toggle
+const handleLanguageToggle = () => {
+  toggleLanguage();
+};
+
+// Form submission
+const handleSubmit = async (formData: FormData) => {
+  setLoading(true);
+  try {
+    // Submit logic
+  } catch (error) {
+    // Error handling
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+## Performance Optimizations
+
+### Code Splitting
+
+```typescript
+// Lazy loading components
+const LazyComponent = React.lazy(() => import("./Component"));
+
+// Usage with Suspense
+<Suspense fallback={<LoadingScreen />}>
+  <LazyComponent />
+</Suspense>;
+```
+
+### Bundle Chunks
+
+```typescript
+// Vite configuration
+output: {
+    manualChunks: {
+        vendor: ['react', 'react-dom', 'scheduler'],
+        three: ['three'],
+        'three-addons': ['@react-three/fiber', '@react-three/drei']
+    },
+    assetFileNames: (assetInfo) => {
+        if (assetInfo.name.endsWith('.scss')) {
+            return 'assets/css/[name][extname]';
+        }
+        return 'assets/[name]-[hash][extname]';
+    }
+}
+```
+
+## Error Handling
+
+### Common Error Patterns
+
+```typescript
+// Context usage validation
+export const useLanguage = () => {
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error("useLanguage must be used within a LanguageProvider");
+  }
+  return context;
+};
+
+// Async operation error handling
+try {
+  await apiCall();
+} catch (error) {
+  console.error("Operation failed:," error);
+  // User feedback
+}
+```
+
+## Accessibility Features
+
+### ARIA Labels
+
+```typescript
+// Button with accessibility
+<button
+  className="home-button"
+  onClick={scrollToTop}
+  aria-label="Scroll to top"
+>
+  <FontAwesomeIcon icon={faHome} />
+</button>
+```
+
+### Focus Management
+
+```css
+/* Keyboard focus styles */
+:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Hide focus for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+```
+
+## Testing Utilities
+
+### Component Testing
+
+```typescript
+// Example test setup
+import { render, screen } from "@testing-library/react";
+import { LanguageProvider } from "../lib/LanguageContext";
+
+const renderWithLanguage = (component: React.ReactElement) => {
+  return render(<LanguageProvider>{component}</LanguageProvider>);
+};
+```

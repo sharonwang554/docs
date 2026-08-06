@@ -1,0 +1,127 @@
+---
+title: 'Project Structure'
+description: 'Project Structure'
+---
+
+# Project Structure
+
+## Directory Organization
+
+```
+3d-space-portfolio/
+├── public/                     # Static assets and SEO files
+│   ├── favicon.ico            # Browser favicon
+│   ├── sitemap.xml            # SEO sitemap
+│   ├── site.webmanifest       # PWA manifest
+│   └── [other static assets]  # Images, icons, etc.
+├── src/
+│   ├── components/            # React components
+│   │   ├── About/            # About section component (implemented)
+│   │   ├── Contact/          # Contact form and info
+│   │   ├── Earth/            # 3D Earth model component with shaders
+│   │   ├── Education/        # Education timeline
+│   │   ├── Experience/       # Work experience cards
+│   │   ├── Footer/           # Site footer
+│   │   ├── HamburgerMenu/    # Mobile navigation menu
+│   │   ├── Hero/             # Hero section that contains the 3d earth
+│   │   ├── LanguageToggle/   # Language switcher
+│   │   ├── LoadingScreen/    # Initial loading screen
+│   │   ├── Projects/         # Projects showcase (implemented)
+│   │   ├── Skills/           # Skills grid layout
+│   │   └── SpaceBackground/  # 3D space scene background
+│   ├── __tests__/           # Test infrastructure
+│   │   ├── mocks/           # Shared mock implementations
+│   │   ├── utils/           # Test utilities and helpers
+│   │   ├── setup.ts         # Global test setup
+│   │   └── README.md        # Test documentation
+│   ├── assets/               # Project assets
+│   │   ├── logos/           # Company and school logos (CATME, Micron, Purdue, KGHS)
+│   │   └── textures/        # 3D textures for Earth model (day, night, specular clouds)
+│   ├── hooks/               # Custom React hooks
+│   │   ├── index.ts         # Hook exports
+│   │   ├── useFormStatus.ts # Form state management
+│   │   ├── useIntersectionObserver.ts # Scroll animations
+│   │   ├── useLocalizedContent.ts # Content localization
+│   │   ├── usePerformanceOptimization.ts # Performance utilities
+│   │   └── useSEO.ts        # SEO management hook
+│   ├── lib/                 # Core utilities and data
+│   │   ├── Data/            # Static content and translations
+│   │   │   ├── personalData.ts      # Static content data
+│   │   │   ├── sectionTranslations.ts # Translation strings
+│   │   │   └── types.ts     # TypeScript type definitions
+│   │   ├── LanguageContext/ # i18n context provider
+│   │   │   └── LanguageContext.tsx
+│   │   ├── LoadingStore/    # Loading state management
+│   │   │   └── loadingStore.ts
+│   │   ├── SEO/             # SEO utilities
+│   │   │   └── seo.ts
+│   │   └── performance.ts   # Performance optimization utilities
+│   ├── styles/              # Global styles
+│   │   ├── _animations.scss # Animation utilities
+│   │   ├── _breakpoints.scss # Responsive breakpoints
+│   │   ├── _cards.scss      # Card component styles
+│   │   ├── _colors.scss     # Color system
+│   │   ├── _forms.scss      # Form styling
+│   │   ├── _layout.scss     # Layout utilities
+│   │   ├── _typography.scss # Typography styles
+│   │   ├── _variables.scss  # SCSS variables
+│   │   └── index.scss       # Style imports
+│   ├── App.tsx              # Root application component
+│   ├── App.scss             # Main application styles
+│   ├── index.scss           # Global styles and CSS variables
+│   └── main.tsx             # Application entry point
+├── docs/                    # Documentation files
+├── scripts/                 # Build and utility scripts
+├── index.html               # HTML entry point
+├── package.json             # Dependencies and scripts
+├── tsconfig.json            # TypeScript configuration
+├── vite.config.ts           # Vite build configuration
+└── vercel.json              # Vercel deployment config
+```
+
+## Component Structure
+
+Each component typically follows this structure:
+
+```
+ComponentName/
+├── ComponentName.tsx         # Main component file
+├── ComponentName.module.scss # Component-specific styles (SCSS Modules)
+└── [additional files]       # Helper files (for example, shaders.ts for Earth)
+```
+
+## Key Architecture Patterns
+
+### 1. Component Organization
+
+- Components are organized by feature/section
+- Each component has its own directory with styles
+- Shared components are placed at the root of components/
+
+### 2. Data Flow
+
+- Static data defined in `lib/personalData.ts`
+- Global state managed with Zustand stores
+- Language context provides translation functions
+- Props passed down for component-specific data
+
+### 3. Styling Approach
+
+- Global variables under styles/ folder.
+- Responsive breakpoints in `styles/breakpoints.scss`
+- Component-specific styles in local SCSS files
+- BEM methodology for class naming
+
+### 4. 3D Implementation
+
+- Three.js integration via react-three-fiber
+- Earth component with custom shaders
+- Space background with optimized rendering
+- Performance considerations for mobile devices
+
+### 5. Internationalization
+
+- Language toggle in header
+- Translation strings in `lib/sectionTranslations.ts`
+- Language context provides current language and translation function
+- Components use translation function for text content

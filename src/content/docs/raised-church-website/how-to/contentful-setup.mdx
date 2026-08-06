@@ -1,0 +1,396 @@
+---
+title: 'Contentful Setup'
+description: 'Contentful Setup'
+---
+
+# Contentful CMS Setup Guide
+
+This guide explains how to set up Contentful CMS so non-technical users can edit all website content.
+
+## Overview
+
+The following pages are now editable via Contentful:
+
+- **Site Info** - General contact info, address, social links
+- **News Banner** - Important announcements
+- **Church News** - Upcoming events and text announcements with optional sign-up links
+- **Home Page** - Hero slider images and gathering times
+- **About Page** - Church history and pastor profiles
+- **Activities** - Church activities and events
+- **Messages** - Sermons with videos and downloads
+- **Sharing** - Member sharings
+- **Offering** - Donation information
+- **Training** - Training resources and links
+
+## Step 1: Create Contentful Account
+
+1. Go to [contentful.com](https://www.contentful.com/)
+2. Sign up for a free account
+3. Create a new space (for example, "Church Website")
+
+## Step 2: Configure Environment Variables
+
+Add these to your `.env` file:
+
+```
+CONTENTFUL_SPACE_ID=your_space_id_here
+CONTENTFUL_ACCESS_TOKEN=your_access_token_here
+CONTENTFUL_ENVIRONMENT=master
+```
+
+To find these values:
+
+- **Space ID**: Settings → General Settings → Space ID
+- **Access Token**: Settings → API keys → Content Delivery API → Add API key
+
+## Step 3: Create Content Models in Contentful
+
+### 3.1 Home Page Content Model
+
+**Content Type Name:** `homePage` (首頁)
+
+**Fields:**
+
+- `heroSlides` (首頁投影片) (References, many) → Links to Hero Slide entries
+
+**Hero Slide Content Model:**
+
+**Content Type Name:** `heroSlide` (首頁投影片)
+
+**Fields:**
+
+- `image` (圖片) (Media, one file)
+- `altText` (說明) (Short text)
+
+---
+
+### 3.2 Gathering Time Content Model
+
+**Content Type Name:** `gatheringTime` (聚會時間)
+
+**Fields:**
+
+- `name` (聚會名稱) (Short text) - Name of the gathering (for example, "主日崇拜" / "Sunday Worship")
+- `day` (聚會日) (Short text) - Day of week (for example, "日" / "Sun")
+- `time` (聚會時間) (Short text) - Time (for example, "10:00")
+- `order` (順序) (Integer) - Display order (1, 2, 3, etc.)
+
+**Localization:** Enable localization for `name` and `day` fields to support both Chinese and English.
+
+**Example Entries:**
+
+| Name (zh) | Name (en)      | Day (zh) | Day (en) | Time  | Order |
+| --------- | -------------- | -------- | -------- | ----- | ----- |
+| 主日崇拜  | Sunday Worship | 日       | Sun      | 10:00 | 1     |
+| 主日學    | Sunday School  | 日       | Sun      | 09:00 | 2     |
+| 禱告會    | Prayer Meeting | 三       | Wed      | 19:30 | 3     |
+
+---
+
+### 3.3 About Page Content Model
+
+**Content Type Name:** `aboutPage` (關於)
+
+**Fields:**
+
+- `historyParagraphs` (教會歷史) (Long text) - Full church history content (use newlines for paragraphs)
+- `ourBeliefs` (我們的信仰) (Long text) - Church belief statements (use newlines for paragraphs)
+- `pastors` (牧者) (References, many) → Links to Pastor entries
+
+**Pastor Content Model:**
+
+**Content Type Name:** `pastor` (牧者)
+
+**Fields:**
+
+- `name` (姓名) (Short text)
+- `role` (職稱) (Short text) - for example, "主任牧師"
+- `period` (服侍年份) (Short text) - for example, "2010—至今"
+- `photo` (照片) (Media, one file)
+
+---
+
+### 3.4 Activity Content Model
+
+**Content Type Name:** `activity` (活動)
+
+**Fields:**
+
+- `title` (名稱) (Short text)
+- `description` (簡介) (Short text)
+- `image` (照片) (Media, many files)
+
+---
+
+### 3.5 Sermon Content Model
+
+**Content Type Name:** `sermon` (主日講道)
+
+**Fields:**
+
+- `title` (題目) (Short text)
+- `speaker` (講員) (Short text)
+- `date` (日期) (Date)
+- `youtubeID` (youtubeID) (Short text) - YouTube video ID
+- `slideFile` (講道投影片) (Media, one file) - Optional
+- `newsletterFile` (週報) (Media, one file) - Optional
+
+---
+
+### 3.6 Sharing Content Model
+
+**Content Type Name:** `testimony` (分享)
+
+**Fields:**
+
+- `title` (標題) (Short text)
+- `author` (分享人) (Short text)
+- `date` (日期) (Date)
+- `excerpt` (內容預覽) (Short text)
+- `content` (內容) (Long text)
+
+---
+
+### 3.7 Offering Page Content Model
+
+**Content Type Name:** `offering` (奉獻)
+
+**Fields:**
+
+- `introText` (描述) (Long text)
+- `bankName` (銀行名稱) (Short text)
+- `bankCode` (銀行代碼) (Short text)
+- `accountName` (帳號名稱) (Short text)
+- `accountNumber` (帳號號碼) (Short text)
+- `onSiteOfferingText` (現場奉獻資訊) (Long text) - Instructions for on-site offering (use newlines for paragraphs)
+- `note` (說明) (Long text)
+
+---
+
+### 3.8 Training Resource Content Model
+
+**Content Type Name:** `trainingResource` (信徒資源)
+
+**Fields:**
+
+- `title` (標題) (Short text)
+- `description` (描述) (Long text)
+- `url` (網址) (Short text)
+- `icon` (圖標) (Short text) - Emoji like 📖, 📺, etc.
+
+---
+
+### 3.9 News Banner Content Model
+
+**Content Type Name:** `newsBanner` (公告)
+
+- `isActive` (是否顯示) (Boolean) - Whether to display the banner
+- `message` (公告內容) (Short text)
+- `linkUrl` (網址) (Short text)
+- `linkText` (網址名稱) (Short text)
+
+---
+
+### 3.10 Church News Content Model
+
+**Content Type Name:** `churchNews` (教會消息)
+
+**Fields:**
+
+- `title` (標題) (Short text) - Title of the announcement or event
+- `type` (類型) (Short text) - Validation: `announcement` or `event`
+  - `announcement`—text-only notice, no sign-up needed
+  - `event`—has date, location, and optional sign-up
+- `date` (活動日期) (Date & time) - Event date (required for `event` type)
+- `location` (地點) (Short text) - Optional, shown for `event` type
+- `body` (內容) (Long text) - Main description text
+- `signUpUrl` (報名連結) (Short text) - Optional external sign-up link (for example, Google Form)
+- `signUpDeadline` (報名截止日期) (Date) - Optional registration deadline
+- `image` (圖片) (Media, one file) - Optional cover image
+- `isActive` (是否顯示) (Boolean) - When `false`, item is hidden everywhere
+
+**Autohide behaviour:**
+
+- When no active `churchNews` entries exist:
+  - Homepage teaser section is hidden
+  - Navbar "最新消息 / News & Events" link is hidden
+  - `/events` page shows a graceful empty state
+
+**Localization:** Enable localization for `title`, `body`, and `location` fields.
+
+---
+
+### 3.11 Site Info Content Model
+
+**Content Type Name:** `siteInfo` (教會網站資訊)
+
+**Fields:**
+
+- `name` (教會名稱) (Short text) - Localized (for example, 左營復活堂)
+- `nameEn` (教會英文名稱) (Short text) - English Name (for example, Raised Church)
+- `fullName` (教會完整名稱) (Short text) - Full localized name
+- `fullNameEn` (教會英文完整名稱) (Short text) - Full English Name
+- `address` (地址) (Short text) - Localized
+- `addressEn` (英文地址) (Short text) - English Address
+- `phone` (電話) (Short text)
+- `fax` (傳真) (Short text)
+- `email` (email) (Short text)
+- `facebookUrl` (facebookUrl) (Short text)
+- `lineUrl` (lineUrl) (Short text)
+- `youtubeUrl` (youtubeUrl) (Short text)
+- `youtubeLiveStreamUrl` (youtube直播網址) (Short text) - Sunday live stream embed URL
+- `mapEmbedUrl` (谷歌地圖嵌入網址) (Long text) - Google maps embed src string
+
+---
+
+### 3.12 Page Hero Content Model
+
+**Content Type Name:** `pageHero` (頁面頂部橫幅)
+
+**Fields:**
+
+- `pageId` (頁面 ID) (Short text) - for example, "about," "sharing," "activities"
+- `title` (標題) (Short text)
+- `subtitle` (副標題) (Short text)
+- `backgroundImage` (背景圖片) (Media, one file) - Optional
+
+---
+
+## Step 4: Enable Localization
+
+For bilingual support (Chinese/English):
+
+1. Go to Settings → Locales
+2. Add locales:
+   - `zh-Hant-TW` (Chinese Traditional - Taiwan)
+   - `en-US` (English - United States)
+3. Set `zh-Hant-TW` as default
+4. Enable localization for all text fields in your content models
+
+## Step 5: Add Initial Content
+
+Create at least one entry for each content type with sample data. The website will fall back to hardcoded data if Contentful entries are not found.
+
+### Adding Gathering Times
+
+1. Go to Content → Add Entry → Gathering Time
+2. Fill in the fields:
+   - **Name (zh-Hant-TW)**: 主日崇拜
+   - **Name (en-US)**: Sunday Worship
+   - **Day (zh-Hant-TW)**: 日
+   - **Day (en-US)**: Sun
+   - **Time**: 10:00
+   - **Order**: 1
+3. Publish
+4. Repeat for all gathering times
+
+## Step 6: Publishing Content
+
+After creating or editing content:
+
+1. Click "Publish" to make changes live
+2. Changes will appear on the website immediately
+
+## Content Management Tips
+
+### For Non-Technical Users:
+
+1. **Adding/Editing Gathering Times:**
+
+   - Go to Content → Gathering Time
+   - Click on an existing entry to edit, or "Add Entry" to create new
+   - Update name, day, time
+   - Use the "order" field to control display sequence (lower numbers appear first)
+   - Switch locale (top right) to add English translations
+   - Publish
+
+2. **Adding New Activities:**
+
+   - Go to Content → Add Entry → Activity
+   - Fill in title, description
+   - Upload an image
+   - Publish
+
+3. **Adding New Sermons:**
+
+   - Go to Content → Add Entry → Sermon
+   - Fill in title, speaker, date
+   - Add YouTube video ID (from the URL: `youtube.com/watch?v=VIDEO_ID`)
+   - Upload slide and newsletter files (optional)
+   - Publish
+
+4. **Editing About Page:**
+
+   - Go to Content → About Page
+   - Edit history paragraphs
+   - Add/remove pastors
+   - Publish
+
+5. **Updating Home Page Slides:**
+
+   - Go to Content → Home Page
+   - Edit or add hero slides
+   - Upload new images
+   - Publish
+
+6. **Managing the News Banner:**
+
+   - Go to Content → News Banner
+   - Set `isActive` to `true` to show the banner, `false` to hide it
+   - Update the `message` field with announcement text
+   - Optionally add a `linkUrl` and `linkText` for a call-to-action button
+   - Publish
+
+7. **Managing Church News (Events & Announcements):**
+
+   - Go to Content → Add Entry → Church News
+   - Set `type`:
+     - `announcement` for text-only notices
+     - `event` for sign-up events with a date and location
+   - Fill in `title` and `body`
+   - For events: set `date`, `location`, and optionally `signUpUrl` (Google Form link) and `signUpDeadline`
+   - Set `isActive` to `true` to display, `false` to hide
+   - Switch locale (top right) to add English translations
+   - Publish
+   - **Tip:** When all entries are inactive, the section automatically hides from the homepage and navigation
+
+8. **Managing Our Beliefs:**
+   - Go to Content → About Page
+   - Find the `ourBeliefs` field (**Long text**)
+   - Paste or type belief statements, using newlines between them
+   - If left empty, the section will not appear on the site
+   - Publish
+
+## Troubleshooting
+
+**Content not showing on website:**
+
+- Make sure entries are published (not just saved as draft)
+- Check that environment variables are correctly set
+- Verify content type names match exactly (case-sensitive)
+
+**Images not displaying:**
+
+- Ensure images are uploaded to Contentful (not just linked)
+- Check that image fields are properly configured in content models
+
+**Bilingual content:**
+
+- Switch locale in Contentful editor (top right)
+- Fill in content for both Chinese and English
+- Publish for each locale
+
+**Gathering times not in correct order:**
+
+- Check the "order" field value for each gathering time entry
+- Lower numbers appear first (1, 2, 3, etc.)
+- Edit and republish to change order
+
+## Developer: Data Transfer (CLI)
+
+For developers who need to export or import entire space structures and data using the CLI, see:
+[Contentful Data Transfer Guide](./CONTENTFUL_DATA_TRANSFER.md)
+
+## Fallback Data
+
+If Contentful is not configured or entries are missing, the website will display default fallback data. This ensures the site always works even during setup.

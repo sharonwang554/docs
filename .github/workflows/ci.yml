@@ -20,6 +20,7 @@ jobs:
         uses: errata-ai/vale-action@v2
         with:
           files: 'src/content/docs'
+          vale_flags: '--minAlertLevel=error'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

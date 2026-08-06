@@ -1,0 +1,18 @@
+---
+import HttpBadge from './HttpBadge.astro';
+interface Props {
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  path: string;
+  auth?: string;
+}
+const { method, path, auth } = Astro.props;
+---
+<div class="not-content api-endpoint">
+  <div class="api-endpoint__header">
+    <HttpBadge method={method} path={path} />
+    {auth && <span class="api-endpoint__auth">🔒 {auth}</span>}
+  </div>
+  <div class="api-endpoint__body">
+    <slot />
+  </div>
+</div>

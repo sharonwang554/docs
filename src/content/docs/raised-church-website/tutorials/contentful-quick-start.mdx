@@ -1,0 +1,72 @@
+---
+title: 'Contentful Setup Quickstart'
+description: 'Step-by-step tutorial for integrating Contentful CMS into your local SvelteKit development environment.'
+---
+
+import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Welcome to the Contentful CMS onboarding tutorial for the Raised Church web platform. This guide is designed for developers who need to configure their local SvelteKit environment to pull live or draft content from our headless CMS pipeline.
+
+By the end of this tutorial, you will have configured your environment variables, established a connection to the Contentful Space, and verified that dynamic data is hydrating the SvelteKit frontend.
+
+---
+
+## Architectural Context
+
+The platform is designed with a resilient fallback mechanism:
+- **With Contentful configured**: The site fetches dynamic content (sermons, activities, hero slides) from the CMS.
+- **Without Contentful**: The site gracefully falls back to static hardcoded data, allowing UI developers to work on styling without needing API keys.
+
+## Step-by-Step Initialization
+
+<Steps>
+
+1. **Obtain API Credentials**
+
+   Ensure you have access to the Contentful space. You will need a `Space ID` and a `Delivery API Token`. If you do not have these, contact the lead maintainer.
+
+2. **Configure Local Environment Secrets**
+
+   In the root of the repository, copy the example environment file to create your local active configuration:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Open `.env` and inject your Contentful credentials:
+
+   ```bash
+   # .env
+   CONTENTFUL_SPACE_ID=your_space_id_here
+   CONTENTFUL_ACCESS_TOKEN=your_delivery_api_token
+   CONTENTFUL_ENVIRONMENT=master
+   ```
+
+3. **Start the SvelteKit Development Server**
+
+   Initialize the application to verify the integration:
+
+   ```bash
+   pnpm run dev
+   ```
+
+4. **Verify Dynamic Content Hydration**
+
+   Navigate to `http://localhost:5173` in your browser. To verify that data is flowing from Contentful rather than the static fallback:
+   - Check the **News Announcement Banner** on the homepage.
+   - Navigate to the **Messages** page and confirm the latest sermons appear.
+   - Inspect the terminal for any data fetching errors from `src/lib/server/contentful.ts`.
+
+</Steps>
+
+## Contentful Data Models
+
+If you are a content editor or an engineer working on the GraphQL fetching logic, you will interact with the following core Contentful models:
+
+- `homePage`: Configures hero slides and announcements.
+- `activity` & `sermon`: Dynamic feeds for events and messages.
+- `siteInfo`: Global settings like contact information and the Sunday livestream URL.
+
+<Aside type="tip" title="Detailed Data Structure">
+For a comprehensive breakdown of field types, constraints, and GraphQL query references, consult the [Contentful Queries & Data Models](../reference/contentful-queries) guide.
+</Aside>

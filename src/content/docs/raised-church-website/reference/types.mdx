@@ -1,0 +1,810 @@
+---
+title: 'Types'
+description: 'Types'
+---
+
+# TypeScript Type System Guide
+
+This guide explains the TypeScript type system in the **svelte-raised-church** project, including type organization, how to add types for new content types, and common type patterns.
+
+## Overview
+
+TypeScript ensures type safety across the project. All major features have corresponding types:
+
+- **Contentful content types** - API response structures
+- **App data models** - Transformed data for components
+- **Route parameters** - Language, page data
+- **Component props** - Svelte component arguments
+- **Helper functions** - Utility return types
+
+**Type Philosophy:** Define types as close to their usage as possible, using strict mode throughout.
+
+## Type File Organization
+
+```
+src/lib/types/
+├── contentful.ts          # Contentful CMS types
+
+src/app.d.ts             # Root app types
+
+src/lib/i18n/
+├── index.ts             # Translation & language types
+```
+
+## Core Types
+
+### Language Type
+
+Represents supported languages:
+
+```typescript
+// From src/lib/i18n/index.ts
+export type Language = "zh" | "en";
+```
+
+**Usage:**
+
+```typescript
+function getTranslation(lang: Language): TranslationDict { ... }
+function formatDate(dateString: string, lang: Language): string { ... }
+```
+
+### Locale Type
+
+Contentful-specific locale codes:
+
+```typescript
+// From src/lib/types/contentful.ts
+export type Locale = "en-US" | "zh-Hant-TW";
+```
+
+**Mapping (from contentful-adapter.ts):**
+
+```typescript
+function getLocale(lang: Language | undefined): Locale {
+  return lang === "en" ? "en-US" : "zh-Hant-TW";
+}
+```
+
+**Why separate?** Contentful uses specific IETF locale codes; our app uses simpler codes.
+
+### TranslationDict Type
+
+```typescript
+// From src/lib/i18n/index.ts
+export type TranslationDict = typeof translations.zh;
+```
+
+This is derived from the actual translation object, so TypeScript knows all valid translation keys:
+
+```typescript
+const t = getTranslation("zh");
+t.pages.activities.title; // ✅ TypeScript knows this path
+t.pages.activities.unknown; // ❌ TypeScript error: Property 'unknown' does not exist
+```
+
+## Contentful Types
+
+All Contentful types defined in `src/lib/types/contentful.ts`:
+
+### Asset Type
+
+```typescript
+export interface ContentfulAsset {
+  fields: {
+    file: {
+      url: string;
+      fileName?: string;
+      contentType?: string;
+    };
+  };
+}
+```
+
+**Usage:** Images, PDFs, videos referenced from content types.
+
+### Content Type Pairs (Contentful + App)
+
+For each content type, define two interfaces:
+
+1. **Contentful Type** (`Contentful*`) - Raw API response
+2. **App Type** - Transformed data for use in components
+
+**Example: Activity**
+
+```typescript
+// Raw Contentful response
+export interface ContentfulActivity {
+  fields: {
+    title: string;
+    description?: string;
+    images?: ContentfulAsset[];
+    image?: ContentfulAsset[];
+  };
+}
+
+// Transformed app data
+export interface Activity {
+  title: string;
+  description: string;
+  images: string[]; // URLs, not asset objects
+}
+```
+
+**Why both?** Contentful API has different structure than what components need. Transformation happens in fetch functions.
+
+### Complete Type Reference
+
+All types in `src/lib/types/contentful.ts`:
+
+| Type               | Purpose             | Fields                                                 |
+| ------------------ | ------------------- | ------------------------------------------------------ |
+| `Activity`         | Church activities   | title, description, images                             |
+| `Sermon`           | Sunday messages     | title, speaker, date, videoId, slideUrl, newsletterUrl |
+| `Sharing`          | Member testimonies  | title, author, date, excerpt, content                  |
+| `Pastor`           | Pastoral staff      | name, role, period, image                              |
+| `AboutPage`        | About page data     | history, beliefs, pastors                              |
+| `GatheringTime`    | Service times       | name, day, time, order                                 |
+| `HeroSlide`        | Homepage slide      | image, alt                                             |
+| `OfferingPage`     | Donation info       | intro, bankTransfer, onSiteOffering, note              |
+| `BankTransfer`     | Bank details        | bankName, bankCode, accountName, accountNumber         |
+| `TrainingResource` | Learning resources  | title, description, url, icon                          |
+| `NewsBanner`       | Announcement banner | message, linkUrl, linkText, isActive                   |
+| `ChurchNewsItem`   | Events/news         | id, type, title, date, location, body, signUpUrl, signUpDeadline, imageUrl, isActive |
+| `SiteInfo`         | Contact/social info | name, nameEn, fullName, fullNameEn, address, addressEn, phone, fax, email, facebookUrl, lineUrl, youtubeUrl, youtubeLiveStreamUrl, mapEmbedUrl |
+| `PageHero`         | Page banner         | pageId, title, subtitle, backgroundImageUrl            |
+
+## Type Flow: From Contentful to Component
+
+```
+1. Fetch from Contentful API
+   ↓ (Raw data)
+2. ContentfulSermon (Contentful type)
+   ↓ (Transform in fetch function)
+3. Sermon (App type)
+   ↓ (Pass to component)
+4. Component receives Sermon[]
+   ↓ (Component uses data)
+5. User sees rendered content
+```
+
+**Example: Fetch Sermons Type Flow**
+
+```typescript
+// src/lib/server/contentful-adapter.ts
+export async function fetchSermons(lang: Language | undefined): Promise<Sermon[]> {
+  const entries = await contentfulClient.getEntries({
+    content_type: 'sermon',
+    locale: getLocale(lang),
+  });
+
+  // Transform Contentful types to app types
+  const sermons: Sermon[] = entries.items.map((item) => {
+    const fields = (item as any).fields as ContentfulSermon['fields'];
+    return {
+      title: fields.title,
+      speaker: fields.speaker,
+      date: fields.date,
+      videoId: fields.youtubeID,        // Note: field renamed
+      slideUrl: getAssetUrl(fields.slideFile),  // Asset transformed to URL
+      newsletterUrl: getAssetUrl(fields.newsletterFile),
+    };
+  });
+
+  return sermons;
+}
+
+// src/routes/[[lang]]/messages/+page.server.ts
+import { getContentRepository } from "$lib/server/content-repository";
+import { getLangFromParams } from "$lib/i18n";
+
+export async function load({ params }) {
+  const lang = getLangFromParams(params);
+  const sermons = await getContentRepository().fetchSermons(lang);  // Type is Sermon[]
+  return { sermons };  // Pass to template
+}
+
+// src/routes/[[lang]]/messages/+page.svelte
+<script lang="ts">
+  import type { Sermon } from '$lib/types/contentful';
+
+  let { data } = $props();
+  // data.sermons is typed as Sermon[]
+</script>
+
+<ul>
+  {#each data.sermons as sermon}
+    <li>{sermon.title} by {sermon.speaker}</li>
+  {/each}
+</ul>
+```
+
+## Component Props Types
+
+Use TypeScript `$props` rune with explicit type annotations:
+
+### Simple Props
+
+```svelte
+<script lang="ts">
+  interface Props {
+    title: string;
+    count: number;
+    isActive?: boolean;
+  }
+
+  let { title, count, isActive = false }: Props = $props();
+</script>
+```
+
+### Complex Props (Generics)
+
+```svelte
+<script lang="ts">
+  import type { Activity } from '$lib/types/contentful';
+
+  interface Props<T = Activity> {
+    items: T[];
+    onSelect?: (item: T) => void;
+    loading?: boolean;
+  }
+
+  let { items, onSelect, loading = false }: Props = $props();
+</script>
+```
+
+## Load Function Types
+
+### Page Load Data
+
+```typescript
+// src/routes/[[lang]]/activities/+page.server.ts
+import { getContentRepository } from "$lib/server/content-repository";
+import { getLangFromParams } from "$lib/i18n";
+
+export async function load({ params, url }) {
+  const lang = getLangFromParams(params);
+  const activities = await getContentRepository().fetchActivities(lang);
+
+  return {
+    activities, // Type: Activity[]
+    title: "Activities,"
+    description: "Join our events,"
+  };
+}
+```
+
+**In Svelte component:**
+
+```svelte
+<script lang="ts">
+  let { data } = $props();
+  // data.activities: Activity[]
+  // data.title: string
+  // data.description: string
+</script>
+```
+
+### Error Handling Types
+
+```typescript
+import { error } from "@sveltejs/kit";
+
+export async function load({ params }) {
+  const id = params.id;
+
+  const item = await fetchItem(id);
+
+  if (!item) {
+    error(404, "Item not found");
+  }
+
+  return { item };
+}
+```
+
+## Generic Types for Reusable Components
+
+### Pagination Type
+
+```typescript
+// src/lib/types/app.ts
+export interface PaginatedData<T> {
+  items: T[];
+  total: number;
+  pageSize: number;
+  currentPage: number;
+}
+
+export interface Pagination {
+  current: number;
+  total: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
+```
+
+**Usage:**
+
+```typescript
+// +page.server.ts
+export async function load({ url }) {
+  const pageSize = 10;
+  const pageNum = Number(url.searchParams.get("page")) || 0;
+
+  const entries = await contentfulClient.getEntries({
+    limit: pageSize,
+    skip: pageNum * pageSize,
+  });
+
+  return {
+    pagination: {
+      current: pageNum,
+      total: Math.ceil(entries.total / pageSize),
+      hasNext: entries.skip + entries.items.length < entries.total,
+      hasPrev: pageNum > 0,
+    },
+  };
+}
+```
+
+### Grid/List Component Type
+
+```typescript
+export interface GridProps<T> {
+  items: T[];
+  columns?: number;
+  gap?: string;
+  renderItem: (item: T) => void;
+}
+```
+
+## Form Data Types
+
+### Contact Form
+
+```typescript
+// src/lib/types/forms.ts
+export interface ContactFormData {
+  name: string;
+  email: string;
+  message: string;
+}
+
+export interface FormResponse {
+  success: boolean;
+  message: string;
+  error?: string;
+}
+```
+
+**Usage:**
+
+```typescript
+// src/routes/[[lang]]/+server.ts (API endpoint)
+import type { ContactFormData, FormResponse } from "$lib/types/forms";
+
+export async function POST({ request }): Promise<Response> {
+  const formData = (await request.json()) as ContactFormData;
+
+  // Validate
+  if (!formData.email.includes("@")) {
+    return json<FormResponse>(
+      {
+        success: false,
+        error: "Invalid email,"
+      },
+      { status: 400 },
+    );
+  }
+
+  // Submit to Web3Forms
+  const response: FormResponse = {
+    success: true,
+    message: "Message sent,"
+  };
+
+  return json(response);
+}
+```
+
+## Union Types for Flexible Data
+
+### Multiple Content Sources
+
+```typescript
+export type PageContent = Activity | Sermon | Sharing;
+
+export function renderContent(content: PageContent) {
+  if ("speaker" in content) {
+    // It's a Sermon
+    return `By ${content.speaker}`;
+  }
+  if ("author" in content) {
+    // It's a Sharing
+    return `By ${content.author}`;
+  }
+  // It's an Activity
+  return "";
+}
+```
+
+### API Response Types
+
+```typescript
+export type ApiResponse<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+// Usage
+const response: ApiResponse<Sermon[]> = await fetch(...);
+if (response.success) {
+  console.log(response.data);  // Sermon[]
+} else {
+  console.error(response.error);  // string
+}
+```
+
+## Optional & Nullable Types
+
+### Optional Properties
+
+```typescript
+export interface Activity {
+  title: string; // Required
+  description: string; // Required
+}
+```
+
+### Nullable Values
+
+```typescript
+export interface HeroSlide {
+  image: string;
+  alt: string; // Required string
+}
+```
+
+### Union with Undefined
+
+```typescript
+export interface Sermon {
+  slideUrl: string | null; // Either URL or null
+  newsletterUrl: string | null; // Either URL or null
+}
+```
+
+## Const Assertion for Literal Types
+
+### Menu Items
+
+```typescript
+const menuItems = [
+  { label: "Home," href: "/" },
+  { label: "About," href: "/about" },
+] as const;
+
+export type MenuItem = (typeof menuItems)[number];
+// Type: { readonly label: "Home"; readonly href: "/" } | { readonly label: "About"; readonly href: "/about" }
+```
+
+### Status Values
+
+```typescript
+const statuses = ["draft," "published," "archived"] as const;
+export type ContentStatus = (typeof statuses)[number];
+// Type: "draft" | "published" | "archived"
+```
+
+## Strict Mode Settings
+
+The project uses strict TypeScript to catch errors at compile time:
+
+**tsconfig.json:**
+
+```json
+{
+  "compilerOptions": {
+    "strict": true, // Enables all strict checks
+    "noImplicitAny": true, // Forbid implicit any
+    "strictNullChecks": true, // null/undefined checking
+    "strictFunctionTypes": true, // Function parameter checking
+    "strictBindCallApply": true, // bind/call/apply checking
+    "noImplicitThis": true, // Forbid implicit this
+    "checkJs": true, // Type check JS files too
+    "forceConsistentCasingInFileNames": true
+  }
+}
+```
+
+**What this means:**
+
+```typescript
+// ❌ Not allowed
+const x; // Implicit any type
+let y = null; // Null assigned without type
+
+// ✅ Correct
+const x: string = "hello";
+let y: string | null = null;
+```
+
+## Adding Types for a New Content Type
+
+### Step 1: Define Contentful & App Types
+
+```typescript
+// src/lib/types/contentful.ts
+
+// Raw Contentful API response
+export interface ContentfulGallery {
+  fields: {
+    title: string;
+    description: string;
+    images: ContentfulAsset[];
+    date: string;
+  };
+}
+
+// Transformed app data
+export interface Gallery {
+  title: string;
+  description: string;
+  images: string[]; // URLs instead of assets
+  date: string;
+}
+```
+
+### Step 2: Export from Types Module
+
+```typescript
+// src/lib/types/index.ts (if you create this file)
+export type { Gallery, ContentfulGallery } from "./contentful";
+```
+
+Or use direct imports:
+
+```typescript
+import type { Gallery } from "$lib/types/contentful";
+```
+
+### Step 3: Use in Fetch Function
+
+```typescript
+// src/lib/server/content-repository.ts
+import type { Gallery } from '$lib/types/contentful';
+
+export interface ContentRepository {
+  // ...
+  fetchGalleries(lang: Language | undefined): Promise<Gallery[]>;
+}
+
+// src/lib/server/contentful-adapter.ts
+import type { Gallery, ContentfulGallery } from '$lib/types/contentful';
+
+export class ContentfulAdapter implements ContentRepository {
+  // ...
+  async fetchGalleries(lang: Language | undefined): Promise<Gallery[]> {
+    return this.withFallback("gallery," lang, async () => {
+      const entries = await contentfulClient.getEntries({
+        content_type: 'gallery',
+        locale: getLocale(lang),
+      });
+
+      return entries.items.map((item) => {
+        const fields = (item as any).fields as ContentfulGallery['fields'];
+        return {
+          title: fields.title,
+          description: fields.description,
+          images: (fields.images || []).map(img => getAssetUrl(img)).filter((url): url is string => url !== null),
+          date: fields.date,
+        };
+      });
+    }, async () => fallbackGallery as Gallery[]);
+  }
+}
+```
+
+### Step 4: Use in Page Load
+
+```typescript
+// src/routes/[[lang]]/gallery/+page.server.ts
+import type { Gallery } from "$lib/types/contentful";
+import { getContentRepository } from "$lib/server/content-repository";
+import { getLangFromParams } from "$lib/i18n";
+
+export async function load({ params }) {
+  const lang = getLangFromParams(params);
+  const galleries: Gallery[] = await getContentRepository().fetchGalleries(lang);
+
+  return { galleries };
+}
+```
+
+### Step 5: Use in Component
+
+```svelte
+<!-- src/routes/[[lang]]/gallery/+page.svelte -->
+<script lang="ts">
+  import type { Gallery } from '$lib/types/contentful';
+
+  let { data } = $props();
+
+  const galleries: Gallery[] = data.galleries;
+</script>
+
+{#each galleries as gallery}
+  <div class="gallery">
+    <h2>{gallery.title}</h2>
+    <p>{gallery.description}</p>
+    {#each gallery.images as image}
+      <img src={image} alt={gallery.title} />
+    {/each}
+  </div>
+{/each}
+```
+
+## Type Checking Commands
+
+### Check Types
+
+```bash
+npm run check
+```
+
+Runs `svelte-check` which:
+
+- Validates TypeScript
+- Checks component props
+- Validates Svelte syntax
+- Reports all type errors
+
+### Watch Mode
+
+```bash
+npm run check:watch
+```
+
+Continuously checks types as you edit files. Great for development.
+
+### Build (Includes Type Check)
+
+```bash
+npm run build
+```
+
+Also validates types before building. Build fails if type errors exist.
+
+## Common Type Errors & Fixes
+
+### Error: Type 'undefined' is not assignable to type 'string'
+
+**Cause:** Not handling optional values
+
+```typescript
+// ❌ Error
+const title = data.activity.title; // title might be undefined
+
+// ✅ Fix
+const title = data.activity?.title ?? "Untitled"; // Provide default
+```
+
+### Error: Type '{}' is not assignable to type 'Activity'
+
+**Cause:** Object missing required properties
+
+```typescript
+// ❌ Error
+const activity: Activity = { title: "Test" }; // Missing description, images
+
+// ✅ Fix
+const activity: Activity = {
+  title: "Test,"
+  description: "Description,"
+  images: ["url1," "url2"],
+};
+```
+
+### Error: Element implicitly has an 'any' type
+
+**Cause:** Missing type annotation
+
+```typescript
+// ❌ Error
+function process(item) {
+  // item is implicitly any
+  return item.title;
+}
+
+// ✅ Fix
+function process(item: Activity): string {
+  return item.title;
+}
+```
+
+### Error: Property does not exist on type 'TranslationDict'
+
+**Cause:** Typo in translation key
+
+```typescript
+// ❌ Error
+const title = t.pages.activities.titl; // Typo: 'titl'
+
+// ✅ Fix
+const title = t.pages.activities.title;
+```
+
+## Type Narrowing
+
+Using type guards to narrow types:
+
+```typescript
+function isSermon(item: PageContent): item is Sermon {
+  return "speaker" in item;
+}
+
+function processContent(content: PageContent) {
+  if (isSermon(content)) {
+    // TypeScript knows it's a Sermon here
+    console.log(content.speaker);
+  }
+}
+```
+
+## Import Styles
+
+**For types, use `type` imports:**
+
+```typescript
+// ✅ Correct - Type-only import
+import type { Activity, Sermon } from "$lib/types/contentful";
+
+// ❌ Less efficient - Includes type info in bundle
+import { Activity, Sermon } from "$lib/types/contentful";
+```
+
+Type-only imports are removed from the final bundle, keeping it smaller.
+
+## Useful TypeScript Utilities
+
+### `Pick<T, Keys>`
+
+Extract specific properties:
+
+```typescript
+export type ActivityPreview = Pick<Activity, "title" | "description">;
+// Type: { title: string; description: string; }
+```
+
+### `Partial<T>`
+
+Make all properties optional:
+
+```typescript
+type PartialActivity = Partial<Activity>;
+// All Activity fields become optional
+```
+
+### `Record<Keys, Type>`
+
+Create object with specific keys:
+
+```typescript
+type LanguageStrings = Record<Language, string>;
+// Type: { zh: string; en: string; }
+```
+
+### `ReturnType<Function>`
+
+Extract function return type:
+
+```typescript
+type ActivityList = ReturnType<ContentRepository["fetchActivities"]>;
+// Type: Promise<Activity[]>
+```
+
+## Next Steps
+
+- See `docs/CONTENTFUL_QUERIES.md` for query examples with proper typing
+- See `docs/ADDING_FEATURES.md` for step-by-step type setup for new features
+- See `docs/COMPONENTS.md` for component prop typing examples

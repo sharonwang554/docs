@@ -1,0 +1,715 @@
+---
+title: 'Styling'
+description: 'Styling'
+---
+
+# Styling Guide
+
+Complete reference for SCSS styling in this project.
+
+---
+
+## Design System
+
+### Colors
+
+Primary colors defined in `src/lib/styles/_variables.scss`:
+
+#### Brand Colors
+```scss
+$color-primary: #2c3e50;      // Dark blue-gray (main brand)
+$color-accent: #e74c3c;       // Red (CTA buttons, highlights)
+$color-accent-dark: #c0392b;  // Darker red (hover state)
+```
+
+#### Neutral Colors
+```scss
+$color-white: #ffffff;
+$color-text: #333333;         // Dark gray (body text)
+$color-text-secondary: #666666; // Light gray (secondary text)
+$color-bg: #f8f8f8;           // Off-white (backgrounds)
+$color-bg-light: #f0f0f0;     // Lighter off-white
+$color-border: #ddd;          // Light gray (borders)
+```
+
+#### Status Colors
+```scss
+$color-success: #27ae60;      // Green (confirmations)
+$color-error: #e74c3c;        // Red (errors)
+$color-warning: #f39c12;      // Orange (warnings)
+$color-info: #3498db;         // Blue (information)
+```
+
+### Using Colors in Components
+
+```svelte
+<style lang="scss">
+  .button {
+    background: $color-accent;    // Use variable
+    color: $color-white;
+    
+    &:hover {
+      background: $color-accent-dark;
+    }
+  }
+  
+  .button--secondary {
+    background: $color-bg-light;
+    border: 1px solid $color-border;
+  }
+</style>
+```
+
+---
+
+## Typography
+
+### Font Stack
+
+```scss
+$font-heading: "Segoe UI," Tahoma, Geneva, Verdana, sans-serif;
+$font-body: -apple-system, BlinkMacSystemFont, "Segoe UI," sans-serif;
+```
+
+### Font Sizes
+
+```scss
+$font-size-xs: 0.75rem;      // 12px
+$font-size-sm: 0.875rem;     // 14px
+$font-size-base: 1rem;       // 16px
+$font-size-lg: 1.125rem;     // 18px
+$font-size-xl: 1.25rem;      // 20px
+$font-size-2xl: 1.5rem;      // 24px
+$font-size-3xl: 1.875rem;    // 30px
+$font-size-4xl: 2.25rem;     // 36px
+$font-size-5xl: 3rem;        // 48px
+```
+
+### Font Weights
+
+```scss
+$font-weight-normal: 400;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+```
+
+### Using Typography
+
+```svelte
+<style lang="scss">
+  h1 {
+    font-family: $font-heading;
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-bold;
+  }
+  
+  p {
+    font-family: $font-body;
+    font-size: $font-size-base;
+    line-height: 1.6;
+  }
+</style>
+```
+
+---
+
+## Spacing
+
+All spacing uses consistent increments:
+
+```scss
+$space-xs: 0.25rem;    // 4px
+$space-sm: 0.5rem;     // 8px
+$space-base: 1rem;     // 16px
+$space-md: 1.5rem;     // 24px
+$space-lg: 2rem;       // 32px
+$space-xl: 3rem;       // 48px
+$space-2xl: 4rem;      // 64px
+$space-3xl: 6rem;      // 96px
+
+// Container padding (responsive)
+$space-container: clamp(1rem, 5vw, 2rem);
+```
+
+### Using Spacing
+
+```svelte
+<style lang="scss">
+  .section {
+    padding: $space-container;      // Responsive padding
+    margin-bottom: $space-lg;        // 32px margin
+    gap: $space-md;                  // 24px gap in grid/flex
+  }
+  
+  .card {
+    padding: $space-md;              // 24px internal padding
+    margin-top: $space-base;         // 16px external margin
+  }
+</style>
+```
+
+---
+
+## Breakpoints
+
+Responsive design uses mobile-first approach:
+
+```scss
+$breakpoint-mobile: 480px;    // Small phones
+$breakpoint-tablet: 768px;    // Tablets and larger phones
+$breakpoint-desktop: 1024px;  // Desktop screens
+$breakpoint-wide: 1440px;     // Large desktop
+```
+
+### Media Query Syntax
+
+```scss
+// Mobile-first (default)
+.gallery {
+  grid-template-columns: 1fr;  // 1 column on mobile
+  
+  @media (min-width: $breakpoint-tablet) {
+    grid-template-columns: repeat(2, 1fr);  // 2 columns on tablet
+  }
+  
+  @media (min-width: $breakpoint-desktop) {
+    grid-template-columns: repeat(3, 1fr);  // 3 columns on desktop
+  }
+}
+
+// Alternative: max-width (less common, but useful)
+@media (max-width: $breakpoint-tablet) {
+  // Only on tablet and below
+}
+```
+
+### Responsive Sizing with clamp()
+
+```scss
+// Font size automatically scales between breakpoints
+.heading {
+  font-size: clamp($font-size-2xl, 5vw, $font-size-5xl);
+}
+
+// Width automatically scales
+.container {
+  width: clamp(300px, 90vw, 1200px);
+}
+```
+
+---
+
+## Border Radius
+
+```scss
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-full: 9999px;  // Perfect circle when width = height
+```
+
+### Usage
+
+```svelte
+<style lang="scss">
+  .card {
+    border-radius: $radius-md;
+  }
+  
+  .pill-button {
+    border-radius: $radius-full;
+    padding: $space-sm $space-md;
+  }
+  
+  .avatar {
+    border-radius: $radius-full;
+    width: 50px;
+    height: 50px;
+  }
+</style>
+```
+
+---
+
+## Shadows
+
+```scss
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+$shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
+```
+
+### Usage
+
+```svelte
+<style lang="scss">
+  .card {
+    box-shadow: $shadow-md;
+    transition: box-shadow 0.3 s;
+    
+    &:hover {
+      box-shadow: $shadow-lg;  // Elevate on hover
+    }
+  }
+  
+  .button {
+    box-shadow: $shadow-sm;
+  }
+</style>
+```
+
+---
+
+## Transitions
+
+```scss
+$transition-fast: 150ms ease;
+$transition-base: 300ms ease;
+$transition-slow: 500ms ease;
+```
+
+### Usage
+
+```svelte
+<style lang="scss">
+  .button {
+    transition: all $transition-fast;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-lg;
+    }
+  }
+  
+  .fade-in {
+    transition: opacity $transition-base;
+  }
+</style>
+```
+
+---
+
+## Mixins
+
+Pre-built SCSS mixins in `src/lib/styles/_mixins.scss`:
+
+### flex-center
+Center content both horizontally and vertically:
+
+```scss
+.hero-overlay {
+  @include flex-center;
+}
+
+// Equivalent to:
+// display: flex;
+// align-items: center;
+// justify-content: center;
+```
+
+### focus-ring
+Keyboard focus indicator for accessibility:
+
+```scss
+.button {
+  @include focus-ring;
+}
+
+// Adds visible outline on :focus-visible
+```
+
+### Responsive Text
+Autoscaling text between breakpoints:
+
+```scss
+.heading {
+  font-size: clamp($font-size-2xl, 5vw, $font-size-5xl);
+}
+```
+
+---
+
+## BEM Naming Convention
+
+All components use BEM (Block-Element-Modifier):
+
+### Block
+Top-level component name:
+```scss
+.navbar { }
+.footer { }
+.card { }
+```
+
+### Element
+Child of block (two underscores):
+```scss
+.navbar__logo { }
+.navbar__link { }
+.card__title { }
+.card__body { }
+```
+
+### Modifier
+Variant or state (two hyphens):
+```scss
+.button--primary { }
+.button--secondary { }
+.link--active { }
+.card--featured { }
+```
+
+### Full Example
+
+```scss
+.hero-slider {                    // Block
+  &__slide {                      // Element
+    &.active {                    // Modifier
+      opacity: 1;
+    }
+  }
+  
+  &__arrow {                      // Element
+    &--prev {                     // Modifier
+      left: $space-container;
+    }
+    &--next {                     // Modifier
+      right: $space-container;
+    }
+  }
+}
+```
+
+---
+
+## Scoped Styles
+
+All component styles are automatically scoped by Svelte:
+
+```svelte
+<style lang="scss">
+  .button {
+    // This only applies to .button in this component
+    // Other components can safely use .button without conflicts
+  }
+</style>
+```
+
+---
+
+## Global Styles
+
+For site-wide styling, edit `src/lib/styles/global.scss`:
+
+```scss
+// Applied to all pages
+body {
+  font-family: $font-body;
+  color: $color-text;
+  background: $color-white;
+}
+
+a {
+  color: $color-accent;
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-heading;
+  font-weight: $font-weight-bold;
+}
+```
+
+---
+
+## Common Patterns
+
+### Card Component
+
+```svelte
+<style lang="scss">
+  .card {
+    padding: $space-md;
+    background: $color-white;
+    border: 1px solid $color-border;
+    border-radius: $radius-md;
+    box-shadow: $shadow-sm;
+    transition: all $transition-base;
+    
+    &:hover {
+      box-shadow: $shadow-md;
+      transform: translateY(-2px);
+    }
+  }
+</style>
+```
+
+### Button Component
+
+```svelte
+<style lang="scss">
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: $space-sm $space-md;
+    border-radius: $radius-full;
+    font-weight: $font-weight-semibold;
+    border: none;
+    cursor: pointer;
+    transition: all $transition-fast;
+    @include focus-ring;
+    
+    &--primary {
+      background: $color-accent;
+      color: $color-white;
+      
+      &:hover {
+        background: $color-accent-dark;
+        transform: translateY(-2px);
+        box-shadow: $shadow-md;
+      }
+    }
+    
+    &--secondary {
+      background: $color-bg-light;
+      color: $color-text;
+      border: 1px solid $color-border;
+      
+      &:hover {
+        background: $color-white;
+        border-color: $color-accent;
+      }
+    }
+    
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+</style>
+```
+
+### Responsive Grid
+
+```svelte
+<style lang="scss">
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(autofill, minmax(300px, 1fr));
+    gap: $space-md;
+    
+    @media (max-width: $breakpoint-tablet) {
+      grid-template-columns: repeat(autofill, minmax(200px, 1fr));
+      gap: $space-base;
+    }
+    
+    @media (max-width: $breakpoint-mobile) {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+```
+
+### Flexbox Container
+
+```svelte
+<style lang="scss">
+  .hero-overlay {
+    @include flex-center;
+    text-align: center;
+    padding: $space-lg;
+    
+    @media (max-width: $breakpoint-tablet) {
+      padding: $space-md;
+    }
+  }
+</style>
+```
+
+---
+
+## Accessibility
+
+### Color Contrast
+Ensure sufficient contrast:
+- Normal text: 4.5:1 (WCAG AA)
+- Large text (18px+): 3:1 (WCAG AA)
+
+Test at: https://webaim.org/resources/contrastchecker/
+
+### Focus Indicators
+Always use `@include focus-ring;` on interactive elements:
+
+```svelte
+<style lang="scss">
+  .button {
+    @include focus-ring;  // Shows outline on Tab focus
+  }
+  
+  a {
+    @include focus-ring;
+  }
+</style>
+```
+
+### Readable Font Sizes
+- Body text: minimum 16px
+- Headings: 24px or larger
+- Links: same size as surrounding text, clearly styled
+
+---
+
+## Optimization Tips
+
+### Reduce CSS Duplication
+Use mixins and variables, not copy-paste:
+
+```scss
+// ❌ Wrong - duplicated styles
+.button-1 {
+  padding: $space-sm $space-md;
+  border-radius: $radius-full;
+}
+
+.button-2 {
+  padding: $space-sm $space-md;
+  border-radius: $radius-full;
+}
+
+// ✅ Right - use modifier
+.button {
+  padding: $space-sm $space-md;
+  border-radius: $radius-full;
+  
+  &--large {
+    padding: $space-md $space-lg;
+  }
+}
+```
+
+### Use clamp() for Responsive
+Eliminates need for multiple media queries:
+
+```scss
+// ✅ Good - scales automatically
+.heading {
+  font-size: clamp($font-size-2xl, 5vw, $font-size-5xl);
+}
+
+// ❌ Verbose - multiple breakpoints
+.heading {
+  font-size: $font-size-2xl;
+  @media (min-width: 768px) {
+    font-size: $font-size-3xl;
+  }
+  @media (min-width: 1024px) {
+    font-size: $font-size-4xl;
+  }
+}
+```
+
+### Mobile-First Approach
+Default styles for mobile, add desktop styles in media queries:
+
+```scss
+// ✅ Correct - mobile first
+.gallery {
+  grid-template-columns: 1fr;  // Mobile default
+  
+  @media (min-width: $breakpoint-tablet) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+// ❌ Wrong - desktop first
+.gallery {
+  grid-template-columns: repeat(3, 1fr);  // Desktop default
+  
+  @media (max-width: $breakpoint-tablet) {
+    grid-template-columns: 1fr;
+  }
+}
+```
+
+---
+
+## Debugging Styles
+
+### Check Applied Styles
+1. Open DevTools (F12)
+2. Inspect element
+3. Check "Styles" tab
+4. Look for overridden styles (strikethrough)
+
+### Common Issues
+
+#### Styles not applying
+- Check class name matches (case-sensitive)
+- Check selector specificity
+- Clear browser cache (Cmd+Shift+R)
+
+#### Responsive not working
+- Check breakpoints are ordered correctly
+- Use `min-width` for mobile-first
+- Test on actual mobile device
+
+#### Scoped styles affecting other components
+- Check no global styles override component styles
+- Verify no inline styles on elements
+
+---
+
+## Adding Custom Styles
+
+For component-specific styling:
+
+```svelte
+<style lang="scss">
+  .my-component {
+    // Use existing variables and mixins
+    color: $color-text;
+    padding: $space-md;
+    border-radius: $radius-md;
+    transition: all $transition-base;
+    @include flex-center;
+    
+    // Add custom properties as needed
+    --my-custom-color: #abc123;
+    background: var(--my-custom-color);
+  }
+</style>
+```
+
+---
+
+## Testing Responsive Design
+
+```bash
+# 1. Run dev server
+npm run dev
+
+# 2. Chrome DevTools: Cmd+Shift+M (toggle device toolbar)
+# 3. Test breakpoints:
+# - 480px (mobile)
+# - 768px (tablet)
+# - 1024px (desktop)
+# - 1440px (wide)
+
+# 4. Test on real devices if possible
+```
+
+---
+
+## Resources
+
+- SCSS documentation: https://sass-lang.com/documentation
+- Responsive design: https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Responsive_Design
+- Accessibility: https://www.w3.org/WAI/WCAG21/quickref/
+- Color contrast checker: https://webaim.org/resources/contrastchecker/

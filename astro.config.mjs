@@ -4,6 +4,8 @@ import vercel from '@astrojs/vercel';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import astroMermaid from 'astro-mermaid';
+import starlightLlmsTxt from 'starlight-llms-txt';
+import starlightBiel from 'starlight-biel';
 
 export default defineConfig({
   site: 'https://docs.sharonwang.me',
@@ -22,7 +24,29 @@ export default defineConfig({
         { icon: 'linkedin', label: 'LinkedIn', href: 'https://www.linkedin.com/in/shihyin-sharon-wang/' },
         { icon: 'rocket', label: 'Visit sharonwang.me', href: 'https://sharonwang.me' },
       ],
-      customCss: ['./src/styles/custom.css', 'katex/dist/katex.min.css'],
+      customCss: [
+        './src/styles/custom.css',
+        './src/styles/api-components.css',
+        'katex/dist/katex.min.css',
+      ],
+
+      // Starlight plugins
+      plugins: [
+        starlightBiel({
+          project: process.env.BIEL_PROJECT_ID || 'PENDING_SETUP',
+          headerTitle: 'Docs AI Search',
+        }),
+        starlightLlmsTxt({
+          projectName: 'Sharon Wang — Technical Documentation Portfolio',
+          description: 'Documentation engineering portfolio showcasing docs-as-code workflows, API integration guides, system architecture, and developer portals.',
+        }),
+      ],
+
+      // Logo configuration
+      logo: {
+        src: './public/logo.svg',
+        alt: 'Sharon Wang Docs',
+      },
 
       // English only for now; structured for future i18n
       defaultLocale: 'root',
@@ -33,39 +57,133 @@ export default defineConfig({
 
       sidebar: [
         {
-          label: 'System Architecture',
-          collapsed: false,
-          items: [{ autogenerate: { directory: 'architecture' } }],
-        },
-        {
-          label: 'Developer Docs & API',
-          collapsed: false,
-          items: [{ autogenerate: { directory: 'developer-docs' } }],
-        },
-        {
-          label: 'Site Reliability / SRE',
-          collapsed: false,
-          items: [{ autogenerate: { directory: 'troubleshooting' } }],
-        },
-        {
-          label: '3D Space Portfolio',
-          collapsed: true,
-          items: [{ autogenerate: { directory: '3d-space-portfolio' } }],
-        },
-        {
-          label: 'Raised Church Website',
-          collapsed: true,
-          items: [{ autogenerate: { directory: 'raised-church-website' } }],
-        },
-        {
-          label: 'TMS (Team Management)',
-          collapsed: true,
-          items: [{ autogenerate: { directory: 'tms' } }],
+          label: 'About This Knowledge Base',
+          slug: 'about',
         },
         {
           label: 'Featured Articles',
           collapsed: false,
           items: [{ autogenerate: { directory: 'articles' } }],
+        },
+        {
+          label: 'TMS',
+          collapsed: true,
+          items: [
+            { slug: 'tms/explanation/overview' },
+            {
+              label: 'Tutorials',
+              collapsed: true,
+              items: [
+                { slug: 'tms/tutorials/getting-started' },
+              ],
+            },
+            {
+              label: 'How-to Guides',
+              collapsed: true,
+              items: [
+                { slug: 'tms/how-to/overview' },
+                { slug: 'tms/how-to/authentication-flow' },
+                { slug: 'tms/how-to/api-reference' },
+              ],
+            },
+            {
+              label: 'Reference',
+              collapsed: true,
+              items: [
+                { slug: 'tms/reference/overview' },
+                { slug: 'tms/reference/canvas-lms-errors' },
+                { slug: 'tms/reference/database-and-memory-runbooks' },
+                { slug: 'tms/reference/debugging-playbook' },
+              ],
+            },
+            {
+              label: 'Explanation',
+              collapsed: true,
+              items: [
+                { slug: 'tms/explanation/project-system-designs' },
+                { slug: 'tms/explanation/canvas-aws-system-architecture' },
+                { slug: 'tms/explanation/complex-logic-breakdown' },
+              ],
+            },
+          ],
+        },
+        {
+          label: '3D Space Portfolio',
+          collapsed: true,
+          items: [
+            {
+              label: 'Tutorials',
+              collapsed: true,
+              items: [
+                { slug: '3d-space-portfolio/tutorials/getting-started' },
+              ],
+            },
+            {
+              label: 'How-to Guides',
+              collapsed: true,
+              items: [
+                { slug: '3d-space-portfolio/how-to/testing' },
+              ],
+            },
+            {
+              label: 'Reference',
+              collapsed: true,
+              items: [
+                { slug: '3d-space-portfolio/reference/api-reference' },
+                { slug: '3d-space-portfolio/reference/scss-module-standards' },
+              ],
+            },
+            {
+              label: 'Explanation',
+              collapsed: true,
+              items: [
+                { slug: '3d-space-portfolio/explanation/project-structure' },
+              ],
+            },
+          ],
+        },
+        {
+          label: 'Raised Church Website',
+          collapsed: true,
+          items: [
+            {
+              label: 'Tutorials',
+              collapsed: true,
+              items: [
+                { slug: 'raised-church-website/tutorials/contentful-quick-start' },
+                { slug: 'raised-church-website/tutorials/multi-church-template-guide' },
+              ],
+            },
+            {
+              label: 'How-to Guides',
+              collapsed: true,
+              items: [
+                { slug: 'raised-church-website/how-to/adding-features' },
+                { slug: 'raised-church-website/how-to/contentful-setup' },
+                { slug: 'raised-church-website/how-to/internationalization' },
+                { slug: 'raised-church-website/how-to/deployment-troubleshooting' },
+                { slug: 'raised-church-website/how-to/testing' },
+              ],
+            },
+            {
+              label: 'Reference',
+              collapsed: true,
+              items: [
+                { slug: 'raised-church-website/reference/components' },
+                { slug: 'raised-church-website/reference/contentful-queries' },
+                { slug: 'raised-church-website/reference/styling' },
+                { slug: 'raised-church-website/reference/types' },
+              ],
+            },
+            {
+              label: 'Explanation',
+              collapsed: true,
+              items: [
+                { slug: 'raised-church-website/explanation/architecture' },
+                { slug: 'raised-church-website/explanation/content-structure' },
+              ],
+            },
+          ],
         },
       ],
 
@@ -163,4 +281,9 @@ export default defineConfig({
     }),
     astroMermaid(),
   ],
+  vite: {
+    build: {
+      chunkSizeWarningLimit: 1500,
+    },
+  },
 });

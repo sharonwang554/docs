@@ -1,0 +1,634 @@
+---
+title: 'Adding Features'
+description: 'Adding Features'
+---
+
+# Adding Features Guide
+
+Complete step-by-step guides for common tasks.
+
+---
+
+## Adding a New Page
+
+### Example: Adding a "Gallery" Page
+
+#### Step 1: Define Contentful Content Type
+
+In your Contentful space:
+
+1. Content model → Add content type
+2. Name: `gallery`
+3. Fields:
+   - `title` (Short text)
+   - `description` (Short text)
+   - `images` (Media, many)
+
+#### Step 2: Enable Localization
+
+1. Click each field
+2. Enable "Localize this field"
+3. Set up for both `zh-Hant-TW` and `en-US`
+
+#### Step 3: Create Fallback Data
+
+Create `src/lib/data/fallback-gallery.json`:
+
+```json
+{
+  "title": "Gallery,"
+  "description": "Church photos,"
+  "images": [
+    {
+      "url": "https://placehold.co/400x300,"
+      "alt": "Church building"
+    }
+  ]
+}
+```
+
+#### Step 4: Define TypeScript Types
+
+Edit `src/lib/types/contentful.ts`, add:
+
+```typescript
+export interface GalleryImage {
+  url: string;
+  alt: string;
+}
+
+export interface Gallery {
+  title: string;
+  description: string;
+  images: GalleryImage[];
+}
+
+export interface ContentfulGalleryImage {
+  fields: {
+    url: string;
+    altText: string;
+  };
+}
+
+export interface ContentfulGallery {
+  fields: {
+    title: string;
+    description: string;
+    images?: ContentfulGalleryImage[];
+  };
+}
+```
+
+#### Step 5: Add Fetch Method to Repository
+
+Edit `src/lib/server/content-repository.ts` to add the method to the interface:
+
+```typescript
+export interface ContentRepository {
+  // ... existing methods
+  fetchGallery(lang: Language | undefined): Promise<Gallery>;
+}
+```
+
+Edit `src/lib/server/contentful-adapter.ts` to add the implementation:
+
+```typescript
+import fallbackGallery from "$lib/data/fallback-gallery.json";
+import type { Gallery, ContentfulGallery } from "$lib/types/contentful";
+
+export class ContentfulAdapter implements ContentRepository {
+  // ... existing methods
+
+  async fetchGallery(lang: Language | undefined): Promise<Gallery> {
+    return this.withFallback(
+      "gallery,"
+      lang,
+      async () => {
+        const entries = await contentfulClient.getEntries({
+          content_type: "gallery,"
+          limit: 1,
+          locale: getLocale(lang),
+        });
+
+        if (entries.items.length === 0) return fallbackGallery as Gallery;
+
+        const fields = (entries.items[0] as any).fields as ContentfulGallery["fields"];
+        const images = (fields.images || []).map((img) => ({
+          url: getAssetUrl(img) || "https://placehold.co/400x300,"
+          alt: img.fields.altText || "Gallery image,"
+        }));
+
+        return {
+          title: fields.title,
+          description: fields.description,
+          images,
+        };
+      },
+      async () => fallbackGallery as Gallery
+    );
+  }
+}
+```
+
+Edit `src/lib/server/fallback-adapter.ts` to add the fallback implementation:
+
+```typescript
+export class FallbackAdapter implements ContentRepository {
+  // ... existing methods
+  async fetchGallery(lang: Language | undefined): Promise<Gallery> {
+    return fallbackGallery as Gallery;
+  }
+}
+```
+
+#### Step 6: Create Route Directory
+
+```bash
+mkdir -p src/routes/[[lang]]/gallery
+```
+
+#### Step 7: Create Page Load Function
+
+Create `src/routes/[[lang]]/gallery/+page.server.ts`:
+
+```typescript
+import { getContentRepository } from "$lib/server/content-repository";
+import type { PageServerLoad } from "./$types";
+
+export const load: PageServerLoad = async ({ params }) => {
+  return await getContentRepository().fetchGallery(params.lang as "en" | "zh" | undefined);
+};
+```
+
+#### Step 8: Create Page Component
+
+Create `src/routes/[[lang]]/gallery/+page.svelte`:
+
+```svelte
+<script lang="ts">
+  import { page } from "$app/state";
+  import { getTranslation, getLangFromParams } from "$lib/i18n";
+  import PageHero from "$lib/components/PageHero.svelte";
+  import SectionTitle from "$lib/components/SectionTitle.svelte";
+  import SEOHead from "$lib/components/SEOHead.svelte";
+
+  let { data } = $props();
+  let t = $derived(getTranslation(getLangFromParams(page.params)));
+</script>
+
+<SEOHead
+  title={data.title}
+  description={data.description}
+  url={page.url.href}
+/>
+
+<PageHero
+  title={data.title}
+  imageUrl="https://placehold.co/1400x300"
+/>
+
+<section class="gallery">
+  <div class="gallery__inner">
+    <SectionTitle
+      title={data.title}
+      subtitle={data.description}
+    />
+
+    <div class="gallery__grid">
+      {#each data.images as image}
+        <div class="gallery__item">
+          <img
+            src={image.url}
+            alt={image.alt}
+            loading="lazy"
+          />
+        </div>
+      {/each}
+    </div>
+  </div>
+</section>
+
+<style lang="scss">
+  .gallery {
+    padding: $space-container;
+
+    &__inner {
+      max-width: $max-width-container;
+      margin: 0 auto;
+    }
+
+    &__grid {
+      display: grid;
+      grid-template-columns: repeat(autofill, minmax(300px, 1fr));
+      gap: $space-md;
+      margin-top: $space-lg;
+    }
+
+    &__item {
+      overflow: hidden;
+      border-radius: $radius-md;
+      aspect-ratio: 1;
+
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3 s;
+      }
+
+      &:hover img {
+        transform: scale(1.05);
+      }
+    }
+  }
+</style>
+```
+
+#### Step 9: Add i18n Strings
+
+Edit `src/lib/i18n/index.ts`, add translations:
+
+```typescript
+pages: {
+  gallery: {
+    title: "Gallery,"
+    subtitle: "Photos from our church community,"
+  }
+}
+```
+
+And Chinese:
+
+```typescript
+pages: {
+  gallery: {
+    title: "相冊,"
+    subtitle: "教會社區的照片,"
+  }
+}
+```
+
+#### Step 10: Add to Navigation
+
+Edit `src/lib/i18n/index.ts`, add to `nav`:
+
+```typescript
+nav: {
+  gallery: "Gallery,"  // English
+  gallery: "相冊,"       // Chinese
+}
+```
+
+#### Step 11: Add to Navigation Component
+
+Edit `src/lib/components/Navbar.svelte`, update `navLinks`:
+
+```typescript
+let navLinks = $derived([
+  // ... existing links
+  { href: `/${lang === "en" ? "en/" : ""}gallery`, label: t.nav.gallery },
+  // ... rest
+]);
+```
+
+#### Step 12: Test Locally
+
+```bash
+npm run dev
+```
+
+Visit:
+- `http://localhost:5173/gallery` (Chinese)
+- `http://localhost:5173/en/gallery` (English)
+
+---
+
+## Adding a New Contentful Content Type
+
+### Steps Summary
+
+1. **Contentful Dashboard:**
+   - Create content model
+   - Define fields
+   - Enable localization
+
+2. **Source Code:**
+   - Add TypeScript types (`src/lib/types/contentful.ts`)
+   - Add fetch method (`src/lib/server/content-repository.ts` and adapters)
+   - Create fallback JSON (`src/lib/data/fallback-*.json`)
+
+3. **Use in Routes:**
+   - Call fetch function in `+page.server.ts`
+   - Use data in `+page.svelte`
+
+---
+
+## Adding a New Component
+
+### Example: Create "TestimonialCard" Component
+
+#### Step 1: Create Component File
+
+Create `src/lib/components/TestimonialCard.svelte`:
+
+```svelte
+<script lang="ts">
+  interface Props {
+    name: string;
+    role: string;
+    content: string;
+    image?: string;
+  }
+
+  let { name, role, content, image }: Props = $props();
+</script>
+
+<article class="testimonial-card">
+  {#if image}
+    <img src={image} alt={name} class="testimonial-card__image" />
+  {/if}
+  
+  <div class="testimonial-card__content">
+    <p class="testimonial-card__text">"{content}"</p>
+    <p class="testimonial-card__author">{name}</p>
+    <p class="testimonial-card__role">{role}</p>
+  </div>
+</article>
+
+<style lang="scss">
+  .testimonial-card {
+    padding: $space-md;
+    border-radius: $radius-md;
+    background: $color-bg-light;
+    border: 1px solid $color-border;
+
+    &__image {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: $space-sm;
+    }
+
+    &__text {
+      font-style: italic;
+      margin-bottom: $space-sm;
+    }
+
+    &__author {
+      font-weight: 600;
+      margin-bottom: $space-xs;
+    }
+
+    &__role {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+    }
+  }
+</style>
+```
+
+#### Step 2: Export from Library
+
+Edit `src/lib/index.ts`, add:
+
+```typescript
+export { default as TestimonialCard } from "./components/TestimonialCard.svelte";
+```
+
+#### Step 3: Use in Page
+
+```svelte
+<script lang="ts">
+  import { TestimonialCard } from "$lib";
+</script>
+
+<TestimonialCard
+  name="John Doe"
+  role="Member"
+  content="This church has changed my life..."
+  image="/photo.jpg"
+/>
+```
+
+---
+
+## Adding Translations
+
+### Add New Translation String
+
+1. **Edit `src/lib/i18n/index.ts`:**
+
+```typescript
+export const translations = {
+  zh: {
+    pages: {
+      gallery: {
+        title: "相冊,"
+        emptyMessage: "尚無照片,"
+      }
+    }
+  },
+  en: {
+    pages: {
+      gallery: {
+        title: "Gallery,"
+        emptyMessage: "No photos yet,"
+      }
+    }
+  }
+};
+```
+
+2. **Use in Component:**
+
+```svelte
+<script lang="ts">
+  import { getTranslation, getLangFromParams } from "$lib/i18n";
+  import { page } from "$app/state";
+  
+  let t = $derived(getTranslation(getLangFromParams(page.params)));
+</script>
+
+<h1>{t.pages.gallery.title}</h1>
+<p>{t.pages.gallery.emptyMessage}</p>
+```
+
+### Key Naming Convention
+
+Use nested object structure:
+- `nav.*` - Navigation
+- `pages.<pagename>.*` - Page-specific
+- `common.*` - Shared across site
+- `home.*` - Home page specific
+
+---
+
+## Adding Styling
+
+### Add CSS Variable
+
+Edit `src/lib/styles/_variables.scss`:
+
+```scss
+$color-gallery-bg: #f5f5f5;
+$spacing-gallery-gap: $space-md;
+```
+
+### Use in Component
+
+```svelte
+<style lang="scss">
+  .gallery {
+    background: $color-gallery-bg;
+    gap: $spacing-gallery-gap;
+  }
+</style>
+```
+
+### Add New Breakpoint
+
+Edit `src/lib/styles/_variables.scss`:
+
+```scss
+$breakpoint-xl: 1400px;
+```
+
+Use in component:
+
+```scss
+@media (max-width: $breakpoint-xl) {
+  // Extra large screens
+}
+```
+
+---
+
+## Common Patterns
+
+### Fetching Paginated Data
+
+1. Use `Pagination` component
+2. Add URL parameter in `+page.server.ts`:
+
+```typescript
+export const load: PageServerLoad = async ({ params, url }) => {
+  const page = parseInt(url.searchParams.get("page") || "1");
+  const items = await fetchActivities(params.lang);
+  const itemsPerPage = 6;
+  const totalPages = Math.ceil(items.length / itemsPerPage);
+  const paginated = items.slice(
+    (page - 1) * itemsPerPage,
+    page * itemsPerPage
+  );
+  return { paginated, currentPage: page, totalPages };
+};
+```
+
+3. In component, update URL on page change:
+
+```svelte
+function handlePageChange(newPage: number) {
+  page.goto(`?page=${newPage}`);
+}
+```
+
+### Using Bilingual Content
+
+```typescript
+import { getBilingualContent } from "$lib/i18n";
+
+const title = getBilingualContent(
+  { zh: "標題," en: "Title" },
+  lang,
+  "Default Title"
+);
+```
+
+### Responsive Grid
+
+```scss
+.gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(autofill, minmax(300px, 1fr));
+  gap: $space-md;
+
+  @media (max-width: $breakpoint-tablet) {
+    grid-template-columns: repeat(autofill, minmax(200px, 1fr));
+  }
+
+  @media (max-width: $breakpoint-mobile) {
+    grid-template-columns: 1fr;
+  }
+}
+```
+
+---
+
+## Testing New Features Locally
+
+```bash
+# 1. Start dev server
+npm run dev
+
+# 2. Test on multiple devices:
+# Desktop: http://localhost:5173
+# Mobile: http://[your-ip]:5173 on phone
+
+# 3. Test both languages
+# /gallery (Chinese)
+# /en/gallery (English)
+
+# 4. Type check
+npm run check
+
+# 5. Build for production
+npm run build
+
+# 6. Test production build
+npm run preview
+```
+
+---
+
+## Deploying to Production
+
+### If Adding Contentful Content Type
+
+1. **Publish in Contentful first** (add at least one test entry)
+2. **Push code to GitHub** with new page/component
+3. **Vercel autodeploys** on push
+4. **Verify at production URL** (raisedchurch.org)
+
+### If Adding New Environment Variable
+
+1. **Add to `.env.local`** for testing
+2. **Commit code to GitHub**
+3. **Add to Vercel project settings** (Settings → Environment Variables)
+4. **Redeploy in Vercel dashboard** to pick up new env var
+
+---
+
+## Checklist: New Feature Complete
+
+- [ ] Content model created in Contentful
+- [ ] Fallback JSON file created
+- [ ] TypeScript types defined
+- [ ] Fetch method added to `content-repository.ts` and adapters
+- [ ] Route file created (`+page.server.ts` and `+page.svelte`)
+- [ ] Styling added to new components
+- [ ] i18n strings added for both languages
+- [ ] Navigation updated if needed
+- [ ] Tested locally (both languages)
+- [ ] `npm run check` passes (no TypeScript errors)
+- [ ] `npm run build` succeeds
+- [ ] Committed and pushed to GitHub
+- [ ] Deployed to production
+- [ ] Verified at production URL
+
+---
+
+## Need Help?
+
+See `docs/ARCHITECTURE.md` for data flow overview.
+See `docs/DEBUGGING.md` for troubleshooting.

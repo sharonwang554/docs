@@ -23,7 +23,7 @@ If you need to provision a Canvas instance from scratch rather than using the ex
 - Dory
 
 <Aside type="caution">
-**Environment Variances:** Installation commands vary based on the host operating system (e.g., using `yum` on Amazon Linux versus `apt-get` on Ubuntu/Debian). Furthermore, Canvas is highly memory-intensive; ensure your EC2 instance is sufficiently provisioned to avoid out-of-memory (OOM) crashes. Ensure all necessary firewall ports are open for HTTP/HTTPS traffic.
+**Environment Variances:** Installation commands vary based on the host operating system (for example, using `yum` on Amazon Linux versus `apt-get` on Ubuntu/Debian). Furthermore, Canvas is highly memory-intensive; ensure your EC2 instance is sufficiently provisioned to avoid out-of-memory (OOM) crashes. Ensure all necessary firewall ports are open for HTTP/HTTPS traffic.
 </Aside>
 
 For a comprehensive from-scratch installation guide, refer to the [Canvas LMS GitHub Repository Quick Start](https://github.com/instructure/canvas-lms/wiki/Quick-Start).
@@ -73,7 +73,7 @@ To allow your application to communicate with Canvas, you must register it as an
 3. **Configure Key Parameters:**
    - **Key Name:** `Local Integration Testing`
    - **Owner Email:** Enter your designated testing admin email.
-   - **Redirect URIs:** Enter your application's OAuth callback URL (e.g., `https://api.your-app.com/oauth/callback`).
+   - **Redirect URIs:** Enter your application's OAuth callback URL (for example, `https://api.your-app.com/oauth/callback`).
    - **Redirect URI (Legacy):** (Enter the same URI as above to prevent legacy routing issues).
 4. **Enforce Scopes:** Toggle **Enforce Scopes** and select the specific API endpoints required by your application.
 5. **Save and Extract Credentials:** Click **Save Key**. The system will generate two critical values:
@@ -81,4 +81,4 @@ To allow your application to communicate with Canvas, you must register it as an
    - **Client Secret:** Click **Show Key** to reveal the alphanumeric secret. *Store these securely.*
 </Steps>
 
-Your Canvas instance is now actively running and configured to accept OAuth 2.0 requests from your client application!
+Your Canvas instance is now actively running and configured to accept OAuth 2.0 requests from your client application.

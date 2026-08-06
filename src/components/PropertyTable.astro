@@ -1,0 +1,37 @@
+---
+interface Props {
+  params: Array<{
+    name: string;
+    type: string;
+    required?: boolean;
+    description: string;
+  }>;
+}
+const { params } = Astro.props;
+---
+<table class="not-content api-property-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Required</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    {params.map(param => (
+      <tr>
+        <td class="api-property-table__name"><code>{param.name}</code></td>
+        <td class="api-property-table__type"><span>{param.type}</span></td>
+        <td class="api-property-table__required">
+          {param.required ? (
+            <span class="api-property-table__required--true">🔴 Required</span>
+          ) : (
+            <span class="api-property-table__required--false">⚪ Optional</span>
+          )}
+        </td>
+        <td class="api-property-table__description">{param.description}</td>
+      </tr>
+    ))}
+  </tbody>
+</table>

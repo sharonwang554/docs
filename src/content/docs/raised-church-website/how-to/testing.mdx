@@ -1,0 +1,758 @@
+---
+title: 'Testing'
+description: 'Testing'
+---
+
+# Testing Guide
+
+This guide explains how to set up testing in the **svelte-raised-church** project and provides patterns for testing components, pages, and utilities.
+
+**Current Status:** The project does **not have testing configured** yet. This guide provides setup instructions and best practices for implementing tests.
+
+## Why Testing Matters
+
+Testing helps catch bugs before they reach production and:
+- Ensures components work as intended
+- Prevents regressions when refactoring
+- Documents expected behavior
+- Builds confidence in deployments
+- Improves code quality
+
+**Project Gap:** Currently scores **0/100 on test coverage** - this is the #1 priority for Phase 3.
+
+## Testing Stack Recommendation
+
+### For Unit/Component Tests: Vitest
+
+```bash
+npm install -D vitest @vitest/ui happy-dom
+```
+
+**Why Vitest:**
+- Lightning fast (uses esbuild)
+- Compatible with Jest syntax (familiar)
+- Excellent Svelte support
+- Built-in UI for test results
+
+### For Integration/E2E Tests: Playwright
+
+```bash
+npm install -D @playwright/test
+```
+
+**Why Playwright:**
+- Tests real browser behavior
+- Can test multiple browsers (Chrome, Firefox, Safari)
+- Screenshots and videos on failure
+- Excellent TypeScript support
+
+### Alternative: Just Testing (Simpler)
+
+```bash
+npm install -D jsdom
+```
+
+For simpler projects, use Vitest + jsdom (simpler than Playwright).
+
+## Setup: Vitest + Svelte Components
+
+### Step 1: Install Dependencies
+
+```bash
+npm install -D vitest @vitest/ui happy-dom @testing-library/svelte @testing-library/user-event
+```
+
+### Step 2: Create vitest.config.ts
+
+```typescript
+// vitest.config.ts
+import { defineConfig } from 'vitest/config';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+
+export default defineConfig({
+  plugins: [svelte({ hot: !process.env.VITEST })],
+  test: {
+    environment: 'happy-dom',
+    globals: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+    },
+  },
+});
+```
+
+### Step 3: Update package.json
+
+```json
+{
+  "scripts": {
+    "test": "vitest,"
+    "test:watch": "vitest --watch,"
+    "test:ui": "vitest --ui,"
+    "test:coverage": "vitest --coverage"
+  }
+}
+```
+
+### Step 4: Create Test File
+
+```typescript
+// src/lib/components/Button.test.ts
+import { render } from '@testing-library/svelte';
+import { describe, it, expect } from 'vitest';
+import Button from './Button.svelte';
+
+describe('Button', () => {
+  it('renders with label', () => {
+    const { getByText } = render(Button, {
+      props: { label: 'Click me' }
+    });
+    
+    expect(getByText('Click me')).toBeTruthy();
+  });
+  
+  it('emits click event', async () => {
+    const { component, getByRole } = render(Button, {
+      props: { label: 'Submit' }
+    });
+    
+    let clicked = false;
+    component.$on('click', () => { clicked = true; });
+    
+    const button = getByRole('button');
+    await button.click();
+    
+    expect(clicked).toBe(true);
+  });
+});
+```
+
+### Step 5: Run Tests
+
+```bash
+npm run test              # Run once
+npm run test:watch       # Watch mode
+npm run test:ui          # Visual UI
+npm run test:coverage    # Coverage report
+```
+
+## Testing Patterns
+
+### Pattern 1: Component Unit Tests
+
+```typescript
+// src/lib/components/HeroSlider.test.ts
+import { render } from '@testing-library/svelte';
+import { describe, it, expect } from 'vitest';
+import HeroSlider from './HeroSlider.svelte';
+
+describe('HeroSlider', () => {
+  const mockSlides = [
+    { image: 'slide1.jpg', alt: 'Slide 1' },
+    { image: 'slide2.jpg', alt: 'Slide 2' },
+  ];
+
+  it('renders all slides', () => {
+    const { container } = render(HeroSlider, {
+      props: { slides: mockSlides }
+    });
+    
+    const images = container.querySelectorAll('img');
+    expect(images.length).toBe(2);
+  });
+
+  it('displays correct alt text', () => {
+    const { getByAltText } = render(HeroSlider, {
+      props: { slides: mockSlides }
+    });
+    
+    expect(getByAltText('Slide 1')).toBeTruthy();
+    expect(getByAltText('Slide 2')).toBeTruthy();
+  });
+
+  it('advances on next button click', async () => {
+    const { getByRole } = render(HeroSlider, {
+      props: { slides: mockSlides }
+    });
+    
+    const nextButton = getByRole('button', { name: /next/i });
+    await nextButton.click();
+    
+    // Assert slide changed (implementation specific)
+  });
+});
+```
+
+### Pattern 2: Utility Function Tests
+
+```typescript
+// src/lib/i18n/index.test.ts
+import { describe, it, expect } from 'vitest';
+import { formatDate, interpolate, getNestedTranslation } from './index';
+
+describe('i18n helpers', () => {
+  describe('formatDate', () => {
+    it('formats dates for Chinese locale', () => {
+      const result = formatDate('2025-03-08', 'zh');
+      expect(result).toMatch(/2025.*3.*8/);
+    });
+
+    it('formats dates for English locale', () => {
+      const result = formatDate('2025-03-08', 'en');
+      expect(result).toMatch(/March.*8.*2025/);
+    });
+
+    it('handles invalid dates gracefully', () => {
+      const result = formatDate('invalid', 'en');
+      expect(result).toBeDefined();
+    });
+  });
+
+  describe('interpolate', () => {
+    it('replaces placeholders with values', () => {
+      const result = interpolate('Hello {name}', { name: 'World' });
+      expect(result).toBe('Hello World');
+    });
+
+    it('handles multiple placeholders', () => {
+      const result = interpolate('{greeting} {name}', {
+        greeting: 'Hello',
+        name: 'World'
+      });
+      expect(result).toBe('Hello World');
+    });
+
+    it('leaves unknown placeholders unchanged', () => {
+      const result = interpolate('Hello {unknown}', {});
+      expect(result).toBe('Hello {unknown}');
+    });
+  });
+
+  describe('getNestedTranslation', () => {
+    const translations = {
+      pages: {
+        about: {
+          title: 'About Us'
+        }
+      }
+    };
+
+    it('retrieves nested translation', () => {
+      const result = getNestedTranslation(translations, 'pages.about.title');
+      expect(result).toBe('About Us');
+    });
+
+    it('returns path if translation missing', () => {
+      const result = getNestedTranslation(translations, 'unknown.path');
+      expect(result).toBe('unknown.path');
+    });
+  });
+});
+```
+
+### Pattern 3: Server Load Function Tests
+
+```typescript
+// src/routes/[[lang]]/+page.server.test.ts
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { load } from './+page.server';
+
+vi.mock('$lib/server/contentful-adapter', () => ({
+  fetchActivities: vi.fn(),
+  fetchSermons: vi.fn(),
+}));
+
+describe('home page load', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('fetches activities for Chinese locale', async () => {
+    const params = {};  // Default language
+    const result = await load({ params, url: new URL('http://localhost') });
+    
+    expect(result).toHaveProperty('activities');
+    expect(Array.isArray(result.activities)).toBe(true);
+  });
+
+  it('fetches activities for English locale', async () => {
+    const params = { lang: 'en' };
+    const result = await load({ params, url: new URL('http://localhost/en') });
+    
+    expect(result).toHaveProperty('activities');
+  });
+
+  it('handles missing Contentful gracefully', async () => {
+    // Mock Contentful to return empty
+    const params = {};
+    const result = await load({ params, url: new URL('http://localhost') });
+    
+    expect(result.activities).toBeDefined();  // Should have fallback
+  });
+});
+```
+
+### Pattern 4: Form Submission Tests
+
+```typescript
+// src/lib/components/ContactForm.test.ts
+import { render, fireEvent, waitFor } from '@testing-library/svelte';
+import { describe, it, expect, vi } from 'vitest';
+import ContactForm from './ContactForm.svelte';
+
+describe('ContactForm', () => {
+  it('validates required fields', async () => {
+    const { getByRole, getByText } = render(ContactForm);
+    
+    const submitButton = getByRole('button', { name: /send/i });
+    await fireEvent.click(submitButton);
+    
+    // Check for validation errors
+    await waitFor(() => {
+      expect(getByText(/required/i)).toBeTruthy();
+    });
+  });
+
+  it('submits form with valid data', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ success: true })
+      })
+    );
+
+    const { getByLabelText, getByRole } = render(ContactForm);
+    
+    const nameInput = getByLabelText(/name/i) as HTMLInputElement;
+    const emailInput = getByLabelText(/email/i) as HTMLInputElement;
+    const messageInput = getByLabelText(/message/i) as HTMLTextAreaElement;
+    
+    nameInput.value = 'John Doe';
+    emailInput.value = 'john@example.com';
+    messageInput.value = 'Test message';
+    
+    await fireEvent.change(nameInput, { target: { value: 'John Doe' } });
+    await fireEvent.change(emailInput, { target: { value: 'john@example.com' } });
+    await fireEvent.change(messageInput, { target: { value: 'Test message' } });
+    
+    const submitButton = getByRole('button', { name: /send/i });
+    await fireEvent.click(submitButton);
+    
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalled();
+    });
+  });
+
+  it('displays error message on submission failure', async () => {
+    global.fetch = vi.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({ success: false, error: 'Server error' })
+      })
+    );
+
+    const { getByLabelText, getByRole, getByText } = render(ContactForm);
+    
+    const nameInput = getByLabelText(/name/i) as HTMLInputElement;
+    const emailInput = getByLabelText(/email/i) as HTMLInputElement;
+    const messageInput = getByLabelText(/message/i) as HTMLTextAreaElement;
+    
+    nameInput.value = 'John';
+    emailInput.value = 'john@example.com';
+    messageInput.value = 'Test';
+    
+    const submitButton = getByRole('button');
+    await fireEvent.click(submitButton);
+    
+    await waitFor(() => {
+      expect(getByText(/error/i)).toBeTruthy();
+    });
+  });
+});
+```
+
+### Pattern 5: Mock Contentful API
+
+```typescript
+// src/lib/server/__mocks__/contentful-adapter.ts
+import type { Activity, Sermon } from '$lib/types/contentful';
+
+export const mockActivities: Activity[] = [
+  {
+    title: 'Easter Celebration',
+    description: 'Join us for Easter service',
+    images: ['easter.jpg']
+  }
+];
+
+export const mockSermons: Sermon[] = [
+  {
+    title: 'Resurrection',
+    speaker: 'Pastor John',
+    date: '2025-03-09',
+    videoId: 'abc123',
+    slideUrl: null,
+    newsletterUrl: null
+  }
+];
+
+export const fetchActivities = vi.fn(() => Promise.resolve(mockActivities));
+export const fetchSermons = vi.fn(() => Promise.resolve(mockSermons));
+```
+
+### Pattern 6: Integration Test with E2E (Playwright)
+
+```typescript
+// tests/homepage.spec.ts
+import { test, expect } from '@playwright/test';
+
+test.describe('Home Page', () => {
+  test('should load and display hero slider', async ({ page }) => {
+    await page.goto('/');
+    
+    // Check hero slider exists
+    const slider = page.locator('[data-testid="hero-slider"]');
+    await expect(slider).toBeVisible();
+  });
+
+  test('should switch to English', async ({ page }) => {
+    await page.goto('/');
+    
+    // Click English link
+    await page.click('a:has-text("English")');
+    
+    // Verify URL changed
+    expect(page.url()).toContain('/en/');
+    
+    // Verify content changed (at least one element should be in English)
+    const heading = page.locator('h1');
+    const text = await heading.textContent();
+    expect(text).toBeTruthy();
+  });
+
+  test('should navigate to About page', async ({ page }) => {
+    await page.goto('/');
+    
+    await page.click('a:has-text("About")');
+    
+    expect(page.url()).toContain('/about');
+    await expect(page.locator('h1')).toContainText(/about|about/i);
+  });
+
+  test('contact form should be functional', async ({ page }) => {
+    await page.goto('/');
+    
+    // Fill form
+    await page.fill('[name="name"]', 'Test User');
+    await page.fill('[name="email"]', 'test@example.com');
+    await page.fill('[name="message"]', 'Test message');
+    
+    // Submit (but we don't actually submit to avoid sending emails)
+    // Just verify form is present and filled
+    const nameInput = page.locator('[name="name"]');
+    await expect(nameInput).toHaveValue('Test User');
+  });
+});
+```
+
+## Test Structure Best Practices
+
+### File Organization
+
+```
+src/
+├── lib/
+│   ├── components/
+│   │   ├── Button.svelte
+│   │   └── Button.test.ts           # Test alongside component
+│   ├── utils/
+│   │   ├── helpers.ts
+│   │   └── helpers.test.ts          # Test alongside utility
+│   └── server/
+│       └── contentful-adapter.ts
+│           └── contentful-adapter.test.ts
+└── routes/
+    └── [[lang]]/
+        ├── +page.server.ts
+        └── +page.server.test.ts      # Test alongside route
+```
+
+### Test File Naming
+
+- `*.test.ts` - Unit tests
+- `*.spec.ts` - Integration/E2E tests
+- `*.test.svelte.ts` - Svelte component tests
+
+### Test Structure
+
+```typescript
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+
+describe('Feature Name', () => {
+  // Setup
+  beforeEach(() => {
+    // Runs before each test
+  });
+
+  // Teardown
+  afterEach(() => {
+    // Runs after each test
+  });
+
+  // Test cases
+  it('should do something', () => {
+    // Arrange
+    const input = 'test';
+    
+    // Act
+    const result = myFunction(input);
+    
+    // Assert
+    expect(result).toBe('expected');
+  });
+
+  // Group related tests
+  describe('nested feature', () => {
+    it('should do nested thing', () => {
+      // ...
+    });
+  });
+});
+```
+
+## Coverage Goals
+
+### Minimum Coverage (Phase 3 Target)
+
+- **Statements:** 70%
+- **Branches:** 65%
+- **Functions:** 70%
+- **Lines:** 70%
+
+### Priority Areas to Test (Phase 3)
+
+1. **Utility functions** (i18n, helpers) - 90%+ coverage
+2. **Content types/types** - 85%+ coverage
+3. **Components** - 70%+ coverage
+4. **Page loads** - 60%+ coverage
+
+### Low Priority (Phase 4)
+
+- Integration tests (E2E with Playwright)
+- Visual regression tests
+- Performance tests
+
+## Running Tests
+
+### Single Run
+
+```bash
+npm run test
+```
+
+### Watch Mode (Autorerun on changes)
+
+```bash
+npm run test:watch
+```
+
+### UI Dashboard
+
+```bash
+npm run test:ui
+```
+
+Opens http://localhost:51204 with visual test results.
+
+### Coverage Report
+
+```bash
+npm run test:coverage
+```
+
+Creates `coverage/` folder with HTML report.
+
+### Run Single Test File
+
+```bash
+npm run test -- src/lib/i18n/index.test.ts
+```
+
+### Run Tests Matching Pattern
+
+```bash
+npm run test -- --grep "formatDate"
+```
+
+## CI/CD Integration
+
+### GitHub Actions Example
+
+```yaml
+# .github/workflows/test.yml
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm ci
+      - run: npm run check
+      - run: npm run test:coverage
+      - uses: codecov/codecov-action@v3
+```
+
+Commit this file to `.github/workflows/test.yml` to run tests automatically.
+
+## Common Testing Issues
+
+### Issue: Component Not Rendering in Tests
+
+**Symptom:** `getByText()` returns null
+
+**Cause:** Component not mounted or prop not passed
+
+**Fix:**
+```typescript
+const { getByText } = render(MyComponent, {
+  props: { myProp: 'value' }  // Required.
+});
+```
+
+### Issue: Async Tests Timing Out
+
+**Symptom:** Test times out, doesn't complete
+
+**Cause:** Awaiting promise but not actually waiting
+
+**Fix:**
+```typescript
+// ✅ Correct
+await waitFor(() => {
+  expect(element).toBeTruthy();
+});
+
+// ❌ Wrong
+expect(element).toBeTruthy();  // Might not be ready yet
+```
+
+### Issue: Mock Not Working
+
+**Symptom:** Test uses real API instead of mock
+
+**Cause:** Mock not set up before import
+
+**Fix:**
+```typescript
+import { vi } from 'vitest';
+
+// Mock BEFORE import
+vi.mock('$lib/server/contentful-adapter');
+
+// THEN import the tested module
+import { load } from './+page.server';
+```
+
+### Issue: TypeScript Errors in Tests
+
+**Symptom:** Type errors in test file
+
+**Cause:** Test types not installed
+
+**Fix:**
+```bash
+npm install -D @vitest/ui vitest
+```
+
+Update `tsconfig.json`:
+```json
+{
+  "compilerOptions": {
+    "types": ["vitest/globals"]
+  }
+}
+```
+
+## Debugging Tests
+
+### Run Single Test
+
+```bash
+npm run test -- --run <filename>
+```
+
+### Debug in Node Inspector
+
+```bash
+node --inspect-brk ./node_modules/vitest/vitest.mjs
+```
+
+### Add Debug Statement
+
+```typescript
+it('should debug', () => {
+  const result = myFunction();
+  console.log('DEBUG:', result);  // Will appear in test output
+  expect(result).toBeTruthy();
+});
+```
+
+### Use Test UI
+
+```bash
+npm run test:ui
+```
+
+Click on tests to see detailed output and re-run.
+
+## Testing Best Practices
+
+✅ **Do:**
+- Test user behavior (not implementation)
+- Use descriptive test names
+- Keep tests independent
+- Mock external dependencies
+- Write tests before fixing bugs
+
+❌ **Don't:**
+- Test implementation details
+- Use vague test names
+- Make tests depend on each other
+- Mock things you should test
+- Skip tests that are "annoying"
+
+## Next Steps for Testing Setup
+
+1. **Phase 3A (Week 1):**
+   - Install Vitest + dependencies
+   - Create vitest.config.ts
+   - Add test scripts to package.json
+   - Write 10-15 unit tests for utilities
+
+2. **Phase 3 B (Week 2):**
+   - Write component tests (50%+ components)
+   - Write page load tests
+   - Set up CI/CD pipeline
+
+3. **Phase 3C (Week 3+):**
+   - Install Playwright for E2E
+   - Write integration tests
+   - Reach 70%+ coverage goal
+
+## Resources
+
+- Vitest Docs: https://vitest.dev
+- Testing Library: https://testing-library.com/svelte
+- Playwright Docs: https://playwright.dev
+- Jest Docs (Vitest compatible): https://jestjs.io/docs/getting-started
+
+## Next Steps
+
+- See `docs/ADDING_FEATURES.md` for testing new features
+- See `docs/DEBUGGING.md` for test debugging
+- See `docs/ARCHITECTURE.md` for code structure to test

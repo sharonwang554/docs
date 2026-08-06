@@ -1,0 +1,11 @@
+---
+interface Props {
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  path: string;
+}
+const { method, path } = Astro.props;
+---
+<div class={`not-content api-badge api-badge--${method.toLowerCase()}`}>
+  <span class="api-badge__method">{method}</span>
+  <code class="api-badge__path">{path}</code>
+</div>

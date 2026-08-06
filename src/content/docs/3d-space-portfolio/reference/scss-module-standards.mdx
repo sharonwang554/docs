@@ -1,0 +1,299 @@
+---
+title: 'Scss Module Standards'
+description: 'Scss Module Standards'
+---
+
+# SCSS Module Standards
+
+## Overview
+
+This project uses **SCSS Modules** consistently across all components for scoped styling. This document outlines the standards and patterns to follow.
+
+## ✅ Standard Pattern
+
+### Component Structure
+
+```
+ComponentName/
+├── ComponentName.tsx
+├── ComponentName.module.scss
+└── ComponentName.test.tsx (optional)
+```
+
+### Import Pattern
+
+```typescript
+// ComponentName.tsx
+import styles from "./ComponentName.module.scss";
+
+const ComponentName: React.FC = () => {
+  return (
+    <div className={styles.container}>
+      <h1 className={styles.title}>Title</h1>
+    </div>
+  );
+};
+```
+
+### SCSS Module Pattern
+
+```scss
+// ComponentName.module.scss
+@use "../../styles/variables";
+@use "../../styles/colors";
+
+.container {
+  padding: var(--spacing-md);
+  background: var(--color-bg-card);
+}
+
+.title {
+  font-size: var(--fs-2xl);
+  color: var(--color-text-primary);
+}
+```
+
+## When to Use `:global()`
+
+Use `:global()` **only** for:
+
+### 1. Dynamically Inserted HTML
+
+When you insert HTML via `dangerouslySetInnerHTML`:
+
+```typescript
+// Component
+const formattedText = text.replace(
+  /(👋)/,
+  '<span class="wave-emoji">$1</span>'
+);
+
+return <div dangerouslySetInnerHTML={{ __html: formattedText }} />;
+```
+
+```scss
+// SCSS Module
+:global(.wave-emoji) {
+  display: inline-block;
+  animation: wave 2 s ease-in-out;
+}
+```
+
+### 2. Third-Party Library Elements
+
+When styling elements created by external libraries (Three.js, etc.):
+
+```scss
+// Styling Three.js canvas
+:global(canvas) {
+  pointer-events: none;
+  position: fixed;
+}
+
+:global(.earth-container) {
+  width: 100%;
+  height: 100%;
+}
+```
+
+### 3. Language-Specific Overrides
+
+When targeting `[lang]` attributes:
+
+```scss
+.greeting {
+  font-size: 2rem;
+
+  // Target Chinese language
+  [lang="zh"] & {
+    font-size: 2.5rem;
+    letter-spacing: 0.08em;
+  }
+}
+```
+
+## ❌ Anti-Patterns to Avoid
+
+### 1. Mixing Module and Global Classes
+
+```typescript
+// ❌ BAD - Redundant global class
+<section className={`${styles.container} global-container`}>
+
+// ✅ GOOD - Module class only
+<section className={styles.container}>
+```
+
+### 2. Using `@import` Instead of `@use`
+
+```scss
+// ❌ BAD - Deprecated syntax
+@import "@/styles/variables";
+@import "@/styles/colors";
+
+// ✅ GOOD - Modern syntax
+@use "@/styles/variables";
+@use "@/styles/colors";
+```
+
+### 3. Creating Separate Non-Module SCSS Files
+
+```
+// ❌ BAD
+ComponentName/
+├── ComponentName.tsx
+├── ComponentName.module.scss
+└── ComponentName.scss  // Don't do this.
+
+// ✅ GOOD
+ComponentName/
+├── ComponentName.tsx
+└── ComponentName.module.scss
+```
+
+### 4. Unnecessary `:global()` Usage
+
+```scss
+// ❌ BAD - Unnecessary global
+:global(.myComponent) {
+  padding: 1rem;
+}
+
+// ✅ GOOD - Use module class
+.myComponent {
+  padding: 1rem;
+}
+```
+
+## Global Styles Location
+
+Global styles belong in `src/styles/`:
+
+```
+src/styles/
+├── _animations.scss    # Animation utilities
+├── _breakpoints.scss   # Responsive breakpoints
+├── _cards.scss         # Card component styles
+├── _colors.scss        # Color system
+├── _forms.scss         # Form styling
+├── _layout.scss        # Layout utilities
+├── _typography.scss    # Typography styles
+├── _variables.scss     # SCSS variables
+└── index.scss          # Style imports
+```
+
+## Benefits of This Approach
+
+### 1. **Scoped Styles**
+
+- No class name collisions
+- Styles are component-specific
+- Easy to refactor and maintain
+
+### 2. **Type Safety**
+
+- TypeScript can autocomplete class names
+- Catch typos at compile time
+
+### 3. **Tree Shaking**
+
+- Unused styles are removed in production
+- Smaller bundle sizes
+
+### 4. **Clear Dependencies**
+
+- Easy to see which styles belong to which component
+- No mystery global styles
+
+## Migration Checklist
+
+When creating or updating components:
+
+- [ ] Use `.module.scss` extension
+- [ ] Import with `import styles from './Component.module.scss'`
+- [ ] Use `@use` instead of `@import`
+- [ ] Apply classes with `className={styles.className}`
+- [ ] Only use `:global()` for the three valid cases above
+- [ ] Remove any redundant global class names
+
+## Examples from Codebase
+
+### ✅ Correct Usage
+
+**Hero Component:**
+
+```typescript
+// Hero.tsx
+import styles from "./Hero.module.scss";
+
+return (
+  <section className={styles.headerContainer}>
+    <div className={styles.textContainer}>
+      <h1 className={styles.greeting}>Hello</h1>
+    </div>
+  </section>
+);
+```
+
+**ErrorBoundary Component:**
+
+```typescript
+// ErrorBoundary.tsx
+import styles from "./ErrorBoundary.module.scss";
+
+return (
+  <div className={styles.errorBoundary}>
+    <div className={styles.errorContent}>
+      <h1 className={styles.errorTitle}>Error</h1>
+    </div>
+  </div>
+);
+```
+
+### Valid `:global()` Usage
+
+**Hero Module (for dynamically inserted emoji):**
+
+```scss
+// Hero.module.scss
+:global(.wave-emoji) {
+  display: inline-block;
+  animation: wave-animation 2.5 s ease-in-out;
+}
+```
+
+**Hero Module (for Three.js canvas):**
+
+```scss
+// Hero.module.scss
+:global(canvas) {
+  pointer-events: none;
+  position: fixed;
+}
+```
+
+## Testing
+
+Verify your SCSS modules are working:
+
+```bash
+# Build should complete without warnings
+bun run build
+
+# Check for deprecation warnings
+bun run build 2>&1 | grep "Deprecation"
+
+# Should return: No deprecation warnings
+```
+
+## Summary
+
+- ✅ All components use `.module.scss`
+- ✅ Import with `import styles from './Component.module.scss'`
+- ✅ Use `@use` instead of `@import`
+- ✅ Apply classes with `className={styles.className}`
+- ✅ Use `:global()` only for dynamic HTML, third-party elements, or language attributes
+- ❌ No mixing of module and global classes
+- ❌ No separate non-module SCSS files in components
+
+This approach ensures maintainable, scalable, and collision-free styling across the entire application.

@@ -121,7 +121,7 @@ starlight-social-icons a[data-tooltip]:hover::after,
 /* -------------------------------------------------------------------------- */
 #back-to-top {
   position: fixed;
-  bottom: 2rem;
+  bottom: 6rem;
   right: 2rem;
   z-index: 100;
   width: 2.75rem;

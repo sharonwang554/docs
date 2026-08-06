@@ -1,0 +1,190 @@
+---
+title: 'Contentful Queries'
+description: 'Contentful Queries'
+---
+
+# Contentful Queries Reference
+
+This guide explains how to query data from Contentful CMS in the **svelte-raised-church** project, using the repository pattern.
+
+## Overview
+
+The project abstracts Contentful data fetching behind a `ContentRepository` interface (`src/lib/server/content-repository.ts`). This ensures the app can easily fall back to local JSON data if Contentful is unconfigured or offline.
+
+The actual Contentful queries are executed via the `contentful` npm package in `src/lib/server/contentful-adapter.ts`.
+
+**Query Flow:**
+
+```
++page.server.ts
+      ↓
+getContentRepository() 
+      ↓
+(Returns ContentfulAdapter or FallbackAdapter)
+      ↓
+contentfulClient.getEntries() (if using ContentfulAdapter)
+      ↓
+Parse/Transform
+      ↓
+Page Load
+```
+
+## Setup & Configuration
+
+Environment variables in `.env` or `.env.local`:
+
+```bash
+CONTENTFUL_SPACE_ID=your_space_id
+CONTENTFUL_ENVIRONMENT=master           # Optional, defaults to 'master'
+CONTENTFUL_ACCESS_TOKEN=your_token
+```
+
+The Contentful client is initialized in `src/lib/server/contentful.ts`.
+
+## Using the Repository (Consumer Side)
+
+When you need to fetch data in a `+page.server.ts` file, you should always use the repository pattern:
+
+### Example: Fetch All Activities
+
+```typescript
+// src/routes/[[lang]]/activities/+page.server.ts
+import { getContentRepository } from "$lib/server/content-repository";
+import type { PageServerLoad } from "./$types";
+
+export const load: PageServerLoad = async ({ params }) => {
+  const activities = await getContentRepository().fetchActivities(params.lang as "en" | "zh" | undefined);
+  return { activities };
+}
+```
+
+**What it does:**
+- Calls the factory function `getContentRepository()`.
+- If Contentful is configured, it calls the `ContentfulAdapter`, which queries the API, orders by creation date, applies the locale, and transforms the response.
+- If Contentful is unconfigured or the query fails, it calls the `FallbackAdapter`, which returns data from `src/lib/data/fallback-activities.json`.
+
+## Writing a New Query (Adapter Side)
+
+When adding a new feature, you will need to write the actual Contentful query in `src/lib/server/contentful-adapter.ts`.
+
+### Basic Query Syntax
+
+```typescript
+const entries = await contentfulClient.getEntries({
+  content_type: "sermon,"
+  limit: 10,
+  order: ["-fields.date"], // Sort by date descending
+  locale: "en-US"
+});
+```
+
+### Common Query Options
+
+| Option           | Type       | Description                               | Example                                |
+| ---------------- | ---------- | ----------------------------------------- | -------------------------------------- |
+| `content_type`   | `string`   | Filter by content type ID                 | `'sermon'`, `'activity'`               |
+| `limit`          | `number`   | Max results (1-100, default 100)          | `10`, `25`                             |
+| `skip`           | `number`   | Number of items to skip (for pagination)  | `0`, `10`, `20`                        |
+| `order`          | `string[]` | Sort fields                             | `['-fields.date']`, `['fields.title']` |
+| `locale`         | `string`   | Filter by locale                          | `'en-US'`, `'zh-Hant-TW'`              |
+| `include`        | `number`   | Depth of linked entries to include (0-10) | `2`                                    |
+
+### Example: Implementing `fetchSermons` in ContentfulAdapter
+
+```typescript
+async fetchSermons(lang: Language | undefined): Promise<Sermon[]> {
+  return this.withFallback(
+    "sermon,"
+    lang,
+    async () => {
+      const entries = await contentfulClient.getEntries({
+        content_type: "sermon,"
+        order: ["-fields.date"],
+        limit: 100,
+        locale: getLocale(lang),
+      });
+
+      return entries.items.map((item) => {
+        const fields = (item as any).fields as ContentfulSermon["fields"];
+        return {
+          title: fields.title,
+          speaker: fields.speaker,
+          date: fields.date,
+          videoId: fields.youtubeID,
+          slideUrl: getAssetUrl(fields.slideFile),
+          newsletterUrl: getAssetUrl(fields.newsletterFile),
+        };
+      });
+    },
+    async () => fallbackSermons as Sermon[]
+  );
+}
+```
+
+Notice the use of `this.withFallback(...)`. This is a protected method in the `ContentfulAdapter` class that handles the try-catch block, logs any errors using `logger.contentfulError`, and automatically returns the fallback data if an error occurs.
+
+### Extract Asset URL
+
+Contentful asset URLs are protocol-relative. Use the `getAssetUrl` helper in `contentful-adapter.ts`:
+
+```typescript
+function getAssetUrl(asset: any): string | null {
+  return asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null;
+}
+```
+
+## Available Fetch Methods
+
+All methods are defined in the `ContentRepository` interface (`src/lib/server/content-repository.ts`):
+
+| Method                         | Returns                                      | Description                         |
+| ------------------------------ | -------------------------------------------- | ----------------------------------- |
+| `fetchActivities(lang)`        | `Activity[]`                                 | Church activities                   |
+| `fetchSermons(lang)`           | `Sermon[]`                                   | Sunday messages/sermons             |
+| `fetchSharings(lang)`          | `Sharing[]`                                  | Member testimonies                  |
+| `fetchGatheringTimes(lang)`    | `GatheringTime[]`                            | Service times                       |
+| `fetchChurchNews(lang)`        | `ChurchNewsItem[]`                           | Events & announcements              |
+| `fetchHomePage(lang)`          | `{ heroSlides, gatheringTimes, newsBanner, churchNews, hasEvents }` | Home page data                      |
+| `fetchPageHero(pageId, lang)`  | `PageHero \| null`                           | Page hero banner data               |
+| `fetchAboutPage(lang)`         | `AboutPage`                                  | About page with history & pastors   |
+| `fetchOfferingPage(lang)`      | `OfferingPage`                               | Donation info                       |
+| `fetchTrainingResources(lang)` | `TrainingResource[]`                         | Training/learning links             |
+| `fetchSiteInfo(lang)`          | `SiteInfo`                                   | Contact info, address, social media |
+
+## Common Issues & Fixes
+
+### Issue: Query Returns Empty
+
+**Symptom:** `entries.items` is empty even though content exists in Contentful
+
+**Causes:**
+1. Locale doesn't match - Contentful has content in `en-US`, you're querying `zh-Hant-TW`
+2. Wrong `content_type` ID
+3. Content is in draft (need published entries)
+
+### Issue: Assets Not Loading (Broken Images)
+
+**Symptom:** Images show 404 or broken image icon
+
+**Causes:**
+1. Missing `https:` prefix on asset URL. Use the `getAssetUrl` helper.
+2. Asset deleted from Contentful
+
+### Issue: Slow Queries
+
+**Symptom:** Pages take long to load
+
+**Causes:**
+1. Fetching too much data (`limit` not set)
+2. Including too many nested levels (`include: 10`)
+
+**Fix:**
+- Set reasonable `limit` (10-25)
+- Use `include: 1` or `include: 2` only
+
+## Next Steps
+
+- See `docs/TYPES.md` for type definitions
+- See `docs/INTERNATIONALIZATION.md` for language handling
+- See `docs/CONTENTFUL_SETUP.md` for environment setup
+- See `docs/ARCHITECTURE.md` for data flow diagram

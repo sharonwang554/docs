@@ -1,0 +1,114 @@
+---
+title: 'Component Showcase'
+description: 'Test page for custom API documentation components and theme system.'
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+import HttpBadge from '../../../components/HttpBadge.astro';
+import ResponseTabs from '../../../components/ResponseTabs.astro';
+import PropertyTable from '../../../components/PropertyTable.astro';
+import ApiEndpoint from '../../../components/ApiEndpoint.astro';
+
+<Aside type="note" title="Component Test Page">
+  This page demonstrates all custom API documentation components. It serves as a visual regression test—if this page builds and renders correctly, all components are functional.
+</Aside>
+
+## HTTP Method Badges
+
+<HttpBadge method="GET" path="/api/v1/users" />
+
+<HttpBadge method="POST" path="/api/v1/users" />
+
+<HttpBadge method="PUT" path="/api/v1/users/:id" />
+
+<HttpBadge method="PATCH" path="/api/v1/users/:id/settings" />
+
+<HttpBadge method="DELETE" path="/api/v1/users/:id" />
+
+---
+
+## Response Tabs
+
+<ResponseTabs tabs={[{ status: 200 }, { status: 401 }]}>
+  <Fragment slot="200">
+    ```json
+    {
+      "success": true,
+      "data": {
+        "id": "usr_1a2b3c4d,"
+        "email": "developer@example.com,"
+        "role": "admin"
+      }
+    }
+    ```
+  </Fragment>
+  <Fragment slot="401">
+    ```json
+    {
+      "code": "UNAUTHORIZED,"
+      "message": "Invalid or expired access token.,"
+      "traceId": "req_abc123"
+    }
+    ```
+  </Fragment>
+</ResponseTabs>
+
+---
+
+## Property Table
+
+<PropertyTable params={[
+  { name: 'locale', type: 'string', required: true, description: 'User interface localization preference. Supported: en, zh-TW, ja.' },
+  { name: 'quality', type: 'enum', required: true, description: '"ultra" | "balanced" | "performance"—WebGL rendering tier.' },
+  { name: 'gpuTelemetry', type: 'object', required: false, description: 'Client GPU capability telemetry for adaptive rendering.' },
+  { name: 'gpuTelemetry.fpsAverage', type: 'number', required: false, description: 'Average FPS over last 60 frames. Range: 1–240.' },
+  { name: 'gpuTelemetry.renderer', type: 'string', required: false, description: 'WebGL renderer identifier string.' },
+]} />
+
+---
+
+## Full API Endpoint
+
+<ApiEndpoint method="POST" path="/api/webhooks/contentful" auth="HMAC-SHA256">
+
+  This endpoint triggers On-Demand Incremental Static Regeneration (ISR) in Next.js when Contentful publishes, updates, or unpublishes content entries.
+
+  ### Request Headers
+
+  <PropertyTable params={[
+    { name: 'Content-Type', type: 'string', required: true, description: 'Must be application/json' },
+    { name: 'X-Contentful-Topic', type: 'string', required: true, description: 'Lifecycle event (for example, ``ContentManagement.Entry.publish``)' },
+    { name: 'X-Raised-Signature', type: 'string', required: true, description: 'HMAC-SHA256 digest of raw request body' },
+  ]} />
+
+  ### Responses
+
+  <ResponseTabs tabs={[{ status: 200, label: 'Revalidated' }, { status: 401, label: 'Invalid Signature' }]}>
+    <Fragment slot="200">
+      ```json
+      {
+        "revalidated": true,
+        "revalidatedRoutes": ["/sermons," "/sermons/walking-in-resurrection-power"],
+        "contentType": "sermon,"
+        "entryId": "3sV9xK2mL1pQ8wR7tY6uI5"
+      }
+      ```
+    </Fragment>
+    <Fragment slot="401">
+      ```json
+      {
+        "code": "INVALID_SIGNATURE,"
+        "message": "HMAC-SHA256 signature verification failed.,"
+        "traceId": "req_9x8y7z"
+      }
+      ```
+    </Fragment>
+  </ResponseTabs>
+
+</ApiEndpoint>
+
+---
+
+## Theme System
+
+The accent theme picker is available in the header bar. Try switching between **Indigo**, **Emerald**, **Violet**, **Rose**, **Blue**, and **Amber** themes. The selection persists across page navigations via `localStorage`.

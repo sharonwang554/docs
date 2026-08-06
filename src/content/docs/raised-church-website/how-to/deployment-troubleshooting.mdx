@@ -1,0 +1,642 @@
+---
+title: 'Deployment Troubleshooting'
+description: 'Deployment Troubleshooting'
+---
+
+# Deployment & Production Troubleshooting Guide
+
+This guide covers deploying **svelte-raised-church** to production on Vercel and troubleshooting issues that occur in the production environment.
+
+## Deployment Overview
+
+The project is deployed on **Vercel** with:
+- **Runtime:** Node.js 24.x
+- **Build command:** `npm run build`
+- **Adapter:** `@sveltejs/adapter-vercel`
+- **Environment:** Automatic preview deployments for PRs, production for main branch
+
+## Pre-Deployment Checklist
+
+Before deploying to production:
+
+### 1. Run Local Type Check
+
+```bash
+npm run check
+```
+
+**What it does:**
+- Validates all TypeScript
+- Checks Svelte component types
+- Reports any errors
+
+**Fix:** Resolve all type errors before deploying.
+
+### 2. Build Locally
+
+```bash
+npm run build
+```
+
+**Expected output:**
+```
+$ vite build
+vite v7.3.1 building for production...
+✓ 456 modules transformed.
+dist/client built in 2.34 s
+dist/server built in 0.45 s
+```
+
+**If build fails:**
+- Check error message (usually TypeScript or import issues)
+- See "Common Build Failures" section below
+
+### 3. Preview Build Locally
+
+```bash
+npm run preview
+```
+
+Visit `http://localhost:4173` and test:
+- Home page loads
+- Navigation works
+- Language switcher works (`/` → `/en/`)
+- Contact form appears (but don't submit, uses production API key)
+
+### 4. Check Environment Variables
+
+Verify all required variables are in `.env` (local) or Vercel dashboard:
+
+```bash
+CONTENTFUL_SPACE_ID=<your-space-id>
+CONTENTFUL_ACCESS_TOKEN=<your-api-token>
+CONTENTFUL_ENVIRONMENT=master
+```
+
+**Verify in Vercel:**
+1. Go to Vercel dashboard
+2. Select project: `svelte-raised-church`
+3. Settings → Environment Variables
+4. Confirm all three variables are set
+
+### 5. Test Contentful Connection
+
+In `+page.server.ts`, temporarily log configuration status:
+
+```typescript
+import { isContentfulConfigured } from '$lib/server/contentful';
+
+export async function load() {
+  console.log('Contentful configured:', isContentfulConfigured);
+  // ...
+}
+```
+
+In logs, should see: `Contentful configured: true`
+
+If `false`, environment variables not set in Vercel.
+
+## Deployment Process
+
+### Option 1: Deploy from Vercel CLI
+
+```bash
+npm run deploy
+```
+
+This runs `vercel --prod` which:
+1. Builds the project
+2. Uploads to Vercel
+3. Runs build on Vercel servers
+4. Deploys to production
+5. Shows deployment URL
+
+### Option 2: Deploy from Git
+
+Push to the main branch:
+
+```bash
+git add .
+git commit -m "Ready for production"
+git push origin main
+```
+
+Vercel automatically:
+1. Detects push to main
+2. Runs build
+3. Deploys to production
+
+**Note:** Preview deployments are created for PRs automatically.
+
+## Vercel Dashboard Navigation
+
+### View Deployment Status
+
+1. Go to https://vercel.com/dashboard
+2. Click project: **svelte-raised-church**
+3. View recent deployments with:
+   - Status (Building, Ready, Error)
+   - Duration
+   - Commit message
+   - Deploy time
+
+### View Logs
+
+1. Click on a deployment
+2. Select **Logs** tab
+3. View build output or runtime logs
+
+**Build logs:** Show compilation errors, type errors, missing dependencies
+
+**Runtime logs:** Show errors from production (see below)
+
+### View Environment Variables
+
+1. Settings → Environment Variables
+2. Verify all three Contentful variables present
+3. Edit or add new variables
+4. Changes take effect on next deployment
+
+## Common Production Issues
+
+### Issue 1: Build Fails - "Cannot find module"
+
+**Symptom:** Build log shows:
+```
+error: Cannot find module '$lib/types/contentful'
+```
+
+**Causes:**
+1. Incorrect import path (check casing)
+2. File doesn't exist
+3. Typo in import statement
+
+**Debug:**
+```bash
+# Locally, verify build works
+npm run build
+
+# Check specific imports
+grep -r "import.*types/contentful" src/
+```
+
+**Fix:**
+1. Verify file exists: `src/lib/types/contentful.ts`
+2. Check import path matches exactly
+3. Commit fix and redeploy
+
+### Issue 2: Build Fails - TypeScript Error
+
+**Symptom:** Build log shows:
+```
+error TS1234: Type 'Activity' does not have property 'invalid'
+```
+
+**Debug:**
+```bash
+npm run check
+```
+
+**Fix:** Resolve the type error locally and redeploy.
+
+### Issue 3: Contentful Not Loading - Shows Fallback Data
+
+**Symptom:**
+- Page loads but shows outdated fallback data
+- No recent activities/sermons/etc. from Contentful
+
+**Causes:**
+1. Contentful environment variables not set in Vercel
+2. API token has expired or been revoked
+3. Contentful API is down
+
+**Debug:**
+1. Check Vercel logs: Look for `Contentful configured: false` or error messages
+2. Verify environment variables in Vercel dashboard
+3. Check Contentful status at https://www.contentful.com/status/
+
+**Fix:**
+1. If env vars missing: Add them in Vercel Settings
+2. If token expired: Generate new token in Contentful → Settings → API Keys
+3. Update in Vercel and redeploy
+
+### Issue 4: 404 Error on Subpage
+
+**Symptom:** Visit `/about` → 404 Not Found
+
+**Causes:**
+1. Route file deleted or missing
+2. File structure broken
+3. SvelteKit cache issue
+
+**Debug:**
+```bash
+# Check routes exist locally
+ls src/routes/[[lang]]/about/
+
+# Build and preview locally
+npm run build
+npm run preview
+# Visit http://localhost:4173/about
+```
+
+**Fix:**
+1. Verify `src/routes/[[lang]]/about/+page.svelte` exists
+2. Check for syntax errors
+3. Run `npm run check` to validate
+4. Commit and redeploy
+
+### Issue 5: Styles Not Loading - Unstyled Page
+
+**Symptom:** Page loads but CSS is missing (looks broken)
+
+**Causes:**
+1. SCSS import error in component
+2. Shared styles import broken
+3. Global styles not loaded
+
+**Debug:**
+1. Check browser DevTools → Network tab → Look for 404 CSS files
+2. Check Vercel build log for SCSS compilation errors
+3. Test locally: `npm run preview`
+
+**Fix:**
+```typescript
+// Common issue: Wrong path for shared styles
+// ❌ Wrong
+@import '$lib/styles/shared';
+
+// ✅ Correct (in Svelte component with lang="scss")
+<style lang="scss">
+  @use '$lib/styles/shared' as *;
+  // your styles
+</style>
+```
+
+Redeploy after fix.
+
+### Issue 6: Images Broken - 404 on Contentful Assets
+
+**Symptom:** Images show as broken with 404 errors
+
+**Causes:**
+1. Missing `https:` prefix on asset URL (protocol-relative URL not working)
+2. Contentful asset deleted
+3. Image URL wrong
+
+**Debug:**
+1. Browser DevTools → Network tab → Find broken image URL
+2. Try copying URL to address bar (might need to add `https:`)
+
+**Fix:** In `contentful-adapter.ts`, verify asset handling:
+```typescript
+function getAssetUrl(asset: any): string | null {
+  return asset?.fields?.file?.url ? `https:${asset.fields.file.url}` : null;  // Note: https:
+}
+```
+
+Ensure `https:` is being prepended.
+
+### Issue 7: Contact Form Not Working
+
+**Symptom:** Click "Send Message" → Nothing happens or error
+
+**Causes:**
+1. Web3Forms API key not set or wrong
+2. Network error
+3. CORS issue
+
+**Debug:**
+1. Browser DevTools → Network tab → Find POST request
+2. Check response status and body
+3. Check browser console for errors
+
+**Fix:**
+1. Verify Web3Forms integration in `src/lib/components/ContactForm.svelte`
+2. Check form action is pointing to correct endpoint
+3. Test locally: `npm run dev`
+
+### Issue 8: Language Switcher Not Working
+
+**Symptom:** Click English link → Still shows Chinese
+
+**Causes:**
+1. Wrong navigation URL
+2. Route parameter not being passed
+3. Translation not loading
+
+**Debug:**
+1. Click link, check URL changes
+2. Check console for errors
+
+**Fix:** Verify Navbar component (see `docs/COMPONENTS.md`):
+```svelte
+<!-- ✅ Correct links -->
+<a href="/">中文</a>
+<a href="/en/">English</a>
+```
+
+### Issue 9: Random Runtime Error in Production
+
+**Symptom:** Page works sometimes, fails randomly; errors appear in logs
+
+**Causes:**
+1. Race condition (async timing issue)
+2. Null pointer from missing Contentful data
+3. Environment variable issues
+
+**Debug:**
+1. Check Vercel logs for full error stack
+2. Look for pattern (specific page? specific user?)
+3. Check Contentful API status
+
+**Fix:**
+1. Add null checks:
+   ```typescript
+   if (!data) return fallbackData;
+   if (!data.activities) return [];
+   ```
+2. Add error boundaries to components
+3. Verify Contentful configuration
+
+### Issue 10: Slow Page Load
+
+**Symptom:** Page takes 10+ seconds to load
+
+**Causes:**
+1. Contentful API slow (network latency)
+2. Too many data fetches
+3. Large unoptimized images
+
+**Debug:**
+1. Check Vercel analytics: Vercel dashboard → Analytics
+2. Check Network tab in browser: See which requests are slow
+3. Check Contentful API response time
+
+**Fix:**
+1. Reduce number of queries (combine if possible)
+2. Optimize images (use WebP, compress)
+3. Add caching to data fetches (see `docs/CONTENTFUL_QUERIES.md`)
+4. Consider CDN for static assets
+
+## Production Monitoring
+
+### View Errors & Logs
+
+**Vercel Logs:**
+1. Dashboard → Select project
+2. Pick a deployment from list
+3. Click **Logs** tab
+4. View real-time or historical logs
+
+**Filtering logs:**
+```
+- Errors only: Filter for "ERROR"
+- Contentful issues: Filter for "Contentful"
+- Build issues: View "Build Logs" section
+```
+
+### View Metrics
+
+**Vercel Analytics:**
+1. Dashboard → Select project
+2. Click **Analytics** tab
+3. View:
+   - Page load time
+   - Core Web Vitals (LCP, FID, CLS)
+   - Response time by endpoint
+
+### Monitor Contentful
+
+**Contentful Dashboard:**
+1. https://app.contentful.com
+2. Select space
+3. Analytics tab shows:
+   - API calls/requests
+   - Errors
+   - Performance
+
+**What to monitor:**
+- Unusual spike in errors
+- API rate limit warnings
+- Slow response times
+
+## Debugging Production Issues
+
+### Step 1: Check Recent Changes
+
+```bash
+git log --oneline -10
+```
+
+Has something been deployed recently that might cause issues?
+
+### Step 2: Check Vercel Logs
+
+In Vercel dashboard:
+1. Find most recent deployment
+2. Click **Logs**
+3. Look for error patterns
+
+### Step 3: Test Locally with Same Environment
+
+```bash
+# Build exactly like production
+npm run build
+
+# Preview exactly like production
+npm run preview
+```
+
+If it works locally but fails in production, issue is environment-specific (for example, env vars).
+
+### Step 4: Check Environment Variables
+
+In Vercel dashboard → Settings → Environment Variables:
+1. Is `CONTENTFUL_SPACE_ID` set?
+2. Is `CONTENTFUL_ACCESS_TOKEN` set?
+3. Are values correct?
+
+### Step 5: Rollback if Necessary
+
+If a recent deployment broke production:
+
+**Option A: Redeploy Previous Version**
+1. Go to Vercel dashboard
+2. Find previous deployment (before the broken one)
+3. Click **...** menu
+4. Select **Promote to Production**
+
+**Option B: Rollback via Git**
+```bash
+# See recent commits
+git log --oneline -5
+
+# Revert to previous commit
+git revert <commit-hash>
+
+# Push to deploy
+git push origin main
+```
+
+**Note:** Rollback should be last resort. Better to fix the issue and deploy a fix.
+
+## Monitoring and Alerts
+
+### Set Up Email Notifications
+
+1. Vercel dashboard
+2. Project Settings → Git
+3. Enable notifications for:
+   - Build failures
+   - Production issues
+   - Deployment errors
+
+### Set Up Custom Metrics
+
+1. Use Vercel Analytics (see above)
+2. Monitor Core Web Vitals
+3. Set up alerts if metrics degrade
+
+### Contentful Webhook (Optional)
+
+Set up webhook to trigger rebuild when content changes:
+1. Contentful dashboard → Settings → Webhooks
+2. Create webhook pointing to Vercel
+3. On content publish, automatically rebuild/redeploy
+
+**This enables:** Content changes immediately appear in production (no manual redeploy)
+
+## Production Deployment Checklist
+
+Use before each production deployment:
+
+- [ ] Run `npm run check` - all types valid
+- [ ] Run `npm run build` - builds without errors
+- [ ] Run `npm run preview` - preview works locally
+- [ ] Test language switcher (/ ↔ /en/)
+- [ ] Test contact form
+- [ ] Verify Contentful data loading
+- [ ] Check all environment variables in Vercel
+- [ ] Review recent commits
+- [ ] Commit changes to git
+- [ ] Push to main branch (or run `npm run deploy`)
+- [ ] Check Vercel deployment status
+- [ ] Verify production site loads
+- [ ] Verify no new errors in Vercel logs
+
+## Health Check Script (Optional)
+
+Create a simple health check to monitor key functionality:
+
+```typescript
+// src/routes/api/health.ts
+import { json } from '@sveltejs/kit';
+import { isContentfulConfigured } from '$lib/server/contentful';
+
+export async function GET() {
+  return json({
+    status: 'ok',
+    contentful: isContentfulConfigured,
+    timestamp: new Date().toISOString(),
+  });
+}
+```
+
+Visit https://your-domain.vercel.app/api/health to check status.
+
+## Performance Optimization for Production
+
+### Enable Gzip Compression
+
+Vercel does this automatically.
+
+### Optimize Images
+
+Use next-gen formats:
+```html
+<!-- Use WebP with fallback -->
+<picture>
+  <source srcset="image.webp" type="image/webp" />
+  <img src="image.jpg" alt="..." />
+</picture>
+```
+
+### Lazy Load Off-Screen Images
+
+```html
+<img src="..." loading="lazy" alt="..." />
+```
+
+### Cache Headers
+
+Vercel sets reasonable defaults. For custom caching:
+```typescript
+// +page.server.ts
+export const config = {
+  cache: {
+    maxage: 3600,  // Cache for 1 hour
+  }
+};
+```
+
+## Disaster Recovery
+
+### Lost Source Code
+
+If main branch is accidentally corrupted:
+```bash
+# Restore from git history
+git reflog
+git checkout <previous-state>
+git push origin main --force  # ⚠️ Use with caution
+```
+
+### Data Loss in Contentful
+
+Contentful has version history:
+1. Go to entry in Contentful
+2. Click **Versioning** tab (usually on right)
+3. Select previous version
+4. Revert if needed
+
+### Broken Production Deployment
+
+If production is completely down:
+1. Check Vercel status page
+2. Check Contentful status
+3. Verify environment variables
+4. Redeploy previous working version (see "Rollback" above)
+5. If still broken, contact support
+
+## Support & Resources
+
+### Vercel Support
+
+- Docs: https://vercel.com/docs
+- Status: https://www.vercel-status.com
+- Contact: support@vercel.com
+
+### SvelteKit Docs
+
+- Docs: https://kit.svelte.dev
+- Adapter Vercel: https://kit.svelte.dev/docs/adapter-vercel
+
+### Contentful Support
+
+- Status: https://www.contentful.com/status
+- Docs: https://www.contentful.com/developers/documentation/
+- Contact: support@contentful.com
+
+### Church Team
+
+For deployment questions:
+- Check git log for recent changes
+- Ask team member who made recent changes
+- Check Contentful for recent content updates
+
+## Next Steps
+
+- See `docs/ARCHITECTURE.md` for technical overview
+- See `docs/DEBUGGING.md` for local development debugging
+- See `docs/CONTENTFUL_QUERIES.md` for data fetching issues

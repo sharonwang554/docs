@@ -1,0 +1,59 @@
+---
+interface Props {
+  tabs: Array<{ status: number; label?: string }>;
+}
+const { tabs } = Astro.props;
+
+const defaultLabels: Record<number, string> = {
+  200: 'Success', 201: 'Created', 204: 'No Content',
+  400: 'Bad Request', 401: 'Unauthorized', 403: 'Forbidden', 404: 'Not Found',
+  429: 'Rate Limited', 500: 'Server Error', 502: 'Bad Gateway', 503: 'Service Unavailable'
+};
+
+function getStatusClass(status: number): string {
+  if (status >= 200 && status < 300) return 'api-response-tab--2xx';
+  if (status >= 400 && status < 500) return 'api-response-tab--4xx';
+  if (status >= 500) return 'api-response-tab--5xx';
+  return '';
+}
+---
+<div class="not-content api-response-tabs" data-response-tabs>
+  <div class="api-response-tabs__header">
+    {tabs.map((tab, i) => (
+      <button
+        class={`api-response-tab ${getStatusClass(tab.status)} ${i === 0 ? 'api-response-tab--active' : ''}`}
+        data-tab-index={i}
+        data-status={tab.status}
+        type="button"
+      >
+        <span class="api-response-tab__code">{tab.status}</span>
+        <span class="api-response-tab__label">{tab.label || defaultLabels[tab.status] || `Status ${tab.status}`}</span>
+      </button>
+    ))}
+  </div>
+  {tabs.map((tab, i) => (
+    <div
+      class={`api-response-panel ${i === 0 ? 'api-response-panel--active' : ''}`}
+      data-panel-index={i}
+    >
+      <slot name={String(tab.status)} />
+    </div>
+  ))}
+</div>
+
+<script>
+  document.querySelectorAll('[data-response-tabs]').forEach((container) => {
+    const tabs = container.querySelectorAll('.api-response-tab');
+    const panels = container.querySelectorAll('.api-response-panel');
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const index = tab.getAttribute('data-tab-index');
+        tabs.forEach(t => t.classList.remove('api-response-tab--active'));
+        panels.forEach(p => p.classList.remove('api-response-panel--active'));
+        tab.classList.add('api-response-tab--active');
+        const panel = container.querySelector(`[data-panel-index="${index}"]`);
+        if (panel) panel.classList.add('api-response-panel--active');
+      });
+    });
+  });
+</script>

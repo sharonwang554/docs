@@ -1,0 +1,106 @@
+---
+title: 'Deploying a New Church Site'
+description: 'Step-by-step tutorial for defining a new church profile and deploying it to Vercel.'
+---
+
+import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Welcome to the Multi-Church deployment tutorial. The `svelte-raised-church` platform supports deploying customized variants for multiple churches from a single codebase.
+
+In this tutorial, you will learn how to create a new church profile configuration, define a custom ministry page, and configure the site for deployment.
+
+---
+
+## Prerequisites
+
+- Local SvelteKit development environment configured.
+- Access to the `sites/` configuration directory.
+
+## Step-by-Step Configuration
+
+<Steps>
+
+1. **Create the Church Profile**
+
+   Navigate to the `sites/` directory and create a new TypeScript configuration file for the new church (for example, `grace-church.config.ts`).
+
+   ```bash
+   touch sites/grace-church.config.ts
+   ```
+
+2. **Define the Core Identity**
+
+   Export a new configuration object that satisfies the `SiteTemplateConfig` schema. Set the bilingual identity, domain routing, and theming.
+
+   ```ts
+   // sites/grace-church.config.ts
+   import type { SiteTemplateConfig } from "$lib/types/site-config";
+
+   export const graceChurchConfig: SiteTemplateConfig = {
+     id: "grace-church,"
+     domains: ["gracechurch.org," "localhost"],
+     nameZh: "恩典教會,"
+     nameEn: "Grace Church,"
+     theme: {
+       colors: {
+         primary: "#4F46E5,"
+       }
+     }
+   };
+   ```
+
+3. **Register the Profile**
+
+   To make the application aware of the new profile, register it in the main `sites/index.ts` registry.
+
+   ```ts
+   // sites/index.ts
+   import { graceChurchConfig } from './grace-church.config';
+   
+   export const siteProfiles = {
+     "grace-church": graceChurchConfig,
+     // ... other profiles
+   };
+   ```
+
+4. **Spin Up a Custom Ministry Page**
+
+   You can dynamically define standalone pages directly in the configuration. Add a `customPages` array to your profile using the `defineCustomPage` helper.
+
+   ```ts
+   import { defineCustomPage, defineSection } from "$lib/config/site";
+
+   // Inside graceChurchConfig:
+   customPages: [
+     defineCustomPage({
+       slug: "food-bank,"
+       titleZh: "愛心食物銀行,"
+       titleEn: "Food Bank Ministry,"
+       showInNav: true,
+       navGroup: "churchLife,"
+       sections: [
+         defineSection({
+           id: "intro,"
+           type: "text,"
+           contentEn: "Our Food Bank distributes essential supplies every month.,"
+         }),
+       ],
+     }),
+   ],
+   ```
+
+5. **Test the Deployment Locally**
+
+   Run the local development server, overriding the `PUBLIC_SITE_ID` environment variable to preview the specific profile:
+
+   ```bash
+   PUBLIC_SITE_ID="grace-church" pnpm run dev
+   ```
+   
+   Navigate to `http://localhost:5173` to see your new church theme, and `http://localhost:5173/p/food-bank` to verify the custom ministry page.
+
+</Steps>
+
+<Aside type="tip" title="Deployment Strategy">
+Because the `hooks.server.ts` resolves the site profile dynamically based on the incoming `hostname`, you can simply attach your new custom domain (for example, `gracechurch.org`) to your existing Vercel project without duplicating infrastructure.
+</Aside>

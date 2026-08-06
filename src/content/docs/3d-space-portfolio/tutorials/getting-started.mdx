@@ -1,0 +1,72 @@
+---
+title: 'Getting Started'
+description: 'Step-by-step tutorial for initializing the 3D Space Portfolio locally and rendering your first 3D scene.'
+---
+
+import { Steps, Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+Welcome to the 3D Space Portfolio developer onboarding tutorial. This guide is designed for frontend developers and technical contributors who need to build, run, and modify the Three.js-based 3D environment locally. 
+
+By the end of this tutorial, you will have the development server running, understand the core project structure, and know how to verify the WebGL rendering pipeline.
+
+---
+
+## Prerequisites
+
+Before beginning, ensure your local development environment meets the following requirements:
+
+- **Node.js**: `v18.0.0` or higher.
+- **Package Manager**: `bun` (preferred) or `yarn`.
+- **Browser**: A modern browser with WebGL 2.0 support enabled (Chrome, Firefox, Safari).
+
+## Step-by-Step Initialization
+
+<Steps>
+
+1. **Clone the Repository**
+
+   Clone the source code to your local machine and navigate into the workspace directory:
+
+   ```bash
+   git clone https://github.com/sharonwang554/3d-space-portfolio.git
+   cd 3d-space-portfolio
+   ```
+
+2. **Install Dependencies**
+
+   We use `bun` for fast dependency resolution. This will install React, Three.js, React Three Fiber, and our Zustand state management libraries.
+
+   ```bash
+   bun install
+   ```
+
+3. **Start the Development Server**
+
+   Initialize the Vite development server with Hot Module Replacement (HMR) enabled:
+
+   ```bash
+   bun run dev
+   ```
+
+4. **Verify the Render Pipeline**
+
+   Open your browser and navigate to `http://localhost:5173`. 
+   
+   You should immediately see:
+   - A dark space background with a dynamic starfield.
+   - A 3D Earth model rotating on its axis.
+   - The UI overlay rendering correctly in English or Chinese.
+
+</Steps>
+
+## Troubleshooting Your Setup
+
+If the 3D canvas fails to load or the Earth model is missing textures, check the following:
+
+- **WebGL Support**: Verify that hardware acceleration is enabled in your browser settings.
+- **Asset Loading**: Open the Chrome DevTools (`F12`) Network tab and ensure `8k_earth_daymap.jpg` is loading with a `200 OK` status.
+- **Port Conflicts**: If port `5173` is in use, Vite will automatically try the next available port. Check your terminal output for the correct URL.
+
+<Aside type="tip" title="Next Steps">
+Now that your local environment is running, proceed to the [Project Structure & Architecture](../explanation/project-structure) guide to understand how the React components interface with the Three.js canvas.
+</Aside>

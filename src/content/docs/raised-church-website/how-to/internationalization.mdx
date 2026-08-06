@@ -1,0 +1,525 @@
+---
+title: 'Internationalization'
+description: 'Internationalization'
+---
+
+# Internationalization (i18n) Guide
+
+This guide explains how to implement bilingual (Traditional Chinese / English) support in the **svelte-raised-church** project.
+
+## Overview
+
+The application supports two languages:
+- **Chinese (Traditional)**: Default language, URL routes as `/` (for example, `/about`)
+- **English**: URL routes as `/en/...` (for example, `/en/about`)
+
+The i18n system is implemented in `src/lib/i18n/index.ts` and consists of:
+1. **Translation dictionary** - Nested object with all UI strings
+2. **Helper functions** - `getTranslation()`, `interpolate()`, `formatDate()`, etc.
+3. **Route parameter detection** - Automatic language detection from URL
+4. **Type safety** - Full TypeScript support for all translation keys
+
+## File Structure
+
+```
+src/lib/i18n/
+├── index.ts                    # Main i18n module with translations + helpers
+src/lib/data/
+├── fallback-*.json             # Fallback JSON for content pages
+src/routes/
+├── [[lang]]/                   # Language-parameterized routes
+│   ├── +layout.svelte          # Detects lang from params
+│   ├── [page].svelte           # Page layout
+│   └── about/
+│       └── +page.svelte        # Bilingual page
+```
+
+See `docs/ARCHITECTURE.md` for complete route structure.
+
+## Translation Dictionary Structure
+
+The translations object is organized hierarchically:
+
+```typescript
+export const translations = {
+  zh: {
+    nav: {                        // Navigation menu
+      home: "首頁,"
+      about: "認識復活堂,"
+      messages: "主日講道,"
+    },
+    pages: {                      // Page-specific strings
+      activities: {
+        title: "教會活動,"
+        subtitle: "參與我們的各項活動,"
+      },
+      messages: {
+        speaker: "講員,"
+        date: "日期,"
+      },
+    },
+    common: {                     // Shared strings
+      loading: "載入中...,"
+      error: "發生錯誤,"
+    },
+    footer: {                     // Footer content
+      title: "左營復活堂,"
+      copyright: "© {year} 左營復活堂 Raised Church. All rights reserved.,"
+    },
+  },
+  en: {
+    // ... English translations follow same structure
+  }
+}
+```
+
+**Structure Guidelines:**
+- Top level: Language code (`zh`, `en`)
+- Second level: Feature area (`nav`, `pages`, `common`, `footer`, `home`)
+- Third level+: Specific keys organized logically
+
+## Helper Functions
+
+### 1. `getTranslation(lang: Language): TranslationDict`
+
+Get the full translation object for a language.
+
+```typescript
+import { getTranslation } from '$lib/i18n';
+
+// In a +page.server.ts load function:
+export async function load({ params }) {
+  const lang = params.lang === 'en' ? 'en' : 'zh';
+  const t = getTranslation(lang);
+  
+  return {
+    title: t.pages.about.title,
+    subtitle: t.pages.about.subtitle,
+  };
+}
+```
+
+**Usage:** When you need the entire translation object or multiple keys.
+
+### 2. `getLangFromParams(params: Record<string, string>): Language`
+
+Extract language code from route parameters safely.
+
+```typescript
+import { getLangFromParams } from '$lib/i18n';
+
+export async function load({ params }) {
+  const lang = getLangFromParams(params);  // Returns 'en' or 'zh'
+  // ...
+}
+```
+
+**Usage:** In `+page.server.ts` load functions to detect active language from URL.
+
+**Why use this?** Handles edge cases where `params.lang` might be undefined (for default route `/`).
+
+### 3. `interpolate(template: string, variables: Record<string, string | number>): string`
+
+Replace placeholders in translation strings with dynamic values.
+
+```typescript
+import { interpolate } from '$lib/i18n';
+
+const t = getTranslation('zh');
+const message = interpolate(t.footer.copyright, { year: 2025 });
+// Result: "© 2025 左營復活堂 Raised Church. All rights reserved."
+```
+
+**Template syntax:** Use `{variableName}` for placeholders.
+
+**Usage:** For strings with dynamic content (dates, years, names, counts).
+
+### 4. `getNestedTranslation(translations: TranslationDict, path: string): string`
+
+Safely get translation values using dot notation path.
+
+```typescript
+import { getNestedTranslation, getTranslation } from '$lib/i18n';
+
+const t = getTranslation('en');
+const title = getNestedTranslation(t, 'pages.activities.title');
+// Result: "Church Activities"
+
+// Handles missing keys gracefully - returns the path if key doesn't exist
+const missing = getNestedTranslation(t, 'nonexistent.key');
+// Result: "nonexistent.key"
+```
+
+**Usage:** When you have a dynamic string key path (for example, from API response).
+
+### 5. `formatDate(dateString: string, lang: Language): string`
+
+Format dates according to language locale.
+
+```typescript
+import { formatDate } from '$lib/i18n';
+
+const zhDate = formatDate('2025-03-08', 'zh');
+// Result: "2025年3月8日"
+
+const enDate = formatDate('2025-03-08', 'en');
+// Result: "March 8, 2025"
+```
+
+**Features:**
+- Respects language-specific date formatting (month names, separators)
+- Uses browser's `Intl.DateTimeFormat` for accuracy
+- Safe: handles invalid dates gracefully
+
+**Usage:** When displaying dates fetched from Contentful or APIs.
+
+### 6. `getBilingualContent<T>(content: { zh?: T; en?: T } | undefined, lang: Language, fallback: T): T`
+
+Extract language-specific content from bilingual objects.
+
+```typescript
+import { getBilingualContent } from '$lib/i18n';
+
+interface PageContent {
+  title: string;
+  image: string;
+}
+
+const content = {
+  zh: { title: "教會歷史," image: "history-zh.jpg" },
+  en: { title: "Church History," image: "history-en.jpg" }
+};
+
+const pageContent = getBilingualContent(content, 'en', fallbackContent);
+// Result: { title: "Church History," image: "history-en.jpg" }
+```
+
+**Logic:**
+1. If `content[lang]` exists, use it
+2. Else if `content.zh` exists, use it (fallback to Chinese)
+3. Else if `content.en` exists, use it (fallback to English)
+4. Else use provided `fallback`
+
+**Usage:** When API/CMS data has separate fields for each language.
+
+## Adding New Translation Keys
+
+### Step 1: Add to Translation Dictionary
+
+Edit `src/lib/i18n/index.ts`:
+
+```typescript
+export const translations = {
+  zh: {
+    pages: {
+      about: {
+        title: "認識復活堂,"
+        // Add your new key here:
+        newfature: "新功能標題,"
+      }
+    }
+  },
+  en: {
+    pages: {
+      about: {
+        title: "About Us,"
+        // Add English translation here:
+        newFeature: "New Feature Title,"
+      }
+    }
+  }
+}
+```
+
+### Step 2: Use in Component
+
+In a Svelte component:
+
+```svelte
+<script lang="ts">
+  import { page } from '$app/state';
+  import { getTranslation } from '$lib/i18n';
+  
+  const lang = ($page.params.lang === 'en' ? 'en' : 'zh') as Language;
+  const t = getTranslation(lang);
+</script>
+
+<h1>{t.pages.about.newFeature}</h1>
+```
+
+### Step 3: Use in Load Function
+
+In `+page.server.ts`:
+
+```typescript
+import { getTranslation, getLangFromParams } from '$lib/i18n';
+
+export async function load({ params }) {
+  const lang = getLangFromParams(params);
+  const t = getTranslation(lang);
+  
+  return {
+    title: t.pages.about.newFeature,
+  };
+}
+```
+
+**Best practices:**
+- Add both Chinese and English at the same time
+- Keep key names consistent (camelCase, descriptive)
+- Group related keys under same parent object
+- Don't use generic names like `text` or `message` - be specific
+
+## Common Patterns
+
+### Pattern 1: Bilingual Navigation
+
+```svelte
+<script lang="ts">
+  import { page } from '$app/state';
+  import { getTranslation } from '$lib/i18n';
+  
+  let { lang = 'zh' } = $props();
+  let t = $derived(getTranslation(lang));
+</script>
+
+<nav>
+  <a href="/">{t.nav.home}</a>
+  <a href="/about">{t.nav.about}</a>
+  <a href="/messages">{t.nav.messages}</a>
+  
+  <!-- Language Switcher -->
+  <div class="lang-switcher">
+    <a href="/" class:active={lang === 'zh'}>中文</a>
+    <a href="/en/" class:active={lang === 'en'}>English</a>
+  </div>
+</nav>
+```
+
+### Pattern 2: Conditional Rendering by Language
+
+```svelte
+<script lang="ts">
+  let { lang = 'zh' } = $props();
+</script>
+
+{#if lang === 'zh'}
+  <p>這是中文版本的特殊內容</p>
+{:else}
+  <p>This is English-specific content</p>
+{/if}
+```
+
+### Pattern 3: Page with Dynamic Title
+
+```typescript
+// +page.server.ts
+import { getTranslation, getLangFromParams } from '$lib/i18n';
+
+export async function load({ params }) {
+  const lang = getLangFromParams(params);
+  const t = getTranslation(lang);
+  
+  return {
+    title: t.pages.activities.title,
+    subtitle: t.pages.activities.subtitle,
+  };
+}
+```
+
+```svelte
+<!-- +page.svelte -->
+<script lang="ts">
+  let { data } = $props();
+</script>
+
+<header>
+  <h1>{data.title}</h1>
+  <p>{data.subtitle}</p>
+</header>
+```
+
+### Pattern 4: Formatted Date in List
+
+```svelte
+<script lang="ts">
+  import { formatDate } from '$lib/i18n';
+  
+  let { lang = 'zh', events = [] } = $props();
+</script>
+
+<ul>
+  {#each events as event}
+    <li>
+      <span>{event.title}</span>
+      <time>{formatDate(event.date, lang)}</time>
+    </li>
+  {/each}
+</ul>
+```
+
+### Pattern 5: Interpolated Dynamic Content
+
+```typescript
+// +page.server.ts
+import { getTranslation, interpolate, getLangFromParams } from '$lib/i18n';
+
+export async function load({ params }) {
+  const lang = getLangFromParams(params);
+  const t = getTranslation(lang);
+  
+  return {
+    copyright: interpolate(t.footer.copyright, { year: new Date().getFullYear() }),
+  };
+}
+```
+
+## ContentfulQueries with i18n
+
+When fetching data from Contentful, the language is automatically handled by the `getLocale()` helper in `contentful-adapter.ts`:
+
+```typescript
+export function getLocale(lang: Language | undefined): Locale {
+  return lang === 'en' ? 'en-US' : 'zh-Hant-TW';
+}
+```
+
+See `docs/CONTENTFUL_QUERIES.md` for detailed Contentful query examples.
+
+**Example: Fetching with language support**
+
+```typescript
+// +page.server.ts
+import { getContentRepository } from '$lib/server/content-repository';
+import { getLangFromParams } from '$lib/i18n';
+
+export async function load({ params }) {
+  const lang = getLangFromParams(params);
+  const activities = await fetchActivities(lang);  // Automatically uses correct locale
+  
+  return { activities };
+}
+```
+
+## Fallback Strategy
+
+If Contentful is unavailable, the app falls back to JSON files:
+- `src/lib/data/fallback-activities.json`
+- `src/lib/data/fallback-sermons.json`
+- `src/lib/data/fallback-sharing.json`
+- etc.
+
+These JSON files contain both Chinese and English content (or are language-specific).
+
+**Note:** Fallback data should be kept in sync with Contentful content types (see `docs/CONTENTFUL_SETUP.md`).
+
+## URL Routing
+
+SvelteKit's `[[lang]]` parameter makes language optional:
+
+- `/` → Chinese (default)
+- `/about` → Chinese
+- `/en/` → English
+- `/en/about` → English
+- `/en/messages/sermon-1` → English sermon detail (if applicable)
+
+The optional bracket syntax `[[lang]]` means the entire `lang` segment is optional, ensuring Chinese content is available without the explicit `/` prefix.
+
+## Type Safety
+
+All translation keys are type-checked via TypeScript:
+
+```typescript
+export type TranslationDict = typeof translations.zh;
+```
+
+When you use the translation object, TypeScript will autocomplete key names and warn you of typos:
+
+```typescript
+const t = getTranslation('en');
+t.pages.activities.title;   // ✅ TypeScript knows this key exists
+t.pages.activities.titleXX;  // ❌ TypeScript error: Property 'titleXX' not found
+```
+
+## Testing Bilingual Content
+
+### Local Testing
+
+1. Start dev server: `npm run dev`
+2. Visit `/` for Chinese version
+3. Visit `/en/` for English version
+4. Use browser DevTools Console to check translation loading
+
+### Contentful Testing
+
+If you have Contentful configured:
+1. Create entries in both locales
+2. Ensure the `locale` parameter is being set correctly in queries
+3. Check Vercel logs to see which locale is being requested
+
+### Fallback Testing
+
+To test fallback JSON files:
+1. Temporarily disable Contentful (disconnect API token)
+2. The app will fall back to JSON files automatically
+3. Verify both languages load correct fallback content
+
+## Common Issues & Fixes
+
+### Issue: Missing Translation Key
+
+**Symptom:** Page shows `undefined` or the key path
+
+**Cause:** Key not added to both `zh` and `en` objects
+
+**Fix:**
+1. Add key to `src/lib/i18n/index.ts` for both languages
+2. Rebuild: `npm run build`
+
+### Issue: Date Formatting Wrong Locale
+
+**Symptom:** Dates always show in English or Chinese format regardless of language
+
+**Cause:** Not using `formatDate()` helper or using wrong locale string
+
+**Fix:**
+```typescript
+// ❌ Wrong
+const date = new Date('2025-03-08').toLocaleDateString();
+
+// ✅ Correct
+const date = formatDate('2025-03-08', lang);
+```
+
+### Issue: Language Not Detected from URL
+
+**Symptom:** All pages show Chinese, language switcher doesn't work
+
+**Cause:** Route parameter not being read correctly
+
+**Fix:**
+```typescript
+// ✅ Use this helper
+const lang = getLangFromParams(params);
+
+// Instead of
+const lang = params.lang || 'zh';  // Might fail for default route
+```
+
+### Issue: Content Mixes Chinese and English
+
+**Symptom:** Some parts in Chinese, some in English on the same page
+
+**Cause:** Not using consistent language parameter across page components
+
+**Fix:** Pass language through props or via `$page.params`:
+```typescript
+let lang = $derived(params.lang === 'en' ? 'en' : 'zh');
+// Use this `lang` for all text rendering
+```
+
+## Next Steps
+
+- See `docs/CONTENTFUL_QUERIES.md` for fetching bilingual content
+- See `docs/ARCHITECTURE.md` for routing structure
+- See `docs/ADDING_FEATURES.md` for adding new bilingual pages
