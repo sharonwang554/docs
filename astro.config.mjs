@@ -33,11 +33,40 @@ export default defineConfig({
 
       sidebar: [
         {
+          label: 'System Architecture',
+          collapsed: false,
+          items: [{ autogenerate: { directory: 'architecture' } }],
+        },
+        {
+          label: 'Developer Docs & API',
+          collapsed: false,
+          items: [{ autogenerate: { directory: 'developer-docs' } }],
+        },
+        {
+          label: 'Site Reliability / SRE',
+          collapsed: false,
+          items: [{ autogenerate: { directory: 'troubleshooting' } }],
+        },
+        {
+          label: '3D Space Portfolio',
+          collapsed: true,
+          items: [{ autogenerate: { directory: '3d-space-portfolio' } }],
+        },
+        {
+          label: 'Raised Church Website',
+          collapsed: true,
+          items: [{ autogenerate: { directory: 'raised-church-website' } }],
+        },
+        {
+          label: 'TMS (Team Management)',
+          collapsed: true,
+          items: [{ autogenerate: { directory: 'tms' } }],
+        },
+        {
           label: 'Featured Articles',
           collapsed: false,
-          autogenerate: { directory: 'articles' },
+          items: [{ autogenerate: { directory: 'articles' } }],
         },
-
       ],
 
       head: [
