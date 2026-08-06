@@ -15,6 +15,11 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Sharon Wang — Docs',
+      logo: {
+        src: './public/favicon.svg',
+        alt: 'Sharon Wang Docs Logo',
+        replacesTitle: false,
+      },
       tagline: 'Technical Documentation Portfolio',
       lastUpdated: true,
       social: [
