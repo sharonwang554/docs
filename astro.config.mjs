@@ -15,6 +15,9 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Sharon Wang — Docs',
+      components: {
+        Head: './src/components/Head.astro',
+      },
       logo: {
         src: './public/favicon.svg',
         alt: 'Sharon Wang Docs Logo',
@@ -45,6 +48,16 @@ export default defineConfig({
             { slug: 'articles/canvas-lms-setup' },
           ],
         },
+        {
+          label: 'Graft Docs',
+          link: 'https://graft.sharonwang.me',
+          attrs: { target: '_blank', rel: 'noopener noreferrer', class: 'external-sidebar-link' },
+        },
+        // {
+        //   label: 'Caveman Docs',
+        //   link: 'https://caveman.sharonwang.me',
+        //   attrs: { target: '_blank', rel: 'noopener noreferrer', class: 'external-sidebar-link' },
+        // },
       ],
 
       head: [

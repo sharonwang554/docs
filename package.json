@@ -15,6 +15,7 @@
     "@astrojs/rss": "^4.0.19",
     "@astrojs/starlight": "^0.34.0",
     "@astrojs/vercel": "^8.0.0",
+    "@vercel/analytics": "^2.0.1",
     "astro": "^5.8.0",
     "astro-mermaid": "^2.1.0",
     "katex": "^0.18.1",
