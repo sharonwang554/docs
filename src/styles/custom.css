@@ -234,7 +234,7 @@ starlight-social-icons a[data-tooltip]:hover::after,
 /* -------------------------------------------------------------------------- */
 /* Sidebar External Links Hover & Icon                                         */
 /* -------------------------------------------------------------------------- */
-.sidebar-pane .external-sidebar-link.large {
+.sidebar-pane .external-sidebar-link {
   color: var(--sl-color-gray-2) !important;
   font-weight: 600 !important;
   font-size: var(--sl-text-sm) !important;
@@ -243,8 +243,8 @@ starlight-social-icons a[data-tooltip]:hover::after,
   transition: color 0.2s ease;
 }
 
-.sidebar-pane .external-sidebar-link.large:hover,
-.sidebar-pane .external-sidebar-link.large:focus {
+.sidebar-pane .external-sidebar-link:hover,
+.sidebar-pane .external-sidebar-link:focus {
   color: var(--sl-color-white) !important;
 }
 

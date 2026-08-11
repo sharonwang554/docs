@@ -49,15 +49,21 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Graft Docs',
-          link: 'https://graft.sharonwang.me',
-          attrs: { target: '_blank', rel: 'noopener noreferrer', class: 'external-sidebar-link' },
+          label: 'Open Source Contributions',
+          collapsed: false,
+          items: [
+            {
+              label: 'Graft Docs',
+              link: 'https://graft.sharonwang.me',
+              attrs: { target: '_blank', rel: 'noopener noreferrer', class: 'external-sidebar-link' },
+            },
+            {
+              label: 'Caveman Docs',
+              link: 'https://caveman.sharonwang.me',
+              attrs: { target: '_blank', rel: 'noopener noreferrer', class: 'external-sidebar-link' },
+            },
+          ],
         },
-        // {
-        //   label: 'Caveman Docs',
-        //   link: 'https://caveman.sharonwang.me',
-        //   attrs: { target: '_blank', rel: 'noopener noreferrer', class: 'external-sidebar-link' },
-        // },
       ],
 
       head: [
