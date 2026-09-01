@@ -12,11 +12,12 @@
     "lint:prose": "vale src/content/docs/"
   },
   "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.0",
     "@astrojs/rss": "^4.0.19",
-    "@astrojs/starlight": "^0.41.7",
-    "@astrojs/vercel": "^11.0.6",
+    "@astrojs/starlight": "^0.41.10",
+    "@astrojs/vercel": "^11.0.9",
     "@vercel/analytics": "^2.0.1",
-    "astro": "^7.2.3",
+    "astro": "^7.2.10",
     "astro-mermaid": "^2.1.0",
     "katex": "^0.18.1",
     "mermaid": "^11.16.0",

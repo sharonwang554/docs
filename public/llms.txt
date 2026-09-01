@@ -1,0 +1,22 @@
+# Sharon Wang — Technical Documentation Portfolio
+
+> A docs-as-code portfolio site by Sharon Wang, a full-stack AI engineer focused on docs-as-code and Developer Experience (DevEx). Built with Astro Starlight, it showcases API integration guides, system architecture documentation, SRE runbooks, and developer enablement engineering. Structured per the Diátaxis framework and prose-linted with Vale.sh.
+
+- Site: https://docs.sharonwang.me
+- Personal portfolio: https://sharonwang.me
+- GitHub: https://github.com/sharonwang554
+- This site is updated on a hobby basis — not on a regular schedule.
+
+## Featured Articles
+
+- [API Integration Guide: OAuth 2.0 & Canvas LMS](https://docs.sharonwang.me/articles/tms-canvas-oauth2/): An architectural deep-dive into implementing the OAuth 2.0 authorization code flow for Canvas LMS integrations.
+- [Local Environment Setup Guide: Docker & Canvas LMS](https://docs.sharonwang.me/articles/canvas-lms-setup/): A step-by-step runbook for provisioning a local Canvas LMS Docker instance for API integration testing.
+
+## Open Source Documentation
+
+- [Graft Docs](https://graft.sharonwang.me): Open-source project documentation for Graft.
+- [Caveman Docs](https://caveman.sharonwang.me): Open-source project documentation for Caveman.
+
+## About
+
+- [About This Knowledge Base](https://docs.sharonwang.me/about/): Documentation philosophy, audience analysis approach, tools, and competency matrix.

@@ -4,16 +4,13 @@ import vercel from '@astrojs/vercel';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import astroMermaid from 'astro-mermaid';
-import { unified } from '@astrojs/markdown-remark';
 
 export default defineConfig({
   site: 'https://docs.sharonwang.me',
   adapter: vercel({ imageService: true, webAnalytics: { enabled: true } }),
   markdown: {
-    processor: unified({
-      remarkPlugins: [remarkMath],
-      rehypePlugins: [rehypeKatex],
-    }),
+    remarkPlugins: [remarkMath],
+    rehypePlugins: [rehypeKatex],
   },
   integrations: [
     starlight({
