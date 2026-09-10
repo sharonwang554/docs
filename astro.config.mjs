@@ -9,7 +9,7 @@ export default defineConfig({
   site: 'https://docs.sharonwang.me',
   adapter: vercel({ imageService: true, webAnalytics: { enabled: true } }),
   markdown: {
-    remarkPlugins: [remarkMath],
+    remarkPlugins: [remarkMath, remarkMermaidToDiv],
     rehypePlugins: [rehypeKatex],
   },
   integrations: [
@@ -161,7 +161,7 @@ export default defineConfig({
             async function renderMermaidDiagrams() {
               setupMermaidModal();
               
-              const codeBlocks = document.querySelectorAll('code.language-mermaid, pre.language-mermaid, pre[data-language="mermaid"]');
+              const codeBlocks = document.querySelectorAll('.mermaid-raw, code.language-mermaid, pre.language-mermaid, pre[data-language="mermaid"]');
               for (let i = 0; i < codeBlocks.length; i++) {
                 const codeBlock = codeBlocks[i];
                 if (codeBlock.dataset.mermaidRendered) continue;
@@ -170,15 +170,19 @@ export default defineConfig({
                 const preOrFigure = codeBlock.closest('.expressive-code') || codeBlock.closest('pre') || codeBlock;
                 
                 let textContent = '';
-                const copyBtn = preOrFigure.querySelector('button[data-code]');
-                if (copyBtn && copyBtn.dataset.code) {
-                  textContent = copyBtn.dataset.code.replace(new RegExp(String.fromCharCode(127), 'g'), String.fromCharCode(10));
+                if (codeBlock.classList.contains('mermaid-raw')) {
+                  textContent = decodeURIComponent(codeBlock.dataset.raw || '');
                 } else {
-                  const lines = codeBlock.querySelectorAll('.ec-line .code');
-                  if (lines.length > 0) {
-                    textContent = Array.from(lines).map(line => line.textContent).join(String.fromCharCode(10));
+                  const copyBtn = preOrFigure.querySelector('button[data-code]');
+                  if (copyBtn && copyBtn.dataset.code) {
+                    textContent = copyBtn.dataset.code.replace(new RegExp(String.fromCharCode(127), 'g'), String.fromCharCode(10));
                   } else {
-                    textContent = codeBlock.textContent || '';
+                    const lines = codeBlock.querySelectorAll('.ec-line .code');
+                    if (lines.length > 0) {
+                      textContent = Array.from(lines).map(line => line.textContent).join(String.fromCharCode(10));
+                    } else {
+                      textContent = codeBlock.textContent || '';
+                    }
                   }
                 }
                 
