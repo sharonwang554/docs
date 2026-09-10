@@ -285,17 +285,21 @@ starlight-social-icons a[data-tooltip]:hover::after,
 
 /* Native Dialog Styling */
 #mermaid-modal {
-  max-width: 95vw;
-  max-height: 95vh;
-  width: auto;
-  height: auto;
+  width: 95vw;
+  height: 95vh;
+  max-width: 1200px;
   background: var(--sl-color-bg);
   border: 1px solid var(--sl-color-gray-5);
   border-radius: 0.5rem;
-  padding: 2.5rem 1.5rem 1.5rem 1.5rem;
+  padding: 0;
   box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-  /* Center in viewport */
   margin: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+#mermaid-modal:not([open]) {
+  display: none;
 }
 
 #mermaid-modal::backdrop {
@@ -303,42 +307,62 @@ starlight-social-icons a[data-tooltip]:hover::after,
   backdrop-filter: blur(4px);
 }
 
-#mermaid-modal-content {
+#mermaid-modal-toolbar {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-}
-
-#mermaid-modal-content svg {
-  max-width: 100%;
-  max-height: 85vh;
-  height: auto !important;
-}
-
-#mermaid-modal-close {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  padding: 0.75rem 1rem;
   background: var(--sl-color-bg-nav);
+  border-bottom: 1px solid var(--sl-color-gray-5);
+}
+
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.zoom-controls button, #mermaid-modal-close {
+  background: var(--sl-color-gray-6);
   border: 1px solid var(--sl-color-gray-5);
   color: var(--sl-color-text);
   cursor: pointer;
   width: 2rem;
   height: 2rem;
-  border-radius: 50%;
+  border-radius: 0.25rem;
+  font-weight: bold;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
-  line-height: 1;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  z-index: 10;
+  font-size: 1.1rem;
 }
 
-#mermaid-modal-close:hover {
+.zoom-controls button:hover, #mermaid-modal-close:hover {
   background: var(--sl-color-gray-5);
   color: var(--sl-color-white);
+}
+
+#mermaid-zoom-level {
+  min-width: 3rem;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+#mermaid-modal-scroll-container {
+  flex: 1;
+  overflow: auto;
+  padding: 2rem;
+  position: relative;
+}
+
+#mermaid-modal-content {
+  transform-origin: top center;
+  transition: transform 0.15s ease-out;
+  display: flex;
+  justify-content: center;
+}
+
+#mermaid-modal-content svg {
+  max-width: none !important;
+  height: auto !important;
 }
