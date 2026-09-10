@@ -102,7 +102,28 @@ export default defineConfig({
             import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
             mermaid.initialize({ startOnLoad: false, theme: 'dark' });
 
+            // Set up the native modal for zooming
+            function setupMermaidModal() {
+              if (document.getElementById('mermaid-modal')) return;
+              const dialog = document.createElement('dialog');
+              dialog.id = 'mermaid-modal';
+              dialog.innerHTML = \`
+                <button id="mermaid-modal-close" aria-label="Close diagram">✕</button>
+                <div id="mermaid-modal-content"></div>
+              \`;
+              document.body.appendChild(dialog);
+
+              // Close on click outside or close button
+              dialog.addEventListener('click', (e) => {
+                if (e.target === dialog || e.target.id === 'mermaid-modal-close') {
+                  dialog.close();
+                }
+              });
+            }
+
             async function renderMermaidDiagrams() {
+              setupMermaidModal();
+              
               const codeBlocks = document.querySelectorAll('code.language-mermaid, pre.language-mermaid');
               for (let i = 0; i < codeBlocks.length; i++) {
                 const codeBlock = codeBlocks[i];
@@ -112,15 +133,21 @@ export default defineConfig({
 
                 const container = document.createElement('div');
                 container.className = 'mermaid-diagram-container';
-                container.style.margin = '1.5rem 0';
-                container.style.display = 'flex';
-                container.style.justifyContent = 'center';
-                container.style.overflowX = 'auto';
+                container.title = 'Click to expand diagram';
 
                 const id = 'mermaid-svg-' + i + '-' + Math.random().toString(36).substring(2, 7);
                 try {
                   const { svg } = await mermaid.render(id, textContent.trim());
                   container.innerHTML = svg;
+                  
+                  // Add click listener for modal
+                  container.addEventListener('click', () => {
+                    const dialog = document.getElementById('mermaid-modal');
+                    const content = document.getElementById('mermaid-modal-content');
+                    content.innerHTML = svg;
+                    dialog.showModal();
+                  });
+
                   if (preOrFigure.parentNode) {
                     preOrFigure.parentNode.replaceChild(container, preOrFigure);
                   }
