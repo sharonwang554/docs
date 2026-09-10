@@ -1,6 +1,25 @@
 ---
 import Default from '@astrojs/starlight/components/Head.astro';
 import Analytics from '@vercel/analytics/astro';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Sharon Wang — Technical Documentation Portfolio',
+  url: 'https://docs.sharonwang.me',
+  description:
+    'Production-grade developer documentation, API specifications, onboarding guides, and end-user product docs.',
+  author: {
+    '@type': 'Person',
+    name: 'Sharon Wang',
+    url: 'https://sharonwang.me',
+    sameAs: [
+      'https://github.com/sharonwang554',
+      'https://www.linkedin.com/in/shihyin-sharon-wang/',
+    ],
+  },
+};
 ---
 <Default {...Astro.props} />
 <Analytics />
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

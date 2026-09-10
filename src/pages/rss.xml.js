@@ -4,23 +4,19 @@ import { getCollection } from 'astro:content';
 export async function GET(context) {
   const docs = await getCollection('docs');
 
-  // Filter to only include articles and major overview pages
+  // Only include published articles in the RSS feed
   const items = docs
     .filter((doc) => {
       const slug = doc.id;
-      return (
-        slug.startsWith('articles/') ||
-        slug.startsWith('tms/') ||
-        slug.startsWith('3d-space-portfolio/') ||
-        slug.startsWith('raised-church-website/')
-      );
+      return slug.startsWith('articles/') && !doc.data.draft;
     })
     .map((doc) => ({
       title: doc.data.title,
       description: doc.data.description || '',
       link: `/${doc.id}/`,
-      // Use current date as fallback since Starlight content doesn't have pubDate by default
-      pubDate: doc.data.lastUpdated || new Date(),
+      // Starlight computes lastUpdated from git at build time, not via getCollection().
+      // Use the current build date as a reliable fallback.
+      pubDate: new Date(),
     }));
 
   return rss({
@@ -29,6 +25,7 @@ export async function GET(context) {
       'Production-grade developer documentation, API specifications, onboarding guides, and end-user product docs.',
     site: context.site,
     items,
-    customData: '<language>en-us</language>',
+    customData: `<language>en-us</language><atom:link href="${new URL('rss.xml', context.site)}" rel="self" type="application/rss+xml" />`,
+    xmlns: { atom: 'http://www.w3.org/2005/Atom' },
   });
 }

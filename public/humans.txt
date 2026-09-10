@@ -1,0 +1,13 @@
+/* TEAM */
+  Developer: Sharon Wang
+  Role: AI Engineer (Doc Engineering & DevEx)
+  Website: https://docs.sharonwang.me/
+  Docs: https://docs.sharonwang.me
+  GitHub: https://github.com/sharonwang554
+  Linkedin: https://linkedin.com/in/shihyin-sharon-wang
+ 
+
+/* SITE */
+  Last update: 2026-09-10
+  Stack: Astro Starlight, HTML5, SASS, TypeScript
+  Language: English
