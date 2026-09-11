@@ -21,15 +21,17 @@ When an instructor links their account with a third-party application, they are 
 
 Understanding OAuth 2.0 requires defining the specific roles each system component plays:
 
-- **Resource Owner**: The end-user (e.g., the instructor) who grants access to their data.
-- **Client**: Your application requesting access to the user's information.
-- **Authorization Server**: The system that authenticates the user and issues access tokens. **Canvas LMS** acts as the authorization server.
-- **Authorization Grant**: A credential representing the resource owner's consent. The client exchanges this grant with the authorization server for an access token.
-- **Access Token (Bearer Token)**: The secure key used by the client to access protected resources.
-- **Resource Server**: The system hosting the protected user accounts and information. It verifies the access token before responding to requests.
-- **Redirect URI**: The pre-registered destination where the authorization server sends the user after granting consent.
-- **Scope**: The specific permissions granted by the end-user (e.g., reading course lists, fetching enrollments).
-- **Client ID & Client Secret**: The unique credentials used to identify and authenticate your application to the authorization server.
+| Term | Definition & Context |
+| :--- | :--- |
+| **Resource Owner** | The end-user (e.g., the instructor) who grants access to their data. |
+| **Client** | Your application requesting access to the user's information. |
+| **Authorization Server** | The system that authenticates the user and issues access tokens. **Canvas LMS** acts as the authorization server. |
+| **Authorization Grant** | A credential representing the resource owner's consent. The client exchanges this grant for an access token. |
+| **Access Token (Bearer)** | The secure key used by the client to access protected resources on behalf of the user. |
+| **Resource Server** | The system hosting the protected user accounts and information. It verifies the access token before responding. |
+| **Redirect URI** | The pre-registered destination where the authorization server sends the user after granting consent. |
+| **Scope** | The specific permissions granted by the end-user (e.g., reading course lists, fetching enrollments). |
+| **Client ID & Secret** | The unique credentials used to identify and authenticate your application to the authorization server. |
 
 ---
 
