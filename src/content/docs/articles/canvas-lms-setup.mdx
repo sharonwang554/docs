@@ -17,10 +17,10 @@ This runbook outlines the manual infrastructure provisioning process used strict
 ## Prerequisites
 
 If you need to provision a Canvas instance from scratch rather than using the existing pre-configured AWS server, ensure the host machine has the following dependencies installed:
-- Git
-- Docker & Docker Compose
-- Mutagen & Mutagen Compose
-- Dory
+- [Git](https://git-scm.com/downloads)
+- [Docker & Docker Compose](https://docs.docker.com/engine/install/)
+- [Mutagen](https://mutagen.io/documentation/introduction/installation) & [Mutagen Compose](https://mutagen.io/documentation/orchestration/compose)
+- [Dory](https://github.com/FreedomBen/dory#installation)
 
 <Aside type="caution">
 **Environment Variances:** Installation commands vary based on the host operating system (e.g., using `yum` on Amazon Linux versus `apt-get` on Ubuntu/Debian). Furthermore, Canvas is highly memory-intensive; ensure your EC2 instance is sufficiently provisioned to avoid out-of-memory (OOM) crashes. Ensure all necessary firewall ports are open for HTTP/HTTPS traffic.
