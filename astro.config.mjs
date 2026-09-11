@@ -17,6 +17,7 @@ export default defineConfig({
       title: 'Sharon Wang — Docs',
       components: {
         Head: './src/components/Head.astro',
+        SocialIcons: './src/components/SocialIcons.astro',
       },
       logo: {
         src: './public/favicon.svg',
